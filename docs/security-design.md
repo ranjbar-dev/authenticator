@@ -1,5 +1,28 @@
 # Security design and limits
 
+Task07 adds explicit selected-region-only native capture and local decoding.
+Preparing ROOT publishes a nonsensitive visual/AccessKit frame before hiding;
+busy ROOT omits query/count/account/review widgets. The independent native timer
+observes task cancellation, monotonic lifecycle epoch/health, the existing idle
+deadline and owner shutdown. Publication/cancellation share a result mutex;
+queued results also recheck the native watch and AppState generation/unlocked
+state. Lock clears preparation, pending capture/review/alternative intent and
+owned widget memory. Restoring ROOT processes lock/result first; it does not
+force unlock or expose a previous unlocked framebuffer from the worker.
+
+Only the approved checked RECT reaches BitBlt, after overlay removal and
+DwmFlush. Limits before allocation are 4096 per axis and 4,194,304 total pixels;
+top-down 32-bit BGRA normalizes reserved alpha 255. Owned pixels zeroize on drop;
+mapped DIB bytes are flushed/cleared before deleting the bitmap and RAII releases
+GDI/native/pointer resources. No screenshot/QR payload writer, clipboard or
+network path exists. GDI/driver/compositor, dependency, allocator/compiler and OS
+copies remain outside complete erasure guarantees. Bounded decoding and native
+calls are cooperative, not a hard interruption/time/memory-erasure guarantee.
+GDI success with black/protected pixels can yield NoQr; there is no secure-desktop
+or DRM bypass. See task07 QA evidence for actual private-notification and pointer
+checks; actual OS lock/suspend and mixed-DPI hardware gates remain open, along
+with task08 editable review/Save and task20's wider security audit.
+
 Task05 adds local create/unlock/Lock, encrypted idle settings and passive Windows
 session-lock/suspend/resume notifications. The single-owner worker, generation
 and cooperative cancellation boundary are described in architecture.md. A stale

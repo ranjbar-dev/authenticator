@@ -5,6 +5,11 @@ use crate::{
         records::{Timestamp, Vault},
     },
     error::AppError,
+    platform::{
+        capture::{CaptureOutcome, CaptureTask},
+        lifecycle::LifecycleWatch,
+    },
+    qr::ScanReview,
     storage::{OperationCancellation, VaultStore},
 };
 use std::{
@@ -38,6 +43,11 @@ pub enum Workflow {
     AddBackupCodes,
     VaultLifecycle,
 }
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ScanAlternative {
+    Image,
+    Manual,
+}
 
 pub struct AppState {
     repository: Option<Result<VaultStore, AppError>>,
@@ -47,6 +57,10 @@ pub struct AppState {
     generation: u64,
     worker: Option<Worker>,
     last_activity: Instant,
+    capture: Option<(u64, CaptureTask)>,
+    review: Option<ScanReview>,
+    capture_region: Option<crate::platform::capture::Region>,
+    scan_alternative: Option<ScanAlternative>,
 }
 struct Completion {
     repository: VaultStore,
@@ -81,6 +95,14 @@ pub enum VaultAction {
     Create,
     Unlock,
 }
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum CaptureEvent {
+    ReviewReady,
+    Cancelled,
+    Locked,
+    CaptureFailure(crate::platform::capture::CaptureError),
+    DecodeFailure(crate::qr::QrError),
+}
 impl AppState {
     pub fn new(mut repository: Result<VaultStore, AppError>) -> Self {
         // A fresh UI owner starts locked even if its caller had a session.
@@ -95,6 +117,10 @@ impl AppState {
             generation: 0,
             worker: None,
             last_activity: Instant::now(),
+            capture: None,
+            review: None,
+            capture_region: None,
+            scan_alternative: None,
         }
     }
     pub fn is_unlocked(&self) -> bool {
@@ -145,6 +171,12 @@ impl AppState {
         self.generation
     }
     pub fn lock(&mut self) {
+        if let Some((_, capture)) = &self.capture {
+            capture.cancel();
+        }
+        self.review = None;
+        self.capture_region = None;
+        self.scan_alternative = None;
         if let Some(Ok(store)) = &mut self.repository {
             store.lock();
         }
@@ -165,6 +197,98 @@ impl AppState {
     }
     pub fn busy(&self) -> bool {
         self.worker.is_some()
+    }
+    pub fn capture_busy(&self) -> bool {
+        self.capture.is_some()
+    }
+    pub fn capture_decoding(&self) -> bool {
+        self.capture.as_ref().is_some_and(|(_, c)| c.decoding())
+    }
+    pub fn begin_capture(
+        &mut self,
+        owner: usize,
+        watch: LifecycleWatch,
+        repaint: impl Fn() + Send + 'static,
+    ) -> Result<(), AppError> {
+        if !self.is_unlocked() {
+            return Err(AppError::VaultLocked);
+        }
+        if self.capture_busy() || self.busy() {
+            return Err(AppError::VaultBusy);
+        }
+        self.review = None;
+        let timeout = self.vault()?.preferences().lock_timeout_seconds();
+        self.scan_alternative = None;
+        self.capture_region = None;
+        let deadline = self.last_activity + Duration::from_secs(timeout.into());
+        self.capture = Some((
+            self.generation,
+            CaptureTask::start(owner, watch, deadline, repaint),
+        ));
+        Ok(())
+    }
+    pub fn cancel_capture(&mut self) {
+        if let Some((_, capture)) = &self.capture {
+            capture.cancel();
+        }
+        self.review = None;
+        self.scan_alternative = None;
+        self.capture_region = None;
+    }
+    pub fn poll_capture(&mut self) -> Option<CaptureEvent> {
+        let (generation, capture) = self.capture.as_ref()?;
+        let mut outcome = capture.poll()?;
+        let current = *generation == self.generation && self.is_unlocked();
+        self.capture_region = if current { capture.region() } else { None };
+        if !current {
+            outcome = CaptureOutcome::Cancelled;
+        }
+        self.capture = None;
+        Some(match outcome {
+            CaptureOutcome::Review(review) => {
+                self.review = Some(review);
+                CaptureEvent::ReviewReady
+            }
+            CaptureOutcome::Cancelled => CaptureEvent::Cancelled,
+            CaptureOutcome::Locked => CaptureEvent::Locked,
+            CaptureOutcome::CaptureFailure(e) => CaptureEvent::CaptureFailure(e),
+            CaptureOutcome::DecodeFailure(e) => CaptureEvent::DecodeFailure(e),
+        })
+    }
+    /// Task08 moves these validated drafts into editable review; task07 never saves.
+    pub fn scan_review(&self) -> Option<&ScanReview> {
+        self.review.as_ref()
+    }
+    pub fn capture_region(&self) -> Option<crate::platform::capture::Region> {
+        self.capture_region
+    }
+    pub fn request_scan_alternative(
+        &mut self,
+        alternative: ScanAlternative,
+    ) -> Result<(), AppError> {
+        if !self.is_unlocked() {
+            return Err(AppError::VaultLocked);
+        }
+        if self.capture_busy() {
+            return Err(AppError::VaultBusy);
+        }
+        self.scan_alternative = Some(alternative);
+        Ok(())
+    }
+    /// Typed handoff only; image/manual editors are owned by later tasks.
+    pub fn take_scan_alternative(&mut self) -> Option<ScanAlternative> {
+        if self.is_unlocked() {
+            self.scan_alternative.take()
+        } else {
+            None
+        }
+    }
+    pub fn take_scan_review(&mut self) -> Option<ScanReview> {
+        if self.is_unlocked() {
+            self.review.take()
+        } else {
+            None
+        }
     }
     pub fn begin(
         &mut self,
@@ -262,6 +386,34 @@ mod tests {
     use super::*;
     use crate::domain::records::Timestamp;
     use zeroize::Zeroizing;
+    #[test]
+    fn capture_lock_gate_duplicate_and_stale_results() -> Result<(), Box<dyn std::error::Error>> {
+        let dir = tempfile::tempdir()?;
+        let mut state = AppState::new(Ok(VaultStore::open_directory(dir.path())?));
+        let listener = crate::platform::lifecycle::Lifecycle::start(|| {})?;
+        assert_eq!(
+            state.begin_capture(0, listener.watch(), || {}),
+            Err(AppError::VaultLocked)
+        );
+        state.capture = Some((
+            state.generation,
+            CaptureTask::queued(Some(CaptureOutcome::DecodeFailure(
+                crate::qr::QrError::NoQr,
+            ))),
+        ));
+        state.lock();
+        assert_eq!(state.poll_capture(), Some(CaptureEvent::Cancelled));
+        assert!(state.scan_review().is_none());
+        assert!(!state.capture_busy());
+        // Late native lock must not become an unlocking action.
+        state.capture = Some((
+            state.generation,
+            CaptureTask::queued(Some(CaptureOutcome::Locked)),
+        ));
+        assert_eq!(state.poll_capture(), Some(CaptureEvent::Cancelled));
+        assert!(!state.is_unlocked());
+        Ok(())
+    }
     fn finish(
         state: &mut AppState,
     ) -> Result<Option<Result<(), AppError>>, Box<dyn std::error::Error>> {

@@ -1,0 +1,30 @@
+Window: "Authenticator capture preview", App: region_capture.exe.
+	0 window (region) Authenticator capture preview Secondary Actions: Raise
+		1 title bar (settable, string) Value: Authenticator capture preview
+			2 menu bar System ID: MenuBar
+				3 menu item System
+			4 button Minimize
+			5 button Maximize
+			6 button Close
+		7 pane (region)
+			8 text DISPOSABLE TASK07 · empty encrypted test vault
+			9 button Arm private WTS lock for next scan
+			10 text F6: 340 · F7: 600 · F8: 960 wide (window sizes, not physical DPI)
+		11 pane (region)
+			12 text AUTHENTICATOR · LOCAL VAULT
+			13 text (heading) Unlock vault Value: Unlock vault
+			14 button Help for this screen
+			16 text Vault locked · credentials hidden
+			65 tab item 2FA Codes
+			66 tab item Backup Codes
+			67 tab item Settings
+			20 text (heading) Your local vault Value: Your local vault
+			63 text Unlock to see account names, verification codes and recovery codes.
+			68 text Vault passphrase
+			69 text field (edit) (settable, string) Vault passphrase
+			70 text Use a long, unique passphrase. Spaces are kept exactly.
+			71 text A lost passphrase cannot be reset. Recovery needs a separate encrypted backup and its passphrase. Keep it independently; creating a vault does not create a backup.
+			72 button Unlock vault
+			73 button Clear fields
+
+The focused UI element is 69 text field (edit) (settable, string) Vault passphrase.

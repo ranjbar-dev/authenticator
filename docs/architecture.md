@@ -1,5 +1,69 @@
 # Architecture and concrete decisions
 
+## Task07 selected-region Windows adapter
+
+`platform/capture.rs` now extends the virtual-desktop foundation with checked
+physical `Point`/`Region`, monitor enumeration, a cancellable worker and closed
+capture/decoder outcomes. `capture/windows.rs` uses a dedicated PMv2 thread;
+signed WM_MOUSE event client coordinates become physical desktop pixels through
+ClientToScreen. GetCursorPos only chooses the initial instruction-panel monitor:
+its latest cursor position must not replace queued button-event coordinates.
+Controls convert theme logical pixels using GetDpiForWindow/96, independently of
+the main egui scale. Either drag direction clips against signed virtual bounds.
+To avoid signed 16-bit mouse-message wrap, virtual desktops beyond 32,767 pixels on an
+axis fail closed. This limit does not expand task06's selected-image cap.
+
+The overlay paints a translucent geometry-only scrim, an opaque border and an
+opaque themed native instruction panel with bundled Noto Sans and a real named
+Cancel button. SetCapture/ReleaseCapture and focus/cancel/display/DPI handling
+live on that native thread. No secondary egui viewport accessibility is assumed.
+Main ROOT renders a nonsensitive preparation frame and AccessKit tree before
+hiding; query/count/review widgets remain absent while selecting/decoding.
+Restoration follows lifecycle and generation processing, never a native worker
+blindly re-showing an old unlocked framebuffer.
+
+On approval, validate nonzero sides<=4096, total<=4,194,304 pixels and four-byte
+size<=16,777,216 before any bitmap/owned pixel allocation. Hide/destroy the
+overlay and DwmFlush its queued changes, compare monitor snapshots before
+allocation/BitBlt, and capture only that RECT using a top-down 32-bit DIB. Reserved
+GDI alpha becomes 255 before the owned zeroizing packed BGRA buffer enters the
+task06 decoder. There is no desktop-background screenshot, screenshot file or
+clipboard path. RAII restores GDI selections, clears mapped DIB bits after
+GdiFlush, releases DCs/bitmaps/fonts/windows and releases pointer capture.
+
+`LifecycleWatch` adds a non-consuming atomic epoch/health watch beside task05's
+pending UI flag. A25ms native timer observes it, explicit operation cancellation,
+the existing session idle deadline and owner shutdown even while ROOT is hidden.
+Native pointer activity does not extend that deadline. Queued review publication
+and cancellation share a mutex; producer and consumer recheck cancellation/native
+watch, and AppState also checks its session generation/unlocked gate. Decode is
+bounded/cooperative, not forcibly interruptible. AppState owns the single task and
+redacted ScanReview, clears it on lock/cancel and exposes `take_scan_review` for
+task08. Safe image/manual intents are handed off without pretending those editors
+exist. No storage-format/import operation was added.
+
+Real public-QR selection succeeded on primary and negative-coordinate 96 DPI
+monitors, including reverse drag, plus actual Cancel/Escape/empty-region recovery.
+Private HWND notification/pointer-release tests cover lifecycle routing without
+changing OS state. Physical 150/200%/mixed-DPI, real hot-unplug/permission-denial,
+OS desktop lock/suspend, full accessibility and task08 import remain open. Exact
+commands, safe evidence, Win32 sources, geometry and memory/driver limits:
+`docs/qa/task07/implementation-evidence.md`. Independent review is pending.
+
+Native selector typography deliberately keeps GDI/OS row metrics for its real
+STATIC/Button controls; ROOT's complete egui typography bundle remains unchanged.
+`native_font` consumes role size/family/`theme::Weight`; regular resolves to private
+**Noto Sans / 400**, semibold to the bundled Win32 family **Noto Sans SemiBold / 600**.
+The regular-family request at 600 was measured resolving 700, so the explicit
+semibold family prevents that synthesis. A private memory-DC probe measures the
+real realized font/extent without screen capture or OS font installation. At
+requested 96 DPI both cells are 19 pixels (ascent 15/descent 4, internal leading 5,
+external leading 0), with zero native tracking. Actual instruction block 375×57
+fits 528×72 and Cancel 102×19 fits 528×36. This is an intentional native-kind
+exception to ROOT BODY/LABEL line-height 20 and future nonzero tracking, rather
+than a claim of full bundle equivalence. See task07 evidence for exact commands
+and the focused review resolution; physical mixed-DPI gates remain open.
+
 ## Task 05 local vault lifecycle
 
 The ROOT shell now creates and unlocks the real local repository with exact

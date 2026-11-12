@@ -31,6 +31,12 @@ pub const CONTENT_MAX_WIDTH: f32 = 640.0;
 pub const COMPACT_TABS_WIDTH: f32 = 310.0;
 pub const DIALOG_WIDTH: f32 = 360.0;
 pub const PROGRESS_HEIGHT: f32 = UNIT * 2.0;
+// Native selector geometry, in the same logical-pixel scale as ROOT controls.
+pub const CAPTURE_PANEL_WIDTH: f32 = 560.0;
+pub const CAPTURE_PANEL_HEIGHT: f32 = 160.0;
+pub const CAPTURE_INSTRUCTIONS_HEIGHT: f32 = 72.0;
+pub const CAPTURE_CANCEL_TOP: f32 = 108.0;
+pub const CAPTURE_DIM_ALPHA: u8 = 48;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Weight {

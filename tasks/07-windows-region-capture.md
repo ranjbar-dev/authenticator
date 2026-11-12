@@ -1,6 +1,6 @@
 # Task 07: Windows screen-region capture overlay
 
-Status: todo
+Status: in_progress — implementation independently reviewed; hardware and task08/09 integration QA open
 Priority: P0 foundation / screenshot-first
 Dependencies: 03–06
 Requirements: FR-2A.1–3/5/6; PRD §§7, 10–11
@@ -11,33 +11,33 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Implementation
 
-- [ ] Implement a Windows capture adapter and region overlay, initiated only by Screenshot to Scan. Hide the main window if needed and restore it on every completion/cancel/failure path.
-- [ ] Support monitor enumeration, negative virtual-desktop coordinates, mixed DPI, scaling, drag in either direction and clipped/empty selections. Document coordinate transformations.
-- [ ] Capture only the selected region into memory; feed pixels to the QR service. No clipboard screenshot or disk screenshot is needed.
-- [ ] Use real pointer capture for drag selection, release it reliably, and handle Escape, monitor disconnection, permission denial, OS session lock and app shutdown. Prevent capture when locked.
-- [ ] Keep OS failures distinct from decoder failures and offer retry/image/manual paths through safe events to the UI.
+- [x] Implement a Windows capture adapter and region overlay, initiated only by Screenshot to Scan. Hide the main window if needed and restore it on every completion/cancel/failure path.
+- [x] Support monitor enumeration, negative virtual-desktop coordinates, mixed DPI, scaling, drag in either direction and clipped/empty selections. Document coordinate transformations.
+- [x] Capture only the selected region into memory; feed pixels to the QR service. No clipboard screenshot or disk screenshot is needed.
+- [x] Use real pointer capture for drag selection, release it reliably, and handle Escape, monitor disconnection, permission denial, OS session lock and app shutdown. Prevent capture when locked.
+- [x] Keep OS failures distinct from decoder failures and offer retry/image/manual paths through safe events to the UI.
 
 ## Screen checklist
 
 Planning snapshot, 12 November 2026: no existing application source, screen family, theme or shared components was present. These are PRD/reference-derived roles, not measured project conventions. Use the shared Rust theme and widgets created by task 04 (or create those primitives in task 04 itself); reread this checklist before editing. Refresh implementation paths from the actual code.
 
-- [ ] Capture begins only from the prominently labeled Screenshot to Scan action. — PRD/reference structure; shared implementation from task 04.
-- [ ] Overlay frames screen content with an obvious selected region and readable brief instructions. — PRD/reference structure; shared implementation from task 04.
-- [ ] Selection bounds track real pointer movement at each tested DPI. — PRD/reference structure; shared implementation from task 04.
-- [ ] Escape and visible cancellation return to the previous app state. — PRD/reference structure; shared implementation from task 04.
-- [ ] Capture has a clear busy state and prevents duplicate invocations. — PRD/reference structure; shared implementation from task 04.
+- [x] Capture begins only from the prominently labeled Screenshot to Scan action. — PRD/reference structure; shared implementation from task 04.
+- [x] Overlay frames screen content with an obvious selected region and readable brief instructions. — PRD/reference structure; shared implementation from task 04.
+- [x] Selection bounds track real pointer movement at each tested DPI. — PRD/reference structure; shared implementation from task 04.
+- [x] Escape and visible cancellation return to the previous app state. — PRD/reference structure; shared implementation from task 04.
+- [x] Capture has a clear busy state and prevents duplicate invocations. — PRD/reference structure; shared implementation from task 04.
 - [ ] Failure feedback offers retry, image import and manual entry. — PRD/reference structure; shared implementation from task 04.
-- [ ] Lock/session changes cancel and conceal capture/review state. — PRD/reference structure; shared implementation from task 04.
-- [ ] Overlay focus and pointer capture are released on every exit path; shared theme values apply to app-owned controls. — PRD/reference structure; shared implementation from task 04.
+- [x] Lock/session changes cancel and conceal capture/review state. — PRD/reference structure; shared implementation from task 04.
+- [x] Overlay focus and pointer capture are released on every exit path; shared theme values apply to app-owned controls. — PRD/reference structure; shared implementation from task 04.
 
 Must not be copied from the reference: profile/sign-in, cloud sync/backup, language selector, extension/companion promotions, optional encryption switches or swipe-only desktop actions. Reuse shared field, button, dialog and feedback components; do not recreate their styling per page.
 
 ## Acceptance and verification
 
-- [ ] Select a QR in another window using actual pointer input; selected pixels match the region.
+- [x] Select a QR in another window using actual pointer input; selected pixels match the region.
 - [ ] Exercise multiple monitors (including negative coordinates), 100/150/200% scale and mixed DPI where available; record hardware coverage honestly and use adapter tests for unavailable layouts.
-- [ ] Escape/empty selection/failure/lock restore the app, release capture and preserve the vault.
-- [ ] No unsolicited capture, retained image, secret logs or blocked pointer interaction remains.
+- [x] Escape/empty selection/failure/lock restore the app, release capture and preserve the vault.
+- [x] No unsolicited capture, retained image, secret logs or blocked pointer interaction remains.
 
 ## Handoff and completion
 
@@ -49,5 +49,9 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 
 ## Evidence
 
-Not started. On execution record changed files, test commands/results, sanitized UI evidence paths where applicable, independent reviewer result and commit reference. If blocked, retain incomplete status and record exact cause, attempted remedies and resumption steps.
+Reviewed implementation and exact checks are recorded in [implementation-evidence.md](../docs/qa/task07/implementation-evidence.md); sanitized result/panel screenshots and accessibility trees are in the same directory. The parent inspected the source and representative component screenshots. Distinct review_07 approved the native capture, resource ownership, privacy and tested UI scope; focused re-review independently passed the font metric test and all 12 platform tests after correcting the realized semibold family. Checker calibration is recorded separately in [calibration.md](../docs/qa/task07/calibration.md).
+
+Real pointer capture of public disposable QR fixtures succeeded on primary and negative-coordinate monitors, including reverse drag. Native Cancel/Escape, empty selection, no-QR, private WTS-message lock and restored focus were exercised. The full pre-final suite passed 69 ordinary tests; later preparing-frame accessibility/privacy and publication-race tests plus focused platform tests passed. See the evidence for exact command boundaries; no full-suite result is invented after the final font-only adjustment.
+
+Physical 150/200% and mixed DPI, right-monitor capture, actual monitor removal/permission denial/OS session lock/hardware suspend, Narrator and reference pixel fidelity remain unverified. Image/manual typed intents are implemented, while working editors and complete review/save integration belong to tasks08/09. Those acceptance boxes remain open until integrated QA. Commit reference is recorded in the following checkpoint.
 

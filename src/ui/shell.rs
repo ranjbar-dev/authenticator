@@ -1,11 +1,12 @@
 //! Inventory-derived shell and local vault lifecycle.
 use super::{
     components as c,
-    state::{AppState, Route, VaultAction, Workflow},
+    state::{AppState, CaptureEvent, Route, ScanAlternative, VaultAction, Workflow},
     theme,
 };
 use crate::{domain::records::DeletionState, storage::VaultStore};
 use eframe::egui;
+use raw_window_handle::{HasWindowHandle, RawWindowHandle};
 use std::time::{Duration, Instant};
 use zeroize::{Zeroize, Zeroizing};
 
@@ -22,6 +23,11 @@ pub struct AuthenticatorApp {
     exists: bool,
     focus_form: bool,
     operation_cancelled: bool,
+    owner: usize,
+    capture_message: Option<String>,
+    capture_failed: bool,
+    capture_focus: bool,
+    capture_preparing: Option<(u64, bool)>,
 }
 impl AuthenticatorApp {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
@@ -32,10 +38,24 @@ impl AuthenticatorApp {
         cc: &eframe::CreationContext<'_>,
         repository: Result<VaultStore, crate::error::AppError>,
     ) -> Self {
-        theme::apply(&cc.egui_ctx);
+        let owner = cc
+            .window_handle()
+            .ok()
+            .and_then(|h| match h.as_raw() {
+                RawWindowHandle::Win32(w) => Some(w.hwnd.get() as usize),
+                _ => None,
+            })
+            .unwrap_or(0);
+        Self::with_context(cc.egui_ctx.clone(), repository, owner)
+    }
+    fn with_context(
+        context: egui::Context,
+        repository: Result<VaultStore, crate::error::AppError>,
+        owner: usize,
+    ) -> Self {
+        theme::apply(&context);
         let state = AppState::new(repository);
         let exists = state.vault_exists().unwrap_or(true);
-        let context = cc.egui_ctx.clone();
         let repaint = context.clone();
         Self {
             state,
@@ -52,6 +72,11 @@ impl AuthenticatorApp {
             exists,
             focus_form: true,
             operation_cancelled: false,
+            owner,
+            capture_message: None,
+            capture_failed: false,
+            capture_focus: false,
+            capture_preparing: None,
         }
     }
     pub fn lock(&mut self) {
@@ -63,6 +88,13 @@ impl AuthenticatorApp {
         self.form_error = None;
         self.focus_form = true;
         self.operation_cancelled = self.state.busy();
+        self.capture_message = None;
+        self.capture_failed = false;
+        self.capture_preparing = None;
+        // ROOT will render the locked state before the visibility command is
+        // applied. Native overlay never restores an old unlocked framebuffer.
+        self.context
+            .send_viewport_cmd(egui::ViewportCommand::Visible(true));
     }
     fn clear_form(&mut self) {
         self.passphrase.zeroize();
@@ -104,6 +136,57 @@ impl AuthenticatorApp {
             self.form_error = outcome.err().map(|e| e.to_string());
             self.operation_cancelled = false;
         }
+        if let Some(event) = self.state.poll_capture() {
+            if event == CaptureEvent::Locked {
+                self.lock();
+            } else if self.state.is_unlocked() {
+                self.capture_failed = matches!(
+                    event,
+                    CaptureEvent::CaptureFailure(_) | CaptureEvent::DecodeFailure(_)
+                );
+                self.capture_message = Some(match event {
+                    CaptureEvent::ReviewReady => format!(
+                        "Scan complete: {} supported credential(s) among {} QR result(s). Nothing was added. Editable review and saving are the next development stage.",
+                        self.state.scan_review().map_or(0, |r| r.supported_count()),
+                        self.state.scan_review().map_or(0, |r| r.candidates().len())
+                    ),
+                    CaptureEvent::Cancelled => "Selection cancelled. Nothing was added.".into(),
+                    CaptureEvent::CaptureFailure(e) => e.to_string(),
+                    CaptureEvent::DecodeFailure(e) => e.to_string(),
+                    CaptureEvent::Locked => unreachable!(),
+                });
+                self.capture_focus = true;
+            }
+            ctx.send_viewport_cmd(egui::ViewportCommand::Visible(true));
+            ctx.send_viewport_cmd(egui::ViewportCommand::Focus);
+            ctx.request_repaint();
+        }
+        if self.state.capture_decoding() {
+            ctx.send_viewport_cmd(egui::ViewportCommand::Visible(true));
+        }
+        if let Some((generation, frame_ready)) = self.capture_preparing {
+            if generation != self.state.generation() || !self.state.is_unlocked() {
+                self.capture_preparing = None;
+            } else if !frame_ready {
+                // A complete nonsensitive ROOT frame + AccessKit update must
+                // precede hiding the window. No new native window exists yet.
+                self.capture_preparing = Some((generation, true));
+                ctx.request_repaint();
+            } else {
+                self.capture_preparing = None;
+                let repaint = self.context.clone();
+                if let Ok(lifecycle) = &self.lifecycle {
+                    match self
+                        .state
+                        .begin_capture(self.owner, lifecycle.watch(), move || {
+                            repaint.request_repaint()
+                        }) {
+                        Ok(()) => ctx.send_viewport_cmd(egui::ViewportCommand::Visible(false)),
+                        Err(e) => self.capture_message = Some(e.to_string()),
+                    }
+                }
+            }
+        }
         if !self.state.busy() {
             self.exists = self.state.vault_exists().unwrap_or(true);
         }
@@ -119,14 +202,14 @@ impl AuthenticatorApp {
                     ui.set_max_width(theme::CONTENT_MAX_WIDTH.min(ui.available_width()));
                 c::secondary(ui,"AUTHENTICATOR · LOCAL VAULT");
                 c::toolbar(ui,|ui| {
-                    c::heading(ui,if self.state.is_unlocked() {self.state.route.title()} else if self.exists {"Unlock vault"} else {"Create vault"},1);
+                    c::heading(ui,if self.state.is_unlocked() && (self.capture_preparing.is_some() || self.state.capture_busy()) {"Screenshot to Scan"} else if self.state.is_unlocked() {self.state.route.title()} else if self.exists {"Unlock vault"} else {"Create vault"},1);
                     let help=c::icon_button(ui,c::Icon::Help,"Help for this screen");
                     if help.clicked() {self.dialog=Some(c::Dialog::new("Offline help",help.id)); self.help_open=true;}
                     if self.state.is_unlocked() && c::icon_button(ui,c::Icon::Lock,"Lock vault").clicked() {self.lock();}
                 });
                 c::secondary(ui,if self.state.is_unlocked() {"Vault unlocked on this device"} else {"Vault locked · credentials hidden"});
                 ui.add_space(theme::SMALL_GAP);
-                if let Some(route)=c::tabs(ui,self.state.route) { self.state.navigate(route); self.status=None; }
+                if self.capture_preparing.is_none() && !self.state.capture_busy() && let Some(route)=c::tabs(ui,self.state.route) { self.state.navigate(route); self.status=None; }
                 ui.add_space(theme::SMALL_GAP);
                 if let Some(error)=self.state.storage_error() {
                     c::status(ui,"storage-error",&error.to_string(),c::StatusKind::Error);
@@ -282,9 +365,21 @@ impl AuthenticatorApp {
         }
     }
     fn unlocked_content(&mut self, ui: &mut egui::Ui) {
+        if self.capture_preparing.is_some() || self.state.capture_busy() {
+            self.capture_controls(ui);
+            return;
+        }
         match self.state.route {
             Route::Codes | Route::BackupCodes => {
                 let backups = self.state.route == Route::BackupCodes;
+                if !backups {
+                    self.capture_controls(ui);
+                    // The opening pass itself also removes old query/count/
+                    // account widgets from ROOT's new visual + accessible tree.
+                    if self.capture_preparing.is_some() {
+                        return;
+                    }
+                }
                 let search = c::labeled_field(
                     ui,
                     "search",
@@ -333,7 +428,7 @@ impl AuthenticatorApp {
                         if backups {
                             "Keep recovery codes with the account they belong to. Adding backup codes is a later development stage."
                         } else {
-                            "Add an account to keep its verification codes here. Account capture and entry are a later development stage."
+                            "Scan a QR code from another window. Review and account saving are the next development stage."
                         },
                     );
                 } else {
@@ -406,6 +501,91 @@ impl AuthenticatorApp {
             }
         }
     }
+    fn capture_controls(&mut self, ui: &mut egui::Ui) {
+        if self.capture_preparing.is_some() || self.state.capture_busy() {
+            c::progress(
+                ui,
+                if self.capture_preparing.is_some() {
+                    "Preparing private screen selection…"
+                } else {
+                    "Selecting or scanning QR locally…"
+                },
+                None,
+            );
+            if c::button(ui, "Cancel scan", c::ButtonStyle::Secondary).clicked() {
+                self.capture_preparing = None;
+                self.state.cancel_capture();
+                self.capture_message = Some("Selection cancelled. Nothing was added.".into());
+            }
+            return;
+        }
+        let start = c::button(
+            ui,
+            if self.capture_failed {
+                "Retry Screenshot to Scan"
+            } else {
+                "Screenshot to Scan"
+            },
+            c::ButtonStyle::Primary,
+        );
+        if self.capture_focus {
+            start.request_focus();
+            self.capture_focus = false;
+        }
+        c::secondary(
+            ui,
+            "Drag around a QR code in another window. Escape or Cancel returns here. Up to 4096 pixels per side and 4,194,304 pixels total.",
+        );
+        if start.clicked() {
+            self.capture_message = None;
+            self.capture_failed = false;
+            self.dialog = None;
+            self.state.cancel_capture();
+            c::clear_sensitive_widget_memory(&self.context);
+            self.capture_preparing = Some((self.state.generation(), false));
+            ui.ctx().request_repaint();
+        }
+        if let Some(message) = &self.capture_message {
+            c::status(
+                ui,
+                "capture-feedback",
+                message,
+                if self.capture_failed {
+                    c::StatusKind::Error
+                } else {
+                    c::StatusKind::Info
+                },
+            );
+        }
+        if self.capture_failed {
+            for (label, message, alternative) in [
+                (
+                    "Import from Photos",
+                    "Image import is the next development stage. No image was opened and nothing was added.",
+                    ScanAlternative::Image,
+                ),
+                (
+                    "Manually Input",
+                    "Manual entry is the next development stage. Nothing was added.",
+                    ScanAlternative::Manual,
+                ),
+            ] {
+                if c::button(ui, label, c::ButtonStyle::Secondary).clicked()
+                    && self.state.request_scan_alternative(alternative).is_ok()
+                {
+                    self.capture_message = Some(message.into());
+                }
+            }
+        }
+        if self.state.scan_review().is_some()
+            && c::button(ui, "Discard scan results", c::ButtonStyle::Secondary).clicked()
+        {
+            self.state.cancel_capture();
+            self.capture_message = None;
+            c::clear_sensitive_widget_memory(&self.context);
+        }
+        ui.add_space(theme::SMALL_GAP);
+    }
     fn show_dialog(&mut self, ctx: &egui::Context) {
         if let Some(dialog) = &mut self.dialog {
             let help = self.help_open;
@@ -413,12 +593,12 @@ impl AuthenticatorApp {
             let close=dialog.show(ctx,|ui,first| {
                 if help {
                     c::body(ui,"Authenticator keeps your vault on this device. Use the three tabs for verification codes, recovery codes and local settings.");
-                    c::secondary(ui,"Your vault passphrase cannot be reset. Keep a separate encrypted backup and its passphrase. Capture, import and backup screens are still being built.");
+                    c::secondary(ui,"Your vault passphrase cannot be reset. Keep a separate encrypted backup and its passphrase. Screenshot to Scan works locally; editable review, saving, image/manual entry and backup screens are still being built.");
                     c::secondary(ui,"Keyboard: Tab and Shift+Tab move focus. Enter or Space activates buttons. Ctrl+L locks the vault. Escape cancels passphrase work or closes dialogs.");
                 } else {
                     c::body(ui,match workflow {
                         Some(Workflow::VaultLifecycle)=>"Vault setup and unlock will be connected in the next development stage. The vault remains locked.",
-                        Some(Workflow::AddAccount)=>"Account capture and manual entry are not available yet. No account was added.",
+                        Some(Workflow::AddAccount)=>"Use Screenshot to Scan on the 2FA Codes screen to select a QR in another window. Editable review, saving and manual entry are the next development stage. No account was added.",
                         Some(Workflow::AddBackupCodes)=>"The account selector and backup-code editor are not available yet. No recovery codes were added.",
                         None=>"No action is pending.",
                     });
@@ -438,6 +618,125 @@ impl AuthenticatorApp {
 impl eframe::App for AuthenticatorApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         self.show(ui);
+    }
+}
+
+#[cfg(all(test, windows))]
+mod capture_privacy_tests {
+    use super::*;
+    use crate::domain::records::{Timestamp, Vault};
+    fn labels(output: &egui::FullOutput) -> Vec<String> {
+        output
+            .platform_output
+            .accesskit_update
+            .as_ref()
+            .map_or_else(Vec::new, |tree| {
+                tree.nodes
+                    .iter()
+                    .flat_map(|(_, n)| {
+                        [n.label(), n.value()]
+                            .into_iter()
+                            .flatten()
+                            .map(str::to_owned)
+                    })
+                    .collect()
+            })
+    }
+    #[test]
+    fn preparing_accessibility_frame_precedes_hide_and_lock_clears_pending_capture()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let directory = tempfile::tempdir()?;
+        let mut store = VaultStore::open_directory(directory.path())?;
+        store.create(
+            Zeroizing::new("disposable-private-frame".into()),
+            Vault::new(Timestamp(1)),
+        )?;
+        let context = egui::Context::default();
+        context.enable_accesskit();
+        let mut app = AuthenticatorApp::with_context(context.clone(), Ok(store), 0);
+        app.state
+            .repository_mut()?
+            .unlock(Zeroizing::new("disposable-private-frame".into()))?;
+        app.state.query = "disposable private query sentinel".into();
+        let input = || egui::RawInput {
+            screen_rect: Some(egui::Rect::from_min_size(
+                egui::Pos2::ZERO,
+                egui::vec2(600., 800.),
+            )),
+            ..Default::default()
+        };
+        let mut before = context.run_ui(input(), |root| app.show(root));
+        before.textures_delta.clear();
+        assert!(
+            labels(&before)
+                .iter()
+                .any(|s| s.contains("private query sentinel"))
+        );
+        app.capture_preparing = Some((app.state.generation(), false));
+        c::clear_sensitive_widget_memory(&context);
+        let mut preparing = context.run_ui(input(), |root| app.show(root));
+        preparing.textures_delta.clear();
+        assert!(app.capture_preparing.is_some_and(|(_, ready)| ready));
+        assert!(!app.state.capture_busy());
+        assert!(
+            !labels(&preparing)
+                .iter()
+                .any(|s| s.contains("private query sentinel") || s == "Search accounts")
+        );
+        assert!(
+            labels(&preparing)
+                .iter()
+                .any(|s| s.contains("Preparing private"))
+        );
+        assert!(
+            !preparing
+                .viewport_output
+                .values()
+                .flat_map(|v| v.commands.iter())
+                .any(|c| matches!(c, egui::ViewportCommand::Visible(false)))
+        );
+        let mut hidden = context.run_ui(input(), |root| app.show(root));
+        hidden.textures_delta.clear();
+        assert!(
+            hidden
+                .viewport_output
+                .values()
+                .flat_map(|v| v.commands.iter())
+                .any(|c| matches!(c, egui::ViewportCommand::Visible(false)))
+        );
+        assert!(
+            !labels(&hidden)
+                .iter()
+                .any(|s| s.contains("private query sentinel") || s == "Search accounts")
+        );
+        assert_eq!(
+            app.state.begin_capture(
+                0,
+                app.lifecycle.as_ref().map_err(|_| "listener")?.watch(),
+                || {}
+            ),
+            Err(crate::error::AppError::VaultBusy)
+        );
+        assert_eq!(
+            app.state.request_scan_alternative(ScanAlternative::Image),
+            Err(crate::error::AppError::VaultBusy)
+        );
+        app.lock();
+        let mut locked = context.run_ui(input(), |root| app.show(root));
+        locked.textures_delta.clear();
+        assert!(app.state.query.is_empty());
+        assert!(app.capture_preparing.is_none());
+        assert!(app.state.scan_review().is_none());
+        assert_eq!(
+            app.state.request_scan_alternative(ScanAlternative::Manual),
+            Err(crate::error::AppError::VaultLocked)
+        );
+        assert!(
+            !labels(&locked)
+                .iter()
+                .any(|s| s.contains("private query sentinel"))
+        );
+        Ok(())
     }
 }
 impl Drop for AuthenticatorApp {

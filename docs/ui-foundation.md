@@ -1,5 +1,41 @@
 # Shared Rust UI foundation
 
+Task07 reuses the shared heading/button/status/progress roles for the prominent
+Screenshot to Scan action, preparation/busy, result and retry/image/manual paths.
+The native selector is an explicit task01 accessibility exception to ROOT egui
+controls: geometry-only dim scrim, opaque blue/focus border, opaque SURFACE/TEXT
+instruction panel and a real named native Cancel button with dark-on-blue text
+and focus. It uses embedded Noto Sans400/ 600 and theme sizes/DIP conversion.
+Escape cancels; Ctrl+L locks even while ROOT is hidden. Preparing and busy ROOT
+omit metadata-bearing widgets before the hide command; restoration returns focus
+to Screenshot after current lifecycle/generation processing. Lock restores the
+locked form. Separate UIA observations expose instructions/Cancel; no complete
+Narrator audit or secondary egui AccessKit support is claimed. Task07 evidence
+covers 340/ 600/960 logical window widths and two 96 DPI monitor selections; physical
+150/200% and mixed-DPI remain unverified. Editable review/Save and image/manual
+editors are subsequent tasks, clearly described as unavailable in this build.
+
+The selector has an explicit **native typography exception** to the ROOT bundle
+table below. It shares the bundled family, role size, theme weight and colors,
+but native STATIC and GDI DrawText keep their OS font-cell metrics instead of
+forcing `BODY/LABEL.line_height = 20`. Native tracking is the GDI default zero;
+this is not a general adapter for future nonzero ROOT tracking. Keeping the real
+STATIC/Button controls preserves their platform accessibility and keyboard
+semantics. No custom text control was introduced to change one pixel of leading.
+
+The private GDI probe `native_font_metrics_and_control_fit` measured the actual
+resolved fonts at a requested 96 DPI: BODY **Noto Sans / 400**, LABEL **Noto Sans
+SemiBold / 600**, both requested `lfHeight = -14`, with cell height 19 pixels,
+ascent 15, descent 4, internal leading 5 and external leading 0. Three instructions
+measure 57 pixels high, widest 375, inside the actual theme allocation 528×72;
+Cancel measures 102×19 inside 528×36 and is centered by native DrawText. The
+instruction allocation is72 (the current central token), not an asserted 70.
+These are real GetTextMetrics/GetTextFace/GetObject/GetTextExtent/DrawText
+measurements, not claimed 20-pixel equivalence or physical 150/200% certification.
+The adapter derives numeric weight and Win32 face from `theme::Weight`: the
+SemiBold file's Win32 family is **Noto Sans SemiBold**. Asking the regular family
+for 600 previously realized 700 on this host; the probe found and corrected it.
+
 Task05 connects the ROOT locked forms to real local create/unlock and reuses
 shared card, field, button, heading, feedback and typography roles. Setup has
 masked confirmation and adjacent passphrase-loss/independent-backup guidance;

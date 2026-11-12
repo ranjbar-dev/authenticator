@@ -1,0 +1,33 @@
+Window: "Authenticator capture preview", App: region_capture.exe.
+	0 window (region) Authenticator capture preview Secondary Actions: Raise
+		1 title bar (settable, string) Value: Authenticator capture preview
+			2 menu bar System ID: MenuBar
+				3 menu item System
+			4 button Minimize
+			5 button Maximize
+			6 button Close
+		7 pane (region)
+			8 text DISPOSABLE TASK07 · empty encrypted test vault
+			35 text Selected physical region: -1826,411 / 433 × 432
+		9 pane (region)
+			10 text AUTHENTICATOR · LOCAL VAULT
+			11 text (heading) 2FA Codes Value: 2FA Codes
+			12 button Help for this screen
+			13 button Lock vault
+			14 text Vault unlocked on this device
+			15 tab item 2FA Codes
+			16 tab item Backup Codes
+			17 tab item Settings
+			74 button Screenshot to Scan
+			75 text Drag around a QR code in another window. Escape or Cancel returns here. Up to 4096 pixels per side and 4,194,304 pixels total.
+			76 status bar (status) Scan complete: 1 supported credential(s) among 1 QR result(s). Nothing was added. Editable review and saving are the next development stage. Value: Scan complete: 1 supported credential(s) among 1 QR result(s). Nothing was added. Editable review and saving are the next development stage.
+			77 button Discard scan results
+			78 text Search accounts
+			21 text field (edit) (settable, string) Search accounts
+			79 text Search your unlocked vault.
+			80 text (heading) No accounts yet Value: No accounts yet
+			81 text Scan a QR code from another window. Review and account saving are the next development stage.
+			82 button Add account
+			46 scroll bar
+
+The focused UI element is 74 button Screenshot to Scan.

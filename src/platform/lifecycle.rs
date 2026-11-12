@@ -2,18 +2,35 @@
 use crate::error::AppError;
 use std::sync::{
     Arc,
-    atomic::{AtomicBool, Ordering},
+    atomic::{AtomicBool, AtomicU64, Ordering},
 };
 
 struct Signal {
     pending: AtomicBool,
     healthy: AtomicBool,
+    epoch: AtomicU64,
     repaint: Box<dyn Fn() + Send + Sync>,
 }
 impl Signal {
     fn lock(&self) {
+        self.epoch.fetch_add(1, Ordering::SeqCst);
         self.pending.store(true, Ordering::SeqCst);
         (self.repaint)();
+    }
+}
+
+/// A non-consuming notification watch. Hidden native capture loops observe it
+/// independently of the ROOT repaint/pending-bit consumer.
+#[derive(Clone)]
+pub struct LifecycleWatch {
+    signal: Arc<Signal>,
+    epoch: u64,
+}
+impl LifecycleWatch {
+    pub fn changed(&self) -> bool {
+        !self.signal.healthy.load(Ordering::SeqCst)
+            || self.signal.pending.load(Ordering::SeqCst)
+            || self.signal.epoch.load(Ordering::SeqCst) != self.epoch
     }
 }
 
@@ -29,6 +46,7 @@ impl Lifecycle {
         let signal = Arc::new(Signal {
             pending: AtomicBool::new(false),
             healthy: AtomicBool::new(true),
+            epoch: AtomicU64::new(0),
             repaint: Box::new(repaint),
         });
         #[cfg(windows)]
@@ -59,6 +77,24 @@ impl Lifecycle {
     }
     pub fn healthy(&self) -> bool {
         self.signal.healthy.load(Ordering::SeqCst)
+    }
+    pub fn watch(&self) -> LifecycleWatch {
+        LifecycleWatch {
+            epoch: self.signal.epoch.load(Ordering::SeqCst),
+            signal: self.signal.clone(),
+        }
+    }
+    #[cfg(all(test, windows))]
+    pub(crate) fn notify_lock_for_test(&self) {
+        // Only our own private listener; does not lock the Windows desktop.
+        unsafe {
+            windows_sys::Win32::UI::WindowsAndMessaging::SendMessageW(
+                self.hwnd as _,
+                windows_sys::Win32::UI::WindowsAndMessaging::WM_WTSSESSION_CHANGE,
+                7,
+                0,
+            );
+        }
     }
 }
 #[cfg(windows)]
@@ -204,6 +240,7 @@ mod tests {
     fn native_window_routes_lock_suspend_resume_and_cleans_up() -> Result<(), AppError> {
         let listener = Lifecycle::start(|| {})?;
         let hwnd = listener.hwnd;
+        let watch = listener.watch();
         assert!(!listener.take_lock());
         // SAFETY: Sends only to this test's private notification HWND. Does not
         // broadcast, invoke LockWorkStation, or suspend the user's desktop.
@@ -219,10 +256,23 @@ mod tests {
                 SendMessageW(hwnd as _, message, code, 0);
                 assert!(listener.take_lock());
                 assert!(!listener.take_lock());
+                assert!(
+                    watch.changed(),
+                    "consuming the UI bit must not erase native capture cancellation"
+                );
             }
             drop(listener);
             assert_eq!(IsWindow(hwnd as _), 0);
         }
+        Ok(())
+    }
+    #[test]
+    fn watch_created_during_pending_notification_fails_closed() -> Result<(), AppError> {
+        let listener = Lifecycle::start(|| {})?;
+        unsafe {
+            SendMessageW(listener.hwnd as _, WM_WTSSESSION_CHANGE, 7, 0);
+        }
+        assert!(listener.watch().changed());
         Ok(())
     }
 }

@@ -1,0 +1,12 @@
+Window: "Authenticator region selection", App: region_capture.exe.
+	0 window Authenticator region selection Secondary Actions: Raise
+		1 pane Screenshot to Scan
+			2 text Drag around the QR code, then release to scan. Escape cancels. Ctrl+L locks the vault. Only the selected region is captured, locally in memory.
+			3 button Cancel capture ID: 100
+		4 pane Selection boundary
+		1 pane Screenshot to Scan
+			2 text Drag around the QR code, then release to scan. Escape cancels. Ctrl+L locks the vault. Only the selected region is captured, locally in memory.
+			3 button Cancel capture ID: 100
+		4 pane Selection boundary
+
+The focused UI element is 3 button Cancel capture ID: 100.

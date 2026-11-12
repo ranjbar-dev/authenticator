@@ -375,6 +375,7 @@ dependencies = [
  "image",
  "qrcode",
  "quircs",
+ "raw-window-handle",
  "subtle",
  "tempfile",
  "totp-rs",
