@@ -237,6 +237,16 @@ pub fn labeled_secret_field(
 ) -> Response {
     labeled_field_impl(ui, id, label, value, helper, error, FieldMode::Secret)
 }
+pub fn labeled_revealed_secret_field(
+    ui: &mut Ui,
+    id: impl std::hash::Hash + std::fmt::Debug,
+    label: &str,
+    value: &mut String,
+    helper: &str,
+    error: Option<&str>,
+) -> Response {
+    labeled_field_impl(ui, id, label, value, helper, error, FieldMode::Revealed)
+}
 
 /// Release all native text-editor histories at the session/form boundary.
 /// Egui does not offer zeroizing undo allocations; dropping history is best
@@ -249,6 +259,141 @@ pub fn clear_sensitive_widget_memory(ctx: &egui::Context) {
 enum FieldMode {
     Plain,
     Secret,
+    Revealed,
+}
+
+/// Full-role, labeled native selector, including current state and focus.
+pub fn labeled_choice(
+    ui: &mut Ui,
+    id: impl std::hash::Hash + std::fmt::Debug,
+    label: &str,
+    value: &mut String,
+    choices: &[&str],
+) -> bool {
+    ui.push_id(id, |ui| {
+        let label = ui.label(theme::LABEL.text(label));
+        let mut changed = false;
+        let response = egui::ComboBox::from_id_salt("choice")
+            .selected_text(theme::BODY.text(value.as_str()).color(theme::TEXT))
+            .width(ui.available_width())
+            .show_ui(ui, |ui| {
+                for choice in choices {
+                    let selected = value == choice;
+                    let response = ui.selectable_label(
+                        selected,
+                        theme::BODY.text(*choice).color(if selected {
+                            theme::ON_BLUE
+                        } else {
+                            theme::TEXT
+                        }),
+                    );
+                    focus(ui, &response);
+                    if response.clicked() {
+                        *value = (*choice).into();
+                        changed = true;
+                        ui.close();
+                    }
+                }
+            })
+            .response
+            .labelled_by(label.id);
+        if changed {
+            response.request_focus();
+        }
+        focus(ui, &response);
+        changed
+    })
+    .inner
+}
+
+/// Recovery editor keeps newlines while masking each non-newline scalar. Native
+/// password semantics block clipboard text output in both modes. Concealed
+/// layout/AX contain only masks; deliberate Reveal exposes visual/AX text.
+/// Undo history is released every pass.
+pub fn labeled_sensitive_multiline(
+    ui: &mut Ui,
+    id: impl std::hash::Hash + std::fmt::Debug,
+    label: &str,
+    value: &mut String,
+    reveal: bool,
+) -> Response {
+    ui.push_id(id, |ui| {
+        let label = ui.label(theme::LABEL.text(label));
+        let id = ui.scope_id().with("input");
+        let mut layouter = |ui: &Ui, buffer: &dyn egui::TextBuffer, width: f32| {
+            let display = if reveal {
+                buffer.as_str().to_owned()
+            } else {
+                buffer
+                    .as_str()
+                    .chars()
+                    .map(|c| {
+                        if c == '\n' {
+                            c
+                        } else {
+                            egui::epaint::text::PASSWORD_REPLACEMENT_CHAR
+                        }
+                    })
+                    .collect()
+            };
+            let mut job = theme::BODY.singleline_job(display, theme::TEXT);
+            job.break_on_newline = true;
+            job.wrap.max_width = width;
+            ui.fonts_mut(|f| f.layout_job(job))
+        };
+        let scroll = egui::ScrollArea::vertical()
+            .id_salt("sensitive-text-viewport")
+            .max_height(theme::MULTILINE_HEIGHT)
+            .min_scrolled_height(theme::MULTILINE_HEIGHT)
+            .auto_shrink([false, true])
+            .scroll_source(egui::scroll_area::ScrollSource {
+                drag: egui::scroll_area::DragScroll::Never,
+                ..Default::default()
+            })
+            .show(ui, |ui| {
+                egui::TextEdit::multiline(value)
+                    .id(id)
+                    .font(theme::BODY.font())
+                    .password(true)
+                    // Retain one scalar ABOVE the byte limit: native input
+                    // clamping must not turn an oversized paste into accepted
+                    // truncation. Parse still rejects >1MiB UTF-8 bytes.
+                    .char_limit(crate::domain::recovery_input::MAX_TEXT_BYTES + 1)
+                    .layouter(&mut layouter)
+                    .desired_rows(5)
+                    .desired_width(ui.available_width())
+                    .show(ui)
+            });
+        let mut output = scroll.inner;
+        output.state.clear_undoer();
+        output.state.clone().store(ui.ctx(), id);
+        let mut response = output.response.response.labelled_by(label.id);
+        // Focus/outer form scrolling refer to the visible editor, rather than
+        // the potentially thousands-of-lines native input's full content rect.
+        response.rect = response.rect.intersect(scroll.inner_rect);
+        response.interact_rect = response.interact_rect.intersect(scroll.inner_rect);
+        let global_rect = ui
+            .ctx()
+            .layer_transform_to_global(ui.layer_id())
+            .map_or(response.rect, |transform| transform * response.rect);
+        ui.ctx().accesskit_node_builder(response.id, |node| {
+            node.set_bounds(egui::accesskit::Rect {
+                x0: global_rect.min.x.into(),
+                y0: global_rect.min.y.into(),
+                x1: global_rect.max.x.into(),
+                y1: global_rect.max.y.into(),
+            })
+        });
+        ui.painter().rect_stroke(
+            response.rect,
+            theme::CONTROL_RADIUS,
+            Stroke::new(1., theme::BORDER),
+            egui::StrokeKind::Inside,
+        );
+        focus(ui, &response);
+        response
+    })
+    .inner
 }
 
 fn field_editor(
@@ -258,12 +403,15 @@ fn field_editor(
     mode: FieldMode,
     typography: theme::Typography,
 ) -> egui::text_edit::TextEditOutput {
-    let secret = matches!(mode, FieldMode::Secret);
+    let secret = !matches!(mode, FieldMode::Plain);
+    let masked = matches!(mode, FieldMode::Secret);
     let mut layouter = |ui: &Ui, buffer: &dyn egui::TextBuffer, _wrap_width: f32| {
-        // Never hand raw secret text to font layout or a retained Galley job.
+        // Concealed mode never hands raw secret text to retained font layout.
+        // Deliberate reveal does, while keeping native clipboard protection and a password parent role;
+        // framework/allocator/OS layout copies cannot be guaranteed erased.
         // Match egui's one replacement character per Unicode scalar so native
         // cursor/selection character indexes still map to the displayed text.
-        let display = if secret {
+        let display = if masked {
             std::iter::repeat_n(
                 egui::epaint::text::PASSWORD_REPLACEMENT_CHAR,
                 buffer.as_str().chars().count(),
@@ -339,6 +487,193 @@ fn labeled_field_impl(
 #[cfg(test)]
 mod field_tests {
     use super::*;
+    #[test]
+    fn many_recovery_lines_keep_the_editor_viewport_and_save_compact() {
+        let ctx = egui::Context::default();
+        theme::apply(&ctx);
+        ctx.enable_accesskit();
+        let mut value = (0..40)
+            .map(|i| format!("public-fixture-{i}\n"))
+            .collect::<String>();
+        let mut frame = ctx.run_ui(
+            egui::RawInput {
+                screen_rect: Some(egui::Rect::from_min_size(
+                    egui::Pos2::ZERO,
+                    egui::vec2(340., 600.),
+                )),
+                ..Default::default()
+            },
+            |root| {
+                egui::CentralPanel::default().show(root, |ui| {
+                    let field = labeled_sensitive_multiline(
+                        ui,
+                        "many-lines",
+                        "Backup codes",
+                        &mut value,
+                        false,
+                    );
+                    assert!(field.rect.height() <= theme::MULTILINE_HEIGHT);
+                    let save = button(ui, "Save", ButtonStyle::Primary);
+                    assert!(
+                        save.rect.top()
+                            < field.rect.top() + theme::MULTILINE_HEIGHT + theme::GAP * 2.
+                    );
+                    assert!(save.rect.bottom() < 300.);
+                });
+            },
+        );
+        frame.textures_delta.clear();
+        assert_eq!(value.lines().count(), 40);
+        assert!(
+            frame
+                .platform_output
+                .accesskit_update
+                .as_ref()
+                .is_some_and(|tree| tree.nodes.iter().any(|(_, node)| node.role()
+                    == egui::Role::PasswordInput
+                    && node.bounds().is_some_and(
+                        |rect| rect.y1 - rect.y0 <= f64::from(theme::MULTILINE_HEIGHT)
+                    )))
+        );
+    }
+    #[test]
+    fn password_clipboard_output_is_blocked_and_reveal_ax_exposure_is_explicit() {
+        for mode in [FieldMode::Secret, FieldMode::Revealed] {
+            let ctx = egui::Context::default();
+            theme::apply(&ctx);
+            ctx.enable_accesskit();
+            let id = Id::unique("clipboard-fixture");
+            let mut value = "sentinel-visible-".repeat(40);
+            let mut frame = ctx.run_ui(egui::RawInput::default(), |root| {
+                egui::CentralPanel::default().show(root, |ui| {
+                    let mut output = field_editor(ui, id, &mut value, mode, theme::BODY);
+                    output.response.request_focus();
+                    output
+                        .state
+                        .cursor
+                        .set_char_range(Some(egui::text::CCursorRange::two(
+                            egui::text::CCursor::new(0),
+                            egui::text::CCursor::new(value.chars().count()),
+                        )));
+                    output.state.store(ui.ctx(), id);
+                });
+            });
+            frame.textures_delta.clear();
+            let raw_runs = frame
+                .platform_output
+                .accesskit_update
+                .as_ref()
+                .is_some_and(|tree| {
+                    tree.nodes
+                        .iter()
+                        .any(|(_, node)| node.value().is_some_and(|v| v.contains("sentinel")))
+                });
+            assert_eq!(
+                raw_runs,
+                matches!(mode, FieldMode::Revealed),
+                "Deliberate reveal exposes text runs; concealed mode must not"
+            );
+            for event in [egui::Event::Copy, egui::Event::Cut] {
+                let input = egui::RawInput {
+                    events: vec![event],
+                    ..Default::default()
+                };
+                let mut frame = ctx.run_ui(input, |root| {
+                    egui::CentralPanel::default().show(root, |ui| {
+                        field_editor(ui, id, &mut value, mode, theme::BODY);
+                    });
+                });
+                frame.textures_delta.clear();
+                assert!(
+                    !frame
+                        .platform_output
+                        .commands
+                        .iter()
+                        .any(|c| matches!(c, egui::OutputCommand::CopyText(_)))
+                );
+            }
+            // Reconceal emits masked values for every remaining text run.
+            value = "sentinel-visible-".repeat(40);
+            let mut hidden = ctx.run_ui(egui::RawInput::default(), |root| {
+                egui::CentralPanel::default().show(root, |ui| {
+                    field_editor(ui, id, &mut value, FieldMode::Secret, theme::BODY);
+                });
+            });
+            hidden.textures_delta.clear();
+            assert!(
+                hidden
+                    .platform_output
+                    .accesskit_update
+                    .as_ref()
+                    .is_some_and(|tree| tree
+                        .nodes
+                        .iter()
+                        .all(|(_, node)| node.value().is_none_or(|v| !v.contains("sentinel"))))
+            );
+        }
+    }
+
+    #[test]
+    fn multiline_conceals_full_ax_and_uses_complete_wrapped_role_metrics() {
+        let ctx = egui::Context::default();
+        theme::apply(&ctx);
+        ctx.enable_accesskit();
+        let mut value = "sentinel-recovery-".repeat(40) + "\nsecond-recovery";
+        for reveal in [false, true, false] {
+            let mut output = ctx.run_ui(egui::RawInput::default(), |root| {
+                egui::CentralPanel::default().show(root, |ui| {
+                    ui.set_width(240.);
+                    labeled_sensitive_multiline(
+                        ui,
+                        "recovery-probe",
+                        "Backup codes",
+                        &mut value,
+                        reveal,
+                    );
+                });
+            });
+            output.textures_delta.clear();
+            let galleys = output
+                .shapes
+                .iter()
+                .filter_map(|shape| match &shape.shape {
+                    egui::Shape::Text(text) if text.galley.job.text.chars().count() > 600 => {
+                        Some(&text.galley)
+                    }
+                    _ => None,
+                })
+                .collect::<Vec<_>>();
+            assert!(!galleys.is_empty());
+            for galley in galleys {
+                assert!(galley.rows.len() > 1);
+                assert!(
+                    galley
+                        .job
+                        .sections
+                        .iter()
+                        .all(|section| section.format.font_id == theme::BODY.font()
+                            && section.format.line_height == Some(theme::BODY.line_height)
+                            && section.format.extra_letter_spacing == theme::BODY.letter_spacing)
+                );
+                assert!(
+                    galley
+                        .rows
+                        .iter()
+                        .all(|row| (row.size.y - theme::BODY.line_height).abs() < 0.01)
+                );
+            }
+            let raw = output
+                .platform_output
+                .accesskit_update
+                .as_ref()
+                .is_some_and(|tree| {
+                    tree.nodes
+                        .iter()
+                        .any(|(_, n)| n.value().is_some_and(|v| v.contains("sentinel")))
+                });
+            assert_eq!(raw, reveal);
+        }
+    }
 
     #[test]
     fn native_editor_uses_complete_typography_and_measured_row_metrics() {

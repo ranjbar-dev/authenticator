@@ -308,11 +308,15 @@ pub struct BackupCode {
     pub(crate) used_at: Option<Timestamp>,
 }
 impl BackupCode {
+    /// Pure value validation shared by text/file preview and record creation.
+    pub fn normalized_value(value: &str) -> Result<Zeroizing<String>, AppError> {
+        validation::text(value, 4096, AppError::InvalidRecord).map(Zeroizing::new)
+    }
     pub fn new(value: &str, at: Timestamp) -> Result<Self, AppError> {
         Ok(Self {
             id: BackupCodeId::new(),
             state: RecordState::new(at),
-            value: Zeroizing::new(validation::text(value, 4096, AppError::InvalidRecord)?),
+            value: Self::normalized_value(value)?,
             used_at: None,
         })
     }

@@ -2,5 +2,6 @@
 pub mod clock;
 pub mod otp;
 pub mod records;
+pub mod recovery_input;
 pub mod uri;
 pub mod validation;

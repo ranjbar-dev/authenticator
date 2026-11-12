@@ -1,5 +1,43 @@
 # Security design and limits
 
+Review09 corrected a responsive-lock defect: the old cancellation mutex could
+make UI Lock wait for an admitted native replace. Current cancellation is an
+atomic request competing with atomic action admission; it does not take the
+background action-serialization mutex. Generation/query/intent and UI-owned
+review/widget state clear without waiting for that action. Completion polling/
+cleanup also avoid waiting on publication, and stale results cannot reopen the
+UI. Cancellation winning admission prevents the replace; an already admitted
+whole encrypted operation may complete, with native rename success remaining
+the durable commit point. A deterministic actual-save gate test proves UI/AX
+cleanup before release, then locked late completion and whole-batch unlock.
+
+This is a UI responsiveness/adoption boundary, not an immediate worker-memory
+erasure guarantee. Active Argon2/native filesystem work cannot be safely forced
+to stop; its worker may still own the vault/DEK/candidate/scratch until it returns.
+Cancellation records intent immediately; worker owners then lock/drop on return.
+No promise is made to erase all dependency, allocator, pagefile or OS copies.
+
+Task09 extends the existing cancellable save worker with explicit Import/Create/
+Edit intent. Stable-ID edits validate an ephemeral original snapshot at the actual
+transaction boundary (including same-second changes), reject missing/trashed
+targets, and preserve the live seed unless replacement was deliberate. Account
+creation and optional recovery codes commit as one encrypted aggregate. The
+schema/envelope is unchanged; existing rename/lifecycle/cancellation semantics
+still govern, including the possibility of a complete committed ciphertext file
+when lock loses the rename gate. No postcommit rollback/deletion is promised.
+
+New raw/normalized recovery and edit snapshot buffers use zeroizing owners;
+bounded text normalization never embeds values in errors. Concealed fields keep
+raw values out of rendered/AX text, while an explicit Reveal intentionally permits
+visible layout and AccessKit text-run exposure. A password parent role alone does
+not prove that a custom visible galley's AX children are masked. Tests inspect
+full node values and Copy/Cut output: clipboard plaintext output is blocked in
+both modes, but Cut can delete selected input. Conceal/lock drops editor histories
+and owners, not every possible framework/font/allocator/OS copy. Task09 evidence
+records actual isolated create/edit/write-failure/Cancel/process-relaunch/HMAC
+checks and the outstanding independent/manual gates. Standalone recovery file/
+used-state workflows remain Task15/16.
+
 Task08 connects the existing capture/decoder to ephemeral masked review and
 explicit separate-entry batch import. Form strings zeroize; capture pixels/raw
 payloads never enter persistence. Lock/cancel/exit drop review and image jobs and
@@ -10,8 +48,8 @@ remain outside guaranteed erasure. Decode is bounded cooperative work.
 The sole repository moves to one save worker. Every approved draft is revalidated
 before the complete detached transaction is encrypted and atomically renamed.
 Recoverable write failures retain edits and the unchanged committed session.
-Cancellation checks and lifecycle/idle guard run at the actual rename gate; a
-cancel that loses that gate can leave the **complete encrypted batch**, then a
+Cancellation and lifecycle/idle guards run at final-action admission; a
+cancel that loses admission can leave the **complete encrypted batch**, then a
 locked session. No partial batch or claimed rollback after success is allowed.
 There is no overwrite import mode: duplicates require an explicit Save-as-new
 action and preserve all existing records. Errors contain fixed safe text only.
@@ -48,7 +86,7 @@ and cooperative cancellation boundary are described in architecture.md. A stale
 result is locked before UI adoption, including completed-but-unpolled results;
 no duplicate store/key cache exists. KDF scratch and its borrowed passphrase
 cannot be interrupted mid-call and are released when bounded Argon2 returns.
-Lock immediately hides all current UI state, clears owned form/query/pending
+Lock immediately hides all current UI state, clears UI-owned form/query/pending
 state and drops native editor histories. Egui undo storage is released rather
 than zeroized internally; allocator/framework/OS copies remain outside complete
 erasure claims. Listener registration failure blocks unlock instead of silently

@@ -160,3 +160,10 @@ own integration checks. Parent corrected the task05 disconnected-machine
 acceptance checkbox to open, consistent with this report's explicit statement
 that OS networking was not disabled. Observed local behavior and absence of an
 application network dependency do not prove that requested manual gate.
+
+Task09 corrected a pre-existing responsive-lock issue in the shared cancellation
+gate: an admitted filesystem action no longer blocks UI cancellation. Independent
+deterministic real-save testing proves generation/query/review/widget/AX cleanup
+before the held action is released, then locked late completion and complete
+encrypted data after explicit unlock. Active worker keys/buffers can remain until
+uninterruptible I/O/crypto returns. This is not actual OS-lock/suspend evidence.

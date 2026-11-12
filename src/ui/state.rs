@@ -2,7 +2,9 @@
 use crate::{
     domain::{
         clock::{Clock, SystemClock},
-        records::{AccountDraft, AccountId, Timestamp, Vault},
+        records::{
+            AccountDraft, AccountId, BackupCode, DeletionState, RecordState, Timestamp, Vault,
+        },
     },
     error::AppError,
     platform::{
@@ -49,6 +51,108 @@ pub enum ScanAlternative {
     Manual,
 }
 
+/// Explicit operation intent. An edit can only update its selected stable ID.
+pub enum SaveIntent {
+    Import(Vec<AccountDraft>),
+    Create {
+        draft: AccountDraft,
+        codes: Vec<Zeroizing<String>>,
+    },
+    Edit {
+        id: AccountId,
+        expected: RecordState,
+        original: AccountDraft,
+        draft: AccountDraft,
+        replace_secret: bool,
+    },
+}
+impl SaveIntent {
+    fn validate(&self) -> Result<(), AppError> {
+        match self {
+            Self::Import(drafts) => {
+                if drafts.is_empty() || drafts.len() > crate::qr::MAX_CANDIDATES {
+                    return Err(AppError::InvalidRecord);
+                }
+                for draft in drafts {
+                    draft.validate()?;
+                }
+            }
+            Self::Create { draft, codes } => {
+                draft.validate()?;
+                if codes.len() > Vault::MAX_RECORDS {
+                    return Err(AppError::InvalidBackupCodes);
+                }
+                for code in codes {
+                    BackupCode::normalized_value(code).map_err(|_| AppError::InvalidBackupCodes)?;
+                }
+            }
+            Self::Edit { draft, .. } => draft.validate()?,
+        }
+        Ok(())
+    }
+    pub(crate) fn apply(
+        self,
+        vault: &mut Vault,
+        at: Timestamp,
+    ) -> Result<Vec<AccountId>, AppError> {
+        match self {
+            Self::Import(drafts) => drafts
+                .into_iter()
+                .map(|draft| vault.add_account(draft, at))
+                .collect(),
+            Self::Create { draft, codes } => {
+                let codes = codes
+                    .iter()
+                    .map(|value| BackupCode::new(value, at))
+                    .collect::<Result<Vec<_>, _>>()?;
+                let id = vault.add_account(draft, at)?;
+                if !codes.is_empty() {
+                    vault.add_backup_set(id, codes, at)?;
+                }
+                Ok(vec![id])
+            }
+            Self::Edit {
+                id,
+                expected,
+                original: snapshot,
+                draft,
+                replace_secret,
+            } => {
+                let original = vault
+                    .accounts()
+                    .iter()
+                    .find(|a| a.id() == id)
+                    .ok_or(AppError::StaleAccount)?;
+                let live = original.credential();
+                if original.state() != expected
+                    || original.state().deletion != DeletionState::Active
+                    || snapshot.service() != live.service()
+                    || snapshot.website() != live.website()
+                    || snapshot.account_identifier() != live.account_identifier()
+                    || !snapshot.duplicate_criteria(live).0
+                {
+                    return Err(AppError::StaleAccount);
+                }
+                // Preservation is enforced at the transaction boundary too;
+                // no placeholder/blank editor seed can overwrite the real seed.
+                let draft = if replace_secret {
+                    draft
+                } else {
+                    AccountDraft::new(
+                        draft.service(),
+                        draft.website(),
+                        draft.account_identifier(),
+                        original.credential().secret().clone(),
+                        draft.settings(),
+                    )?
+                };
+                vault.edit_account(id, draft, at)?;
+                Ok(vec![id])
+            }
+        }
+    }
+}
+
 pub struct AppState {
     repository: Option<Result<VaultStore, AppError>>,
     pub route: Route,
@@ -63,11 +167,24 @@ pub struct AppState {
     scan_alternative: Option<ScanAlternative>,
     imported: Option<Vec<AccountId>>,
     image_busy: bool,
+    #[cfg(test)]
+    next_save_gate: Option<Arc<crate::storage::test_gate::CommitGate>>,
 }
 struct Completion {
     repository: VaultStore,
     outcome: Result<(), AppError>,
     imported: Vec<AccountId>,
+}
+/// Worker-only post-publication check closes the race where UI cancel records
+/// its request but try_lock misses a slot still held by the producer. After
+/// publication unlocks the slot, either this check locks it or a later UI cancel
+/// can acquire it itself. Poll independently rejects stale/cancelled adoption.
+fn finish_publication(cancel: &OperationCancellation, result: &Mutex<Option<Completion>>) {
+    if cancel.is_cancelled()
+        && let Some(completion) = result.lock().unwrap_or_else(|e| e.into_inner()).as_mut()
+    {
+        completion.repository.lock();
+    }
 }
 struct Worker {
     generation: u64,
@@ -79,12 +196,15 @@ struct Worker {
 impl Worker {
     fn cancel(&self) {
         self.cancel.cancel();
-        if let Some(result) = self
-            .result
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .as_mut()
-        {
+        // Never wait on worker publication/cleanup from the UI. If publication
+        // currently owns this slot, its cancellation check and the stale
+        // generation check in poll still prevent unlocked UI adoption.
+        let mut slot = match self.result.try_lock() {
+            Ok(slot) => slot,
+            Err(std::sync::TryLockError::Poisoned(error)) => error.into_inner(),
+            Err(std::sync::TryLockError::WouldBlock) => return,
+        };
+        if let Some(result) = slot.as_mut() {
             result.repository.lock();
         }
     }
@@ -128,6 +248,8 @@ impl AppState {
             scan_alternative: None,
             imported: None,
             image_busy: false,
+            #[cfg(test)]
+            next_save_gate: None,
         }
     }
     pub fn is_unlocked(&self) -> bool {
@@ -189,6 +311,9 @@ impl AppState {
         self.generation
     }
     pub fn lock(&mut self) {
+        self.generation = self.generation.wrapping_add(1);
+        self.query.zeroize();
+        self.pending = None;
         if let Some((_, capture)) = &self.capture {
             capture.cancel();
         }
@@ -203,9 +328,6 @@ impl AppState {
         if let Some(worker) = &self.worker {
             worker.cancel();
         }
-        self.query.zeroize();
-        self.pending = None;
-        self.generation = self.generation.wrapping_add(1);
     }
     pub fn vault_exists(&self) -> Result<bool, AppError> {
         self.repository
@@ -375,6 +497,7 @@ impl AppState {
                 imported: Vec::new(),
             });
             drop(slot);
+            finish_publication(&cancel, &result);
             repaint();
         });
         self.worker = Some(worker);
@@ -388,22 +511,27 @@ impl AppState {
         watch: LifecycleWatch,
         repaint: impl Fn() + Send + 'static,
     ) -> Result<(), AppError> {
+        self.begin_save(SaveIntent::Import(drafts), watch, repaint)
+    }
+    pub fn begin_save(
+        &mut self,
+        intent: SaveIntent,
+        watch: LifecycleWatch,
+        repaint: impl Fn() + Send + 'static,
+    ) -> Result<(), AppError> {
         if self.busy() || self.capture_busy() || self.image_busy {
             return Err(AppError::VaultBusy);
         }
         if !self.is_unlocked() {
             return Err(AppError::VaultLocked);
         }
-        if drafts.is_empty() || drafts.len() > crate::qr::MAX_CANDIDATES {
-            return Err(AppError::InvalidRecord);
-        }
-        for draft in &drafts {
-            draft.validate()?;
-        }
+        intent.validate()?;
         let timeout = self.vault()?.preferences().lock_timeout_seconds();
         let deadline = self.last_activity + Duration::from_secs(timeout.into());
         let cancel =
             OperationCancellation::guarded(move || !watch.changed() && Instant::now() < deadline);
+        #[cfg(test)]
+        let cancel = cancel.with_test_gate(self.next_save_gate.take());
         let mut repository = self.repository.take().ok_or(AppError::VaultBusy)??;
         let result = Arc::new(Mutex::new(None));
         self.worker = Some(Worker {
@@ -416,12 +544,7 @@ impl AppState {
         std::thread::spawn(move || {
             let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 let at = Timestamp(SystemClock.unix_seconds()?);
-                repository.transaction_cancellable(&cancel, |vault| {
-                    drafts
-                        .into_iter()
-                        .map(|draft| vault.add_account(draft, at))
-                        .collect::<Result<Vec<_>, _>>()
-                })
+                repository.transaction_cancellable(&cancel, |vault| intent.apply(vault, at))
             }));
             let (outcome, imported) = match outcome {
                 Ok(Ok(ids)) => (Ok(()), ids),
@@ -441,17 +564,27 @@ impl AppState {
                 imported,
             });
             drop(slot);
+            finish_publication(&cancel, &result);
             repaint();
         });
         Ok(())
     }
+    #[cfg(test)]
+    pub(crate) fn hold_next_save_after_admission(
+        &mut self,
+        gate: Arc<crate::storage::test_gate::CommitGate>,
+    ) {
+        self.next_save_gate = Some(gate);
+    }
     pub fn poll(&mut self, now: Instant) -> Option<Result<(), AppError>> {
         let worker = self.worker.as_ref()?;
-        let mut done = worker
-            .result
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .take()?;
+        let mut slot = match worker.result.try_lock() {
+            Ok(slot) => slot,
+            Err(std::sync::TryLockError::Poisoned(error)) => error.into_inner(),
+            Err(std::sync::TryLockError::WouldBlock) => return None,
+        };
+        let mut done = slot.take()?;
+        drop(slot);
         let current = worker.generation == self.generation && !worker.cancel.is_cancelled();
         if !current {
             done.repository.lock();
@@ -495,6 +628,37 @@ mod tests {
     use super::*;
     use crate::domain::records::Timestamp;
     use zeroize::Zeroizing;
+    #[test]
+    fn cancellation_does_not_wait_for_completion_publication()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let result = Arc::new(Mutex::new(None));
+        let token = OperationCancellation::default();
+        let worker = Worker {
+            generation: 0,
+            cancel: token.clone(),
+            result: result.clone(),
+            importing: true,
+            deadline: None,
+        };
+        std::thread::scope(|scope| {
+            let held = result.lock().unwrap_or_else(|e| e.into_inner());
+            let (sent, received) = std::sync::mpsc::sync_channel(1);
+            scope.spawn(move || {
+                worker.cancel();
+                let _ = sent.send(());
+            });
+            let outcome = received.recv_timeout(Duration::from_secs(2));
+            // Release before assertions/scope joins, even if old blocking code
+            // caused timeout. The test must fail safely instead of hanging.
+            drop(held);
+            assert!(
+                outcome.is_ok(),
+                "UI cancellation must not wait for producer publication"
+            );
+            assert!(token.is_cancelled());
+        });
+        Ok(())
+    }
     #[test]
     fn import_worker_overlap_write_error_retry_and_stale_completion()
     -> Result<(), Box<dyn std::error::Error>> {

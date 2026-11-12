@@ -86,6 +86,8 @@ pub const BODY: Typography = Typography {
     family: TypeFamily::NotoSans,
     case: TextCase::AsWritten,
 };
+/// Shared recovery editor viewport: six BODY rows plus control breathing room.
+pub const MULTILINE_HEIGHT: f32 = BODY.line_height * 6.0 + SMALL_GAP;
 pub const LABEL: Typography = Typography {
     weight: Weight::Semibold,
     ..BODY

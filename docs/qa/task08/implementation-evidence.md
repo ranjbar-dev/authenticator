@@ -231,6 +231,13 @@ same command and passed. No user/reference process was terminated or altered.
 
 ## Remaining gates and limits
 
+Subsequent Task09 review corrected the shared save cancellation implementation:
+atomic admission and nonblocking cancellation replace the old mutex that could
+delay UI Lock behind an admitted filesystem action. Independent held-save and
+publication-race tests passed; all-or-nothing persistence is unchanged. See
+task09/independent-review.md. Active worker memory is not forcibly erased during
+kernel I/O/crypto. Earlier mutex descriptions reflect the Task08 checkpoint.
+
 - Separate UI and focused security/data-loss review subsequently passed within
   the documented functional scope; author did not self-accept or change statuses.
 - Actual networking-disabled journey is **unverified**. No OS network setting was

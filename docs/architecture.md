@@ -1,5 +1,52 @@
 # Architecture and concrete decisions
 
+## Task09 account form and save intents
+
+Review09 correction: `OperationCancellation` uses atomic REQUESTED/ADMITTED bits
+to linearize cancellation against admission of one final replace action. Cancel
+is nonblocking. A separate mutex serializes background actions sharing a token;
+cancel never acquires it. Tokens remain cloneable/defaultable/reusable until
+cancelled, and an unwind guard clears admission after success/error/panic. A
+cancel winning admission prevents the action; an admitted action may subsequently
+complete or fail under the existing atomic file semantics. Admission is not the
+durable commit point: native rename success still is. Lifecycle/idle guards are
+checked just before admission. No schema/crypto/envelope change is involved.
+
+Shell clears its UI-owned review/form/widget buffers before cancelling state;
+state invalidates generation/query/intent first. Cancellation and polling use
+nonblocking completion-slot access. Any late result is checked/locked before UI
+adoption, so UI Lock does not wait for admitted filesystem I/O. Workers recheck
+cancellation after publishing/releasing the slot, closing the race when UI cancel
+could not acquire it. Cancellation does not interrupt native I/O or Argon2, or
+force-clear a worker-owned vault, DEK,
+candidate or scratch while it is using them. Those owners are released/locked
+when the worker returns; framework/allocator/OS copies remain outside guarantees.
+
+`ui::import_review::Editor` now renders the shared account field tree for QR,
+manual creation and stable-ID editing. `ReviewMode` distinguishes these operations;
+the Account edit holds an ephemeral original draft/state for conflict checking,
+starts with a blank replacement-seed buffer and preserves the existing seed unless
+Change secret is deliberately enabled. The save worker verifies the complete
+original snapshot, including same-second metadata/settings/seed changes, and
+rejects missing/trashed targets. Edit updates only that ID, retaining creation,
+icon, memberships and existing recovery sets/used states. New duplicate entries
+remain explicitly separate; an edit's duplicate warning excludes itself.
+
+`AppState::begin_save(SaveIntent)` generalizes the existing sole-owner cancellable
+worker; `begin_import` delegates to Import intent. Create can add an account and
+new recovery set atomically. Edit and approved QR batches use the same detached
+whole-vault validation/encryption/rename gate and stale lifecycle handling. No
+repository/key clone, second committed-data cache or format migration is added.
+Ordinary errors retain the unlocked owner and form; lock discards late results.
+
+`domain::recovery_input::RecoveryInput` provides Task15's reusable text rules:
+optional initial UTF-8 BOM, LF/CRLF, <=1MiB, trim before domain validation, omit
+blanks, <=10,000 nonblank lines and <=4096 bytes per value. Exact duplicate removal
+requires explicit review tied to unchanged input. New codes begin unused. Pure
+`BackupCode::normalized_value` avoids creating random IDs during preview. Account
+Edit does not implicitly replace a recovery set; its standalone editor remains
+Task15. Details, actual relaunch/HMAC proof and review limits: task09 QA evidence.
+
 ## Task08 editable review and atomic import
 
 The existing ROOT shell now completes capture → bounded QR decode → explicit
@@ -25,9 +72,9 @@ Future account editing/backup merge must implement their own deliberate policies
 oversized batches and invalid drafts before handing its sole repository to one
 worker. No store/key clone is created. `transaction_cancellable` applies the whole
 batch to a detached candidate and uses the existing authenticated codec and atomic
-ciphertext writer. Its cancellation mutex and additional lifecycle/idle guard are
-checked at the rename gate. Before that gate, cancellation/failure leaves committed
-memory/disk unchanged. Once rename has won, lock/cancel can leave the **whole**
+ciphertext writer. Its atomic cancellation admission and lifecycle/idle guard are
+checked before the final replace action. Before admission, cancellation leaves
+committed memory/disk unchanged. Once action admission has won, lock/cancel can leave the **whole**
 encrypted batch committed; no false rollback promise or postcommit deletion exists.
 Generations/cancellation reject late results and lock the worker-owned repository.
 Recoverable write conflicts/failures return the unlocked repository and retain the
@@ -152,12 +199,13 @@ erased by egui.
 Argon2 runs off the paint/event thread. It cannot be safely interrupted mid-call;
 its bounded scratch/passphrase/temporary keys drop when that call returns. The
 UI remains cancellable and never adopts a cancelled unlocked result. A completed
-but unpolled result is locked synchronously when cancelled. Closing cancels
-without waiting for the KDF thread. Storage's create cancellation gate shares a
-mutex with the final same-volume rename: cancellation before that gate prevents
-commit, cancellation after rename may leave a complete encrypted vault requiring
-unlock. Cancellation waits only for an already-entered native rename, not KDF or
-temporary-file construction. Original transaction semantics and format are intact.
+but unpolled result is locked when its slot is available without waiting;
+generation/token checks also reject it before adoption. Closing requests cancel
+without waiting for the KDF/filesystem worker. The former shared cancellation/
+rename mutex was corrected by Task09 review: atomic admission now prevents work
+if cancel wins, while an admitted final replace may leave a complete encrypted
+vault requiring unlock. Active worker-owned key/plaintext lifetimes are not
+forcibly interrupted. Native rename remains the commit point; format is intact.
 
 Idle expiry uses `Instant`, checks before recording new input and requests a
 200ms repaint tick. Default remains 300 seconds; Settings saves 60/300/900/1800

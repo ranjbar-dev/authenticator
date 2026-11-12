@@ -25,6 +25,9 @@ pub enum AppError {
     VaultLocked,
     VaultBusy,
     InvalidPassphrase,
+    InvalidBackupCodes,
+    ReviewBackupDuplicates,
+    StaleAccount,
 }
 
 impl fmt::Display for AppError {
@@ -56,6 +59,9 @@ impl fmt::Display for AppError {
             Self::VaultLocked => "Unlock the vault to continue.",
             Self::VaultBusy => "The vault is open in another instance. Close it and try again.",
             Self::InvalidPassphrase => "Use a passphrase between 12 and 1024 UTF-8 bytes.",
+            Self::InvalidBackupCodes => "Enter one backup code per line: up to 1 MiB, 10,000 nonblank lines and 4096 bytes per code. Internal control characters are not allowed.",
+            Self::ReviewBackupDuplicates => "Review and acknowledge removal of exact duplicate backup codes before saving.",
+            Self::StaleAccount => "This account changed or is no longer active. Cancel and reopen the account to edit it safely.",
         })
     }
 }

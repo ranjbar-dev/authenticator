@@ -7,6 +7,101 @@ use std::{io::Write, process::Command};
 
 type TestResult = Result<(), Box<dyn std::error::Error>>;
 #[test]
+fn account_with_recovery_and_edits_are_atomic_on_fault_cancel_and_validation() -> TestResult {
+    use crate::ui::{import_review::ImportReview, state::SaveIntent};
+    use std::sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    };
+    let (dir, mut store) = fixture()?;
+    let original = fs::read(dir.path().join("vault.bin"))?;
+    let accounts = store.vault()?.accounts().len();
+    let sets = store.vault()?.backup_sets().len();
+    let draft = store.vault()?.accounts()[0].credential().clone();
+    let intent = || SaveIntent::Create {
+        draft: draft.clone(),
+        codes: vec![
+            Zeroizing::new("new-code-one".into()),
+            Zeroizing::new("new-code-two".into()),
+        ],
+    };
+    for fault in [
+        files::WriteFault::AfterPartial,
+        files::WriteFault::BeforeReplace,
+    ] {
+        store.fault = fault;
+        let result = store.transaction_cancellable(&OperationCancellation::default(), |v| {
+            intent().apply(v, Timestamp(10))
+        });
+        assert_eq!(result.err(), Some(AppError::StorageUnavailable));
+        assert_eq!(store.vault()?.accounts().len(), accounts);
+        assert_eq!(store.vault()?.backup_sets().len(), sets);
+        assert_eq!(fs::read(dir.path().join("vault.bin"))?, original);
+        assert_eq!(fs::read_dir(dir.path())?.count(), 2);
+    }
+    store.fault = files::WriteFault::None;
+    let allowed = Arc::new(AtomicBool::new(true));
+    let guard = allowed.clone();
+    let cancel = OperationCancellation::guarded(move || guard.load(Ordering::SeqCst));
+    let result = store.transaction_cancellable(&cancel, |v| {
+        let ids = intent().apply(v, Timestamp(10))?;
+        allowed.store(false, Ordering::SeqCst);
+        Ok(ids)
+    });
+    assert_eq!(result.err(), Some(AppError::VaultLocked));
+    assert_eq!(store.vault()?.accounts().len(), accounts);
+    assert_eq!(fs::read(dir.path().join("vault.bin"))?, original);
+    // Duplicate values bypassing normalizer fail after candidate account add,
+    // proving the enclosing transaction never commits a partial account.
+    let result = store.transaction(|v| {
+        SaveIntent::Create {
+            draft: draft.clone(),
+            codes: vec![Zeroizing::new("same".into()), Zeroizing::new("same".into())],
+        }
+        .apply(v, Timestamp(10))
+    });
+    assert_eq!(result.err(), Some(AppError::InvalidRecord));
+    assert_eq!(store.vault()?.accounts().len(), accounts);
+    assert_eq!(fs::read(dir.path().join("vault.bin"))?, original);
+    let id = store.transaction(|v| intent().apply(v, Timestamp(10)))?[0];
+    assert_eq!(store.vault()?.accounts().len(), accounts + 1);
+    assert_eq!(store.vault()?.backup_sets().len(), sets + 1);
+    let committed = fs::read(dir.path().join("vault.bin"))?;
+    let account = store
+        .vault()?
+        .accounts()
+        .iter()
+        .find(|a| a.id() == id)
+        .ok_or("new account absent")?;
+    let mut form = ImportReview::edit(account)?;
+    form.editors[0].service.push_str(" changed");
+    store.fault = files::WriteFault::BeforeReplace;
+    let edit = form.save_intent(store.vault()?)?;
+    assert_eq!(
+        store.transaction(|v| edit.apply(v, Timestamp(11))).err(),
+        Some(AppError::StorageUnavailable)
+    );
+    assert_eq!(fs::read(dir.path().join("vault.bin"))?, committed);
+    store.fault = files::WriteFault::None;
+    let edit = form.save_intent(store.vault()?)?;
+    store.transaction(|v| edit.apply(v, Timestamp(11)))?;
+    store.lock();
+    store.unlock(pass())?;
+    assert_eq!(store.vault()?.accounts().len(), accounts + 1);
+    assert_eq!(store.vault()?.backup_sets().len(), sets + 1);
+    let codes = store
+        .vault()?
+        .backup_sets()
+        .iter()
+        .find(|s| s.account_id() == id)
+        .ok_or("recovery set absent")?
+        .codes();
+    assert_eq!(codes.len(), 2);
+    assert!(codes.iter().all(|c| c.used_at().is_none()));
+    scan(dir.path())?;
+    Ok(())
+}
+#[test]
 fn import_batch_fault_cancel_at_commit_and_success_are_atomic() -> TestResult {
     use std::sync::{
         Arc,

@@ -305,39 +305,50 @@ mod cancellation_tests {
     #[test]
     fn cancellation_and_rename_gate_have_one_linearization_order()
     -> Result<(), Box<dyn std::error::Error>> {
-        use std::sync::{
-            Arc,
-            atomic::{AtomicBool, Ordering},
-            mpsc,
-        };
+        use std::sync::{Arc, mpsc};
+        use std::time::Duration;
         let token = OperationCancellation::default();
         let commit_token = token.clone();
-        let (entered_tx, entered_rx) = mpsc::sync_channel(1);
-        let (release_tx, release_rx) = mpsc::sync_channel(1);
-        let commit = std::thread::spawn(move || {
-            commit_token.commit(|| {
-                let _ = entered_tx.send(());
-                let _ = release_rx.recv();
-                Ok(())
-            })
-        });
-        entered_rx.recv()?;
-        let done = Arc::new(AtomicBool::new(false));
-        let cancellation_done = done.clone();
-        let cancel_token = token.clone();
-        let (attempt_tx, attempt_rx) = mpsc::sync_channel(1);
-        let cancellation = std::thread::spawn(move || {
-            let _ = attempt_tx.send(());
-            cancel_token.cancel();
-            cancellation_done.store(true, Ordering::SeqCst);
-        });
-        attempt_rx.recv()?;
-        assert!(!done.load(Ordering::SeqCst));
-        release_tx.send(())?;
-        assert_eq!(commit.join().map_err(|_| "commit panic")?, Ok(()));
-        cancellation.join().map_err(|_| "cancel panic")?;
-        assert!(token.is_cancelled());
+        let gate = Arc::new(crate::storage::test_gate::CommitGate::default());
+        std::thread::scope(|scope| -> Result<(), Box<dyn std::error::Error>> {
+            // Release on assertion/error BEFORE scoped threads are joined.
+            let _release_on_failure = gate.release_on_drop();
+            let held = gate.clone();
+            let commit = scope.spawn(move || {
+                commit_token.commit(|| {
+                    held.hold_admitted_action();
+                    Ok(())
+                })
+            });
+            assert!(gate.wait_entered(Duration::from_secs(5)));
+            let cancel_token = token.clone();
+            let (done_tx, done_rx) = mpsc::sync_channel(1);
+            scope.spawn(move || {
+                cancel_token.cancel();
+                let _ = done_tx.send(());
+            });
+            done_rx.recv_timeout(Duration::from_secs(2))?;
+            assert!(
+                !gate.is_released(),
+                "cancel returns while admitted action stays held"
+            );
+            assert!(token.is_cancelled());
+            gate.release();
+            assert_eq!(commit.join().map_err(|_| "commit panic")?, Ok(()));
+            Ok(())
+        })?;
         assert_eq!(token.commit(|| Ok(())), Err(AppError::VaultLocked));
+        let reusable = OperationCancellation::default();
+        assert_eq!(
+            reusable.commit(|| Err::<(), _>(AppError::StorageUnavailable)),
+            Err(AppError::StorageUnavailable)
+        );
+        assert_eq!(reusable.commit(|| Ok(())), Ok(()));
+        let panic = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            reusable.commit::<()>(|| panic!("disposable admitted action panic"))
+        }));
+        assert!(panic.is_err());
+        assert_eq!(reusable.commit(|| Ok(())), Ok(()));
         Ok(())
     }
 }

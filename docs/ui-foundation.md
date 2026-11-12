@@ -1,5 +1,42 @@
 # Shared Rust UI foundation
 
+Review09 corrections preserve the screen hierarchy. Duplicate-code approval now
+clears its contradictory global warning immediately; disabling backup input also
+clears code-specific feedback, while unrelated metadata errors and input remain.
+Changing code text still invalidates approval. Lock clears UI-owned buffers/
+histories and state generation/query without waiting for an admitted filesystem
+replace, and completion-slot checks are nonblocking. A held actual-save regression
+verifies a credential-free locked AX frame before release. The active worker may
+retain its vault/key/scratch until uninterruptible I/O/crypto returns; responsive
+UI concealment does not imply forced key erasure or post-admission rollback.
+
+Task09 keeps Account creation/editing in the existing ROOT holder, with shared
+Back/Save/Cancel, a Keep editing/Discard guard, reference-order labeled fields,
+deliberate seed replacement, and the same field tree as QR review. Collapsed
+Advanced displays the actual parameter summary; expanded native labeled combo
+boxes use complete BODY metrics for current/options text and ON_BLUE/BLUE for a
+selected option. Tab/Space operate them, selection closes and restores focus, and
+Escape closes a popup before considering form cancellation. A shared masked
+multiline field supports optional creation-time recovery codes, duplicate review
+and intentional reveal. Preview counts are cached on text changes, and changing
+input clears stale validation feedback. No private visual theme was added.
+The multiline input has an inner scroll viewport capped at six BODY rows plus
+the shared8-point gap; focus/outer-scroll targets and AX bounds cover that visible
+viewport. Text selection does not initiate content drag scrolling. Actual20-line
+pointer/key/Save checks at340/600 and a40-line compact geometry regression cover
+the long-input state; Save/Cancel remain near the preview instead of below every
+line of content.
+
+Concealed native password inputs mask both layout and full AX text. Intentional
+Reveal uses visible layout and can expose AX TextRun children even though the
+parent retains PasswordInput semantics; it must not be described as secret-free
+accessibility in revealed mode. Native Copy/Cut do not emit clipboard text in
+either mode; Cut may delete the selection. Undo histories are released every pass,
+and lock/form exit clears widget state and owned sensitive buffers with documented
+framework/OS limits. Task09's full-node/clipboard/actual multiline metrics tests
+and actual340/600/960 pointer/key/screenshots are in its QA handoff. The native
+Task07 GDI typography exception remains unchanged.
+
 Task08 extends the same ROOT codes screen and scroll holder with explicit
 candidate choice, labeled editable review and committed account/code cards.
 Screenshot to Scan remains primary, with local image and manual entry directly
