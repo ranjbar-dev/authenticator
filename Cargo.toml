@@ -26,11 +26,14 @@ url = "=2.5.8"
 argon2 = { version = "=0.6.0", default-features = false, features = ["alloc", "zeroize"] }
 chacha20poly1305 = { version = "=0.11.0", default-features = false, features = ["alloc", "zeroize"] }
 getrandom = "=0.4.3"
+image = { version = "=0.25.10", default-features = false, features = ["png", "jpeg"] }
+quircs = "=0.10.3"
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.61", features = ["Win32_UI_WindowsAndMessaging", "Win32_Storage_FileSystem", "Win32_Security", "Win32_Security_Authorization", "Win32_System_Threading", "Win32_System_Memory", "Win32_UI_Shell", "Win32_System_Com", "Win32_System_RemoteDesktop", "Win32_System_Power", "Win32_System_LibraryLoader", "Win32_Graphics_Gdi"] }
 
 [dev-dependencies]
+qrcode = { version = "=0.14.1", default-features = false }
 tempfile = "3.27"
 
 [lints.rust]

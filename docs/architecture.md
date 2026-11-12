@@ -141,3 +141,76 @@ Official sources checked on 12 November 2026, alongside downloaded crate source/
 - [RFC 6238](https://www.rfc-editor.org/rfc/rfc6238) and [RFC 4226](https://www.rfc-editor.org/rfc/rfc4226): published deterministic vector fixtures only. [URL parsing API](https://docs.rs/url/2.5.8/url/struct.Url.html) is used solely for optional website validation, with stricter raw-input checks.
 
 Task 02 implementation evidence is in `docs/qa/task02/implementation-evidence.md`; independent acceptance remains the orchestrator's separate review. There are no task 02 UI/screenshots or real credentials.
+
+## Task 06 local QR service
+
+`src/qr.rs` is a synchronous local service with no UI, capture, vault/store access,
+clipboard, logging, network, icon lookup or writer. It accepts an explicitly
+selected path through `decode_file`, owned encoded bytes through `decode_image`,
+or owned selected-region pixels through `decode_pixels`. Byte/pixel arguments
+are `Zeroizing<Vec<u8>>`, consumed even on failure. No source path, filename,
+image, raw URI or unvalidated text is returned. It does not open the default
+profile or read any vault. The existing storage transaction API remains unchanged;
+this service has no save/import operation.
+
+| Boundary | Exact limit and behavior |
+|---|---|
+| Formats | Content-sniffed PNG and JPEG only; extensions ignored; image defaults/rayon/other format features disabled. PNG palette/low-bit data expands; 8/16-bit grayscale, gray-alpha, RGB and RGBA output accepted. PNG's initial image only; no animation traversal or metadata/orientation application. QR quarter-turn rotations are handled by recognition. |
+| Encoded input | 8,388,608 bytes (8 MiB). Path metadata rejects nonregular files/symlinks and overcap lengths before open; file handle metadata must also describe a regular file within the cap, then a `take(cap+1)` read catches growth. A single cap+1 reserved, zeroizing buffer prevents growth reallocations of the app-owned file copy. No file content is changed or copied to another path. Filesystem I/O timing itself is OS-controlled; this is not a file-open timeout guarantee against a malicious concurrent path replacement or unresponsive device. |
+| Dimensions | Both nonzero and at most 4,096, with checked multiplication and at most 4,194,304 pixels. PNG IHDR and JPEG segment/SOF dimensions checked before creating a format decoder; decoder dimensions must agree. JPEG segment ranges are checked against the bounded input before traversal. |
+| Decoder allocation | At most 33,554,432 bytes (32 MiB) in `image::Limits::max_alloc`, set before `into_decoder` (including PNG header/ancillary handling). Width/height limits are strict; max_alloc is an upstream best-effort decoder budget, **not** a total process-memory limit. The app independently checks decoded `total_bytes` before allocating its output; worst supported output is 8 bytes/pixel. Encoded copies, grayscale, QR workspace and codec scratch are additional bounded buffers. |
+| Capture layout | Tightly packed top-to-bottom `Gray8`, `Rgb8`, `Rgba8` or `Bgra8`; exact length = width × height × channels, no row padding/stride, premultiplication or orientation flag. Straight alpha composites over white. The task07 adapter must convert padded/bottom-up GDI data and set its unused alpha byte to 255; passing GDI's reserved zero byte as alpha would whiten the image. The producer must enforce these dimensions/bytes **before** capture allocation as well. |
+| Recognition | `quircs 0.10.3` internally caps regions at 65,534, capstones at 32 and grids at 8; grouping is limited by those capstones. Recognition runs once over bounded pixels. At most eight extracted grids are collected in a pre-reserved buffer using `take(8)`; saturation (8 grids, 32 capstones or 65,534 regions) fails the whole scan before any payload decode. Review maximum is 7 codes. Saturation may conservatively reject a busy image; retry with a smaller region. Never offer a silently truncated batch. |
+| Payload | At most 2,048 decoded bytes per code, strict UTF-8, no controls; then the existing strict `parse_totp_uri` runs without changing its URI policy. Quircs' own payload assembly is independently bounded at 8,896 bytes before the service's tighter check. No library error text is formatted. |
+
+`ScanReview::candidates` preserves per-code outcomes: `Supported(AccountDraft)`,
+`Unsupported`, `MalformedCredential(AppError)`, `InvalidPayload`, or
+`DecodeFailure`. Unsupported schemes/types have their own outcome; malformed
+TOTP settings/secret/issuer/unknown parameters preserve the parser's safe fixed
+error. No detected code returns `QrError::NoQr`; bad image data returns
+`DecodeFailure`, distinct from format, file, size and candidate-limit errors.
+A damaged detected QR can coexist with a valid draft. Review and every candidate
+have completely redacted Debug, including metadata. Draft secrets and metadata
+already zeroize on drop through task02's owners. `requires_choice` is true when
+more than one supported credential exists, including repeated QR credentials;
+there is no default selection, deduplication, automatic save or import.
+
+App-owned encoded, decoded-image, grayscale and recognition pixel buffers zeroize
+on exit. Extracted grid bitmaps have a clearing Drop wrapper; successful decoded
+payload ownership transfers immediately into Zeroizing and drops after parsing.
+Dependency internals are an explicit limitation: `image`'s JPEG decoder copies
+encoded input; PNG metadata/scratch and JPEG codec scratch are library-owned;
+quircs allocates/reallocates payloads internally and may drop partial payloads
+on decode failure, with non-zeroizing stack/ECC/flood-fill/geometry scratch.
+Copies moved by Rust/compiler/allocator and OS pagefile/dumps also cannot be
+guaranteed cleared. Nothing is persisted by this service, and no complete memory
+erasure claim is made. Defensive `catch_unwind` maps upstream decoder assertions
+to the fixed decode error; the app's existing panic hook suppresses payload
+printing. This is not a sandbox or a hard wall-clock deadline. CPU/input work is
+bounded by encoded bytes, pixels and detector/candidate caps, not interruptible
+mid-codec. Later tasks should run it off the UI thread and discard stale results.
+
+Task07 owns actual capture and cancellation. Task08 must require an unlocked
+session and explicit selection/editable review/Save, use the existing generation
+guard on lock/cancel to discard pending results, and commit only selected validated
+drafts atomically through storage. The service alone does not enforce vault state.
+No UI/hardware acceptance is claimed in task06.
+
+Dependency/API review on 12 November 2026 used downloaded pinned source plus the
+official [image API](https://docs.rs/image/0.25.10/image/),
+[decoder limits](https://docs.rs/image/0.25.10/image/struct.Limits.html),
+[image repository](https://github.com/image-rs/image),
+[quircs API](https://docs.rs/quircs/0.10.3/quircs/) and
+[maintainer repository](https://github.com/dignifiedquire/quircs).
+`image =0.25.10` with only png/jpeg resolves png0.18.1, zune-jpeg0.5.15 and
+zune-core0.5.3; `quircs =0.10.3` supplies existing QR detection/decoding primitives.
+`qrcode =0.14.1` is dev-only, defaults off, for disposable in-memory fixtures.
+Do not copy upstream README examples that print QR payloads or open arbitrary
+paths through a global image loader. Source inspection verified allocation,
+region/capstone/grid/payload limits and identified the memory-copy limits above.
+`cargo audit --json` using RustSec database commit
+`af7b3ec33460b8e2de8d422e16d628518891a519` reported zero known vulnerabilities;
+three existing unmaintained notices concern zbus_names/zvariant/zvariant_derive
+in the Unix accessibility dependency tree, not the new decoding path. No quircs
+advisory matched the current RustSec listing. This is a point-in-time dependency
+check, not certification of decoder security or future maintenance.

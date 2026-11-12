@@ -2,5 +2,6 @@
 pub mod domain;
 pub mod error;
 pub mod platform;
+pub mod qr;
 pub mod storage;
 pub mod ui;

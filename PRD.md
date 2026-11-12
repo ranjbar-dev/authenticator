@@ -1,6 +1,6 @@
 # Product Requirements Document: Authenticator
 
-**Status:** Implementation in progress; tasks01–04 accepted; task05 implementation reviewed with hardware/integration QA open; tasks06–24 pending
+**Status:** Implementation in progress; tasks01–04 accepted; task05 implementation reviewed with hardware/integration QA open; task06 accepted; tasks07–24 pending
 **Basis:** Direct inspection of the running Windows app “Authenticator App · 2FA” on 12 November 2026.  
 **Purpose:** Define Authenticator, a Rust desktop app matching the inspected reference UI, with screenshot-based 2FA import as its defining feature and encrypted local-only storage.  
 **Repository:** https://github.com/ranjbar-dev/authenticator  
@@ -265,3 +265,5 @@ Task03 implements the encrypted local storage API with Argon2id-wrapped random D
 Task04 now supplies the shared native Rust shell, three tabs, central theme with bundled OFL NotoSans400/600, whole typography roles, labeled plain/masked fields, root dialogs, status/cards and real repository lock gating. UI screenshots and native pointer/keyboard/accessibility checks cover shared controls, empty disposable vault and appzoom size matrix. This is not a full account/capture workflow. Exact reference pixels and physicalDPI/Narrator remain unverified; see docs/ui-foundation.md and docs/qa/task04/. Separate checker calibration detected a source-level planted typography defect; copied-executable launch failed, so no live visual-calibration sensitivity is claimed.
 
 Task05 implements localpassphrase create/unlock forms, asyncKDF work, explicitCtrlL/Lock, encryptedidlepreference default300seconds, nativeWTS/powernotification listener andgeneration/cancellation/secretwidget cleanup. Full45tests and distinctUI/securityreview passed; observedrelaunchlocked, persistedtimeout andactual3secondisolatedidleexpiry. ActualOSsessionlock/hardwaresuspend delivery andfuturecapture/import/revealedcode integration remainunverified; task05 remainsopen for thosegates. See docs/qa/task05/implementation-evidence.md. No complete hardware ormemory-erasure assurance is claimed.
+
+Task06 supplies local bounded PNG/JPEG and packedpixel QR decoding, strict validated reviewcandidates andmixed/failure outcomes. Limits:8MiBencoded,4096axis,4,194,304pixels,32MiBdecoded budget,2048-byte payload and7candidates; detector saturation rejects ratherthan silentlytruncates. Transparentimages compositeoverwhite; nativeGDIproducer mustsetreservedalpha255. No screenshot/payload persistence orruntime network added. Distinctreview approved; realcapture/editableimport integration remains07/08. See docs/architecture.md and docs/qa/task06/.

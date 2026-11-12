@@ -1,6 +1,6 @@
 # Task 06: Bounded local image and QR decoding
 
-Status: todo
+Status: done
 Priority: P0 foundation / screenshot-first
 Dependencies: 02, 03
 Requirements: FR-2.2–4, FR-2A.3/5/6; PRD §8
@@ -11,17 +11,17 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Implementation
 
-- [ ] Implement a local QR service accepting in-memory capture pixels and PNG/JPEG image files. Sniff content safely, bound file size, pixel dimensions, decoded allocation and payload/count limits, and return structured review candidates.
-- [ ] Feed every candidate through the strict TOTP parser. Distinguish no QR, unsupported QR, malformed credential and decode failure. Handle multiple supported QR codes without silently importing all.
-- [ ] Do not save screenshots, raw QR payloads or original image files; retain only validated in-memory review data until explicit save. No network lookups or website/icon fetching.
-- [ ] Use deterministic disposable fixtures covering valid algorithms/periods, noisy/rotated QR, malformed images and oversized dimensions. Document supported formats and limits.
+- [x] Implement a local QR service accepting in-memory capture pixels and PNG/JPEG image files. Sniff content safely, bound file size, pixel dimensions, decoded allocation and payload/count limits, and return structured review candidates.
+- [x] Feed every candidate through the strict TOTP parser. Distinguish no QR, unsupported QR, malformed credential and decode failure. Handle multiple supported QR codes without silently importing all.
+- [x] Do not save screenshots, raw QR payloads or original image files; retain only validated in-memory review data until explicit save. No network lookups or website/icon fetching.
+- [x] Use deterministic disposable fixtures covering valid algorithms/periods, noisy/rotated QR, malformed images and oversized dimensions. Document supported formats and limits.
 
 ## Acceptance and verification
 
-- [ ] PNG/JPEG and in-memory fixtures yield the same validated candidates and parameters.
-- [ ] No-QR, mixed valid/invalid multiple codes, unsupported schemes and corrupt/oversized images return safe actionable results.
-- [ ] Fuzz/property or targeted adversarial parsing checks show bounded failure without panic/large uncontrolled allocation.
-- [ ] Filesystem/log inspection confirms no raw source or QR payload is persisted.
+- [x] PNG/JPEG and in-memory fixtures yield the same validated candidates and parameters.
+- [x] No-QR, mixed valid/invalid multiple codes, unsupported schemes and corrupt/oversized images return safe actionable results.
+- [x] Fuzz/property or targeted adversarial parsing checks show bounded failure without panic/large uncontrolled allocation.
+- [x] Filesystem/log inspection confirms no raw source or QR payload is persisted.
 
 ## Handoff and completion
 
@@ -33,5 +33,5 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Evidence
 
-Not started. On execution record changed files, test commands/results, sanitized UI evidence paths where applicable, independent reviewer result and commit reference. If blocked, retain incomplete status and record exact cause, attempted remedies and resumption steps.
+Accepted 2026-11-12 after distinct read-only review_06; no blocking parser/privacy/security findings. Exact APIs/limits/dependency sources/clearing limits in docs/architecture.md and docs/qa/task06/implementation-evidence.md. Independent15QR+15domain/foundation tests, lockedallfeatureClippy/fmt/diffchecks pass; inspected full60test/audit evidence.8MiB file,4096axis,4,194,304pixels,32MiBdecoded budget,2048payload,7candidates; saturation rejected before payloaddecode. PNG/JPEG generatedinmemory tests cover24settings,alpha/16bit/rotations/noise,mixed andmalformed,hostilegeometry/ancillarychunks,readgrowth,filesystemimmutability andredaction. Memorybudget isbest-effort, dependency-owned copies/error scratch notguaranteedcleared; no capture/UI/vault writes introduced. Actualcapture/cancel/lock/review/save remain07/08. Commitreferencefollowingcheckpoint.
 
