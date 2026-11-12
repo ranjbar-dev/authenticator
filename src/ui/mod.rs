@@ -1,4 +1,7 @@
-//! Foundation/feasibility UI only; not a completed product shell.
+//! Shared product shell. The original feasibility spike remains diagnostic-only.
+pub mod components;
+pub mod shell;
+pub mod state;
 pub mod theme;
 
 use crate::platform::capture;

@@ -1,0 +1,53 @@
+Window: "Authenticator UI gallery", App: ui_gallery.exe.
+	0 window (region) Authenticator UI gallery Secondary Actions: Raise
+		1 title bar (settable, string) Value: Authenticator UI gallery
+			2 menu bar System ID: MenuBar
+				3 menu item System
+			4 button Minimize
+			5 button Maximize
+			6 button Close
+		7 pane (region)
+			8 text DISPOSABLE UI PREVIEW · no real credentials
+			9 button Shell
+			10 button Controls
+			11 button Preview tools
+		12 pane (region)
+			13 text (heading) Shared controls Value: Shared controls
+			24 text Only a component preview. No records are saved.
+			25 text (heading) Labeled field Value: Labeled field
+			26 text Preview label
+			27 text field (edit) (settable, string) Preview label Value: ac
+			28 text Enter any non-sensitive label.
+			29 button Validate preview
+			48 status bar (status) Preview accepted. Nothing was saved. Value: Preview accepted. Nothing was saved.
+			30 button Open preview dialog
+			31 button Preview help icon
+			32 button Preview add icon
+			33 button Preview lock icon
+			34 button Preview key icon
+			35 button Preview recovery icon
+			36 button Preview settings icon
+			37 button (disabled) Disabled example
+			38 status bar (status) Error example: the operation could not be completed. Value: Error example: the operation could not be completed.
+			39 status bar (status) Information example: your existing data is unchanged. Value: Information example: your existing data is unchanged.
+			40 text Progress example · 60%
+			41 progress bar Progress example · 60% Value: 60
+			42 text Waiting example
+			43 progress bar Waiting example
+			44 text Please wait…
+			45 text (heading) Empty-state example Value: Empty-state example
+			46 text A concise explanation appears near the next action.
+			47 scroll bar
+		49 window (dialog) Preview dialog Secondary Actions: Raise
+			50 text (heading) Preview dialog Value: Preview dialog
+			51 text Dialog label
+			52 text field (edit) (settable, string) Dialog label
+			53 text This is a non-sensitive preview field.
+			54 text Masked preview
+			55 text field (edit) (settable, string) Masked preview Value: •
+			56 text Disposable input only. Never saved.
+			57 button Close preview dialog
+
+Document text: ```
+•
+```

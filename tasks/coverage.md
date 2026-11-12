@@ -7,7 +7,7 @@ Status of every row at plan generation: **planned, not implemented or verified**
 | App name, Rust UI/core, Windows-first architecture | 01, 04, 23 | Build, framework spike, executable/package identity | task01 foundation verified; remaining owning tasks pending |
 | Reference inventory and honest visual evidence | 01, 04, 21 | docs/reference-ui.md and comparison report | task01 foundation verified; remaining owning tasks pending |
 | Screenshot-first primary workflow and local import | 06–08, 21 | Complete capture/review/save/code-verification journey offline | planned |
-| FR-1.1 real cards, icons, code, time, empty/loading/error/locked | 04, 05, 10, 21 | State screenshots and real-vault UI checks | planned |
+| FR-1.1 real cards, icons, code, time, empty/loading/error/locked | 04, 05, 10, 21 | State screenshots and real-vault UI checks | task04 shared shell verified; later workflows/full QA pending |
 | FR-1.2 exact boundaries, sleep/resume, clock problems | 02, 10, 19, 20 | Clock-injected tests and Windows lifecycle checks | task02 domain verified; integration/remaining owners pending |
 | FR-1.3 copy confirmation, near-expiry, safe clipboard cleanup | 10, 16, 20 | Real clipboard ownership/race tests | planned |
 | FR-1.4 search, no results, all six sorts, list/grid persistence | 10, 21 | UI interactions and restart tests | planned |
@@ -39,10 +39,10 @@ Status of every row at plan generation: **planned, not implemented or verified**
 | FR-7.2 counts/status/version/startup/preferences/English UI | 19, 21 | Settings/restart/failure screenshots | planned |
 | FR-7.3 system time/resume, local guidance, no remote clock mutation | 02, 10, 19 | Injected clock and OS behavior evidence | planned |
 | FR-7.4 explicit optional startup and failures | 19, 23 | Registration toggle, denial, package smoke test | planned |
-| FR-8 no Google/app accounts/cloud/sync/multilingual/translation | 01, 04, 19–21 | Source/UI and offline network audit | planned |
+| FR-8 no Google/app accounts/cloud/sync/multilingual/translation | 01, 04, 19–21 | Source/UI and offline network audit | task04 shared shell verified; later workflows/full QA pending |
 | FR-8 all persisted user data encrypted, no uploads | 03, 11, 20 | Ciphertext/artifact/traffic evidence | task03 storage verified; UI/platform/remaining owners pending |
-| PRD §7 compact reference design across all pages/states | 04–05, 07–10, 12–19, 21 | Per-task checklist and independent comparison | planned |
-| PRD §7 resize/scale/contrast/focus/labels/keyboard/Narrator | 04, 21 | Multi-size/DPI and accessibility report | planned |
+| PRD §7 compact reference design across all pages/states | 04–05, 07–10, 12–19, 21 | Per-task checklist and independent comparison | task04 shared shell verified; later workflows/full QA pending |
+| PRD §7 resize/scale/contrast/focus/labels/keyboard/Narrator | 04, 21 | Multi-size/DPI and accessibility report | task04 shared shell verified; later workflows/full QA pending |
 | PRD §8 threat model, crypto/KDF/versioning and key lifetime | 01, 03, 11, 20 | Security design and separate-agent review | task01 foundation verified; remaining owning tasks pending |
 | PRD §8 no secrets/PII in diagnostics, no telemetry or raw captures | 03, 06–08, 20 | Sentinel file/log/crash/network audit | task03 storage verified; UI/platform/remaining owners pending |
 | PRD §8 untrusted parsing bounds, schema checks, transactions | 02, 03, 06, 11, 20 | Adversarial/fault-injection test results | task03 storage verified; UI/platform/remaining owners pending |
@@ -61,3 +61,5 @@ Task01 accepted: implementation 7502fa4, independent review_01 re-review approve
 Task02: separate review_02 approved;20 tests incl published vectors/all24settings, strict bounded parser, redacted aggregates and validated relations pass. See docs/qa/task02/implementation-evidence.md. Full multi-owner UI/persistence rows remain pending.
 
 Task03: review_03 focused security/data-loss review approved after native error-path cleanup;32 main tests plus actual process interruption/lock probes, ACL/sharing checks pass. See docs/qa/task03/implementation-evidence.md and docs/storage-format.md. UI lifecycle, backup and full runtime audits pending.
+
+Task04 accepted after distinct calibration + review_04/re-review. Shared role/contrast/lock-state tests,2 actual editor-metric/password tests, livepointer/key/modal/Lock,9fixedwindow/appzoom samples; source-only calibration limit explicit. See docs/qa/task04/. PhysicalWindowsDPI and complete workflow/accessibility/reference QA remain pending.

@@ -1,0 +1,30 @@
+Window: "Authenticator UI gallery", App: ui_gallery.exe.
+	0 window (region) Authenticator UI gallery Secondary Actions: Raise
+		1 title bar (settable, string) Value: Authenticator UI gallery
+			2 menu bar System ID: MenuBar
+				3 menu item System
+			4 button Minimize
+			5 button Maximize
+			6 button Close
+		7 pane (region)
+			8 text DISPOSABLE UI PREVIEW · no real credentials
+			9 button Shell
+			10 button Controls
+			11 button Preview tools
+		12 pane (region)
+			13 text AUTHENTICATOR · LOCAL VAULT
+			229 text (heading) 2FA Codes Value: 2FA Codes
+			230 button Help for this screen
+			231 button Lock vault
+			232 text Vault unlocked on this device
+			233 tab item 2FA Codes
+			234 tab item Backup Codes
+			235 tab item Settings
+			236 text Search accounts
+			237 text field (edit) (settable, string) Search accounts
+			238 text Search your unlocked vault.
+			239 text (heading) No accounts yet Value: No accounts yet
+			240 text Add an account to keep its verification codes here. Account capture and entry are a later development stage.
+			241 button Add account
+
+The focused UI element is 0 window (region) Authenticator UI gallery Secondary Actions: Raise.

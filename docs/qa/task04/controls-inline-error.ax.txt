@@ -1,0 +1,41 @@
+Window: "Authenticator UI gallery", App: ui_gallery.exe.
+	0 window (region) Authenticator UI gallery Secondary Actions: Raise
+		1 title bar (settable, string) Value: Authenticator UI gallery
+			2 menu bar System ID: MenuBar
+				3 menu item System
+			4 button Minimize
+			5 button Maximize
+			6 button Close
+		7 pane (region)
+			8 text DISPOSABLE UI PREVIEW · no real credentials
+			9 button Shell
+			10 button Controls
+			11 button Preview tools
+		12 pane (region)
+			13 text (heading) Shared controls Value: Shared controls
+			187 text Only a component preview. No records are saved.
+			188 text (heading) Labeled field Value: Labeled field
+			189 text Preview label
+			190 text field (edit) (settable, string) Preview label
+			191 text Enter a preview label.
+			192 button Validate preview
+			193 button Open preview dialog
+			194 button Preview help icon
+			195 button Preview add icon
+			196 button Preview lock icon
+			197 button Preview key icon
+			198 button Preview recovery icon
+			199 button Preview settings icon
+			200 button (disabled) Disabled example
+			201 status bar (status) Error example: the operation could not be completed. Value: Error example: the operation could not be completed.
+			202 status bar (status) Information example: your existing data is unchanged. Value: Information example: your existing data is unchanged.
+			203 text Progress example · 60%
+			204 progress bar Progress example · 60% Value: 60
+			205 text Waiting example
+			206 progress bar
+			207 text Please wait…
+			208 text (heading) Empty-state example Value: Empty-state example
+			209 text A concise explanation appears near the next action.
+			210 scroll bar
+
+The focused UI element is 0 window (region) Authenticator UI gallery Secondary Actions: Raise.

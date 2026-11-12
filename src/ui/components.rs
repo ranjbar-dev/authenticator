@@ -1,0 +1,533 @@
+//! Shared semantic egui controls, with opaque vector icons and quiet focus borders.
+use super::{state::Route, theme};
+use eframe::egui::{self, Color32, Id, Response, Stroke, Ui};
+
+pub fn heading(ui: &mut Ui, text: &str, level: u32) -> Response {
+    let role = if level == 1 {
+        theme::TITLE
+    } else {
+        theme::SECTION
+    };
+    let response = ui.add(egui::Label::new(role.text(text)).wrap());
+    response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Heading, true, text));
+    ui.ctx()
+        .accesskit_node_builder(response.id, |node| node.set_level(level as usize));
+    response
+}
+pub fn body(ui: &mut Ui, text: &str) -> Response {
+    ui.add(egui::Label::new(theme::BODY.text(text)).wrap())
+}
+pub fn secondary(ui: &mut Ui, text: &str) -> Response {
+    ui.add(egui::Label::new(theme::CAPTION.text(text).color(theme::MUTED)).wrap())
+}
+pub fn toolbar<R>(ui: &mut Ui, controls: impl FnOnce(&mut Ui) -> R) -> egui::InnerResponse<R> {
+    ui.horizontal_wrapped(controls)
+}
+
+pub fn card<R>(ui: &mut Ui, content: impl FnOnce(&mut Ui) -> R) -> egui::InnerResponse<R> {
+    egui::Frame::new()
+        .fill(theme::SURFACE)
+        .stroke(Stroke::new(1.0, theme::BORDER))
+        .corner_radius(theme::RADIUS)
+        .inner_margin(theme::PADDING)
+        .show(ui, |ui| {
+            ui.set_width(ui.available_width());
+            content(ui)
+        })
+}
+
+pub fn focus(ui: &Ui, response: &Response) {
+    if response.has_focus() {
+        // Outside the filled button, against its holder; no bright halo.
+        ui.painter().rect_stroke(
+            response.rect.expand(theme::FOCUS_STROKE),
+            theme::CONTROL_RADIUS,
+            Stroke::new(theme::FOCUS_STROKE, theme::FOCUS),
+            egui::StrokeKind::Outside,
+        );
+    }
+}
+#[derive(Clone, Copy)]
+pub enum ButtonStyle {
+    Primary,
+    Secondary,
+}
+pub fn button(ui: &mut Ui, text: &str, style: ButtonStyle) -> Response {
+    let primary = matches!(style, ButtonStyle::Primary);
+    let response = ui.add_sized(
+        [ui.available_width(), theme::CONTROL_HEIGHT],
+        egui::Button::new(theme::LABEL.text(text).color(if primary {
+            theme::ON_BLUE
+        } else {
+            theme::TEXT
+        }))
+        .fill(if primary { theme::BLUE } else { theme::SURFACE })
+        .wrap(),
+    );
+    focus(ui, &response);
+    response
+}
+
+#[derive(Clone, Copy)]
+pub enum Icon {
+    Lock,
+    Help,
+    Plus,
+    Key,
+    Recovery,
+    Settings,
+}
+pub fn paint_icon(ui: &Ui, rect: egui::Rect, icon: Icon, color: Color32) {
+    let center = rect.center();
+    let p = |x: f32, y: f32| center + egui::vec2(x, y) * (theme::ICON_SIZE / 20.0);
+    let stroke = Stroke::new(theme::ICON_STROKE, color);
+    let line = |a, b| {
+        ui.painter().line_segment([a, b], stroke);
+    };
+    match icon {
+        Icon::Plus => {
+            line(p(-7.0, 0.0), p(7.0, 0.0));
+            line(p(0.0, -7.0), p(0.0, 7.0));
+        }
+        Icon::Lock => {
+            ui.painter().rect_stroke(
+                egui::Rect::from_min_max(p(-7.0, -1.0), p(7.0, 9.0)),
+                2.0,
+                stroke,
+                egui::StrokeKind::Inside,
+            );
+            ui.painter().add(egui::Shape::line(
+                vec![
+                    p(-4.0, -1.0),
+                    p(-4.0, -6.0),
+                    p(0.0, -8.0),
+                    p(4.0, -6.0),
+                    p(4.0, -1.0),
+                ],
+                stroke,
+            ));
+            line(p(0.0, 3.0), p(0.0, 6.0));
+        }
+        Icon::Help => {
+            ui.painter().circle_stroke(center, 9.0, stroke);
+            ui.painter().add(egui::Shape::line(
+                vec![
+                    p(-3.0, -4.0),
+                    p(0.0, -6.0),
+                    p(3.0, -4.0),
+                    p(3.0, -1.0),
+                    p(0.0, 1.0),
+                    p(0.0, 3.0),
+                ],
+                stroke,
+            ));
+            ui.painter().circle_filled(p(0.0, 6.0), 1.0, color);
+        }
+        Icon::Key => {
+            ui.painter().circle_stroke(p(-4.0, -3.0), 5.0, stroke);
+            line(p(0.0, 1.0), p(8.0, 9.0));
+            line(p(4.0, 5.0), p(7.0, 2.0));
+            line(p(7.0, 8.0), p(10.0, 5.0));
+        }
+        Icon::Recovery => {
+            ui.painter().rect_stroke(
+                egui::Rect::from_min_max(p(-7.0, -9.0), p(7.0, 9.0)),
+                2.0,
+                stroke,
+                egui::StrokeKind::Inside,
+            );
+            for y in [-4.0, 0.0, 4.0] {
+                line(p(-3.0, y), p(3.0, y));
+            }
+        }
+        Icon::Settings => {
+            ui.painter().circle_stroke(center, 6.0, stroke);
+            ui.painter().circle_stroke(center, 2.0, stroke);
+            for (x, y) in [(0.0, 1.0), (1.0, 0.0), (-1.0, 0.0), (0.0, -1.0)] {
+                line(p(x * 6.0, y * 6.0), p(x * 10.0, y * 10.0));
+            }
+        }
+    }
+}
+pub fn icon_button(ui: &mut Ui, icon: Icon, name: &str) -> Response {
+    let response = ui.add_sized(
+        [theme::CONTROL_HEIGHT; 2],
+        egui::Button::new("").fill(theme::BLUE),
+    );
+    paint_icon(ui, response.rect, icon, theme::ON_BLUE);
+    response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), name));
+    focus(ui, &response);
+    response.on_hover_text(name)
+}
+pub fn icon_tile(ui: &mut Ui, icon: Icon) {
+    let (rect, _) = ui.allocate_exact_size(
+        egui::vec2(theme::CONTROL_HEIGHT, theme::CONTROL_HEIGHT),
+        egui::Sense::hover(),
+    );
+    ui.painter()
+        .rect_filled(rect, theme::CONTROL_RADIUS, theme::BLUE);
+    paint_icon(ui, rect, icon, theme::ON_BLUE);
+}
+
+pub fn tabs(ui: &mut Ui, selected: Route) -> Option<Route> {
+    let mut next = None;
+    // Stack at very small logical widths (e.g. 200% zoom) rather than truncate.
+    let compact = ui.available_width() < theme::COMPACT_TABS_WIDTH;
+    let width = if compact {
+        ui.available_width()
+    } else {
+        (ui.available_width() - theme::SMALL_GAP * 2.0) / 3.0
+    };
+    let render = |ui: &mut Ui| {
+        for route in Route::ALL {
+            let active = route == selected;
+            let response = ui.add_sized(
+                [width, theme::CONTROL_HEIGHT],
+                egui::Button::new(theme::LABEL.text(route.title()).color(if active {
+                    theme::ON_BLUE
+                } else {
+                    theme::TEXT
+                }))
+                .fill(if active { theme::BLUE } else { theme::SURFACE })
+                .selected(active)
+                .wrap(),
+            );
+            response.widget_info(|| {
+                egui::WidgetInfo::selected(egui::Role::Tab, true, active, route.title())
+            });
+            focus(ui, &response);
+            if response.clicked() {
+                next = Some(route);
+            }
+        }
+    };
+    if compact {
+        ui.vertical(render);
+    } else {
+        ui.horizontal(render);
+    }
+    next
+}
+
+pub fn labeled_field(
+    ui: &mut Ui,
+    id: impl std::hash::Hash + std::fmt::Debug,
+    label: &str,
+    value: &mut String,
+    helper: &str,
+    error: Option<&str>,
+) -> Response {
+    labeled_field_impl(ui, id, label, value, helper, error, FieldMode::Plain)
+}
+
+/// Explicit secret adapter: native password semantics AND a masked display
+/// layouter. A custom TextEdit layouter bypasses egui's default masking.
+pub fn labeled_secret_field(
+    ui: &mut Ui,
+    id: impl std::hash::Hash + std::fmt::Debug,
+    label: &str,
+    value: &mut String,
+    helper: &str,
+    error: Option<&str>,
+) -> Response {
+    labeled_field_impl(ui, id, label, value, helper, error, FieldMode::Secret)
+}
+
+#[derive(Clone, Copy)]
+enum FieldMode {
+    Plain,
+    Secret,
+}
+
+fn field_editor(
+    ui: &mut Ui,
+    id: Id,
+    value: &mut String,
+    mode: FieldMode,
+    typography: theme::Typography,
+) -> egui::text_edit::TextEditOutput {
+    let secret = matches!(mode, FieldMode::Secret);
+    let mut layouter = |ui: &Ui, buffer: &dyn egui::TextBuffer, _wrap_width: f32| {
+        // Never hand raw secret text to font layout or a retained Galley job.
+        // Match egui's one replacement character per Unicode scalar so native
+        // cursor/selection character indexes still map to the displayed text.
+        let display = if secret {
+            std::iter::repeat_n(
+                egui::epaint::text::PASSWORD_REPLACEMENT_CHAR,
+                buffer.as_str().chars().count(),
+            )
+            .collect()
+        } else {
+            buffer.as_str().to_owned()
+        };
+        ui.fonts_mut(|fonts| fonts.layout_job(typography.singleline_job(display, theme::TEXT)))
+    };
+    let layout = egui::Layout::centered_and_justified(ui.layout().main_dir());
+    ui.allocate_ui_with_layout(
+        egui::vec2(ui.available_width(), theme::CONTROL_HEIGHT),
+        layout,
+        |ui| {
+            egui::TextEdit::singleline(value)
+                .font(typography.font())
+                .password(secret)
+                .layouter(&mut layouter)
+                .id(id)
+                .show(ui)
+        },
+    )
+    .inner
+}
+
+fn labeled_field_impl(
+    ui: &mut Ui,
+    id: impl std::hash::Hash + std::fmt::Debug,
+    label: &str,
+    value: &mut String,
+    helper: &str,
+    error: Option<&str>,
+    mode: FieldMode,
+) -> Response {
+    ui.push_id(id, |ui| {
+        let label = ui.label(theme::LABEL.text(label));
+        let response = field_editor(ui, ui.scope_id().with("input"), value, mode, theme::BODY)
+            .response
+            .response
+            .labelled_by(label.id);
+        let detail = ui.add(
+            egui::Label::new(theme::CAPTION.text(error.unwrap_or(helper)).color(
+                if error.is_some() {
+                    theme::ERROR
+                } else {
+                    theme::MUTED
+                },
+            ))
+            .wrap(),
+        );
+        ui.ctx().accesskit_node_builder(response.id, |node| {
+            node.set_description(error.unwrap_or(helper));
+            node.push_described_by(detail.id.accesskit_id());
+            if error.is_some() {
+                node.set_invalid(egui::accesskit::Invalid::True);
+            }
+        });
+        focus(ui, &response);
+        response
+    })
+    .inner
+}
+
+#[cfg(test)]
+mod field_tests {
+    use super::*;
+
+    #[test]
+    fn native_editor_uses_complete_typography_and_measured_row_metrics() {
+        let ctx = egui::Context::default();
+        theme::apply(&ctx);
+        let mut frame = ctx.run_ui(egui::RawInput::default(), |root| {
+            egui::CentralPanel::default().show(root, |ui| {
+                let mut value = "MMMMMMMM ".to_owned();
+                let body = field_editor(
+                    ui,
+                    Id::unique("body"),
+                    &mut value,
+                    FieldMode::Plain,
+                    theme::BODY,
+                );
+                assert_eq!(body.galley.job.text, value);
+                assert_eq!(body.galley.rows.len(), 1);
+                assert!((body.galley.rows[0].size.y - theme::BODY.line_height).abs() < 0.01);
+                let format = &body.galley.job.sections[0].format;
+                assert_eq!(format.font_id, theme::BODY.font());
+                assert_eq!(format.extra_letter_spacing, theme::BODY.letter_spacing);
+                // Nonzero tracking and another line height must affect actual
+                // layout, not just be metadata on an ignored role bundle.
+                let varied = theme::Typography {
+                    line_height: 28.0,
+                    letter_spacing: 2.0,
+                    ..theme::BODY
+                };
+                let tracked = field_editor(
+                    ui,
+                    Id::unique("tracked"),
+                    &mut value,
+                    FieldMode::Plain,
+                    varied,
+                );
+                assert!((tracked.galley.rows[0].size.y - 28.0).abs() < 0.01);
+                assert!(tracked.galley.rect.width() > body.galley.rect.width() + 10.0);
+                assert_eq!(tracked.galley.job.text, "MMMMMMMM ");
+            });
+        });
+        frame.textures_delta.clear();
+    }
+
+    #[test]
+    fn secret_editor_galley_contains_only_masked_unicode_characters() {
+        let ctx = egui::Context::default();
+        theme::apply(&ctx);
+        ctx.enable_accesskit();
+        let mut frame = ctx.run_ui(egui::RawInput::default(), |root| {
+            egui::CentralPanel::default().show(root, |ui| {
+                let mut value = "disposable-é🦀".to_owned();
+                let output = field_editor(
+                    ui,
+                    Id::unique("secret"),
+                    &mut value,
+                    FieldMode::Secret,
+                    theme::BODY,
+                );
+                let count = value.chars().count();
+                assert_eq!(output.galley.job.text.chars().count(), count);
+                assert!(
+                    output
+                        .galley
+                        .job
+                        .text
+                        .chars()
+                        .all(|c| c == egui::epaint::text::PASSWORD_REPLACEMENT_CHAR)
+                );
+                assert!(!output.galley.job.text.contains("disposable"));
+                assert_eq!(output.galley.rows[0].glyphs.len(), count);
+                assert!((output.galley.rows[0].size.y - theme::BODY.line_height).abs() < 0.01);
+                assert_eq!(value, "disposable-é🦀");
+            });
+        });
+        frame.textures_delta.clear();
+        let update = frame.platform_output.accesskit_update.as_ref();
+        assert!(update.is_some_and(|tree| {
+            tree.nodes
+                .iter()
+                .any(|(_, node)| node.role() == egui::Role::PasswordInput)
+        }));
+        if let Some(tree) = update {
+            assert!(
+                tree.nodes
+                    .iter()
+                    .all(|(_, node)| node.value() != Some("disposable-é🦀"))
+            );
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+pub enum StatusKind {
+    Info,
+    Success,
+    Error,
+}
+pub fn status(
+    ui: &mut Ui,
+    id: impl std::hash::Hash + std::fmt::Debug,
+    text: &str,
+    kind: StatusKind,
+) {
+    ui.push_id(id, |ui| {
+        let (color, fill) = match kind {
+            StatusKind::Info => (theme::MUTED, theme::SURFACE),
+            StatusKind::Success => (theme::SUCCESS, theme::SURFACE),
+            StatusKind::Error => (theme::ERROR, theme::ERROR_SURFACE),
+        };
+        egui::Frame::new()
+            .fill(fill)
+            .corner_radius(theme::CONTROL_RADIUS)
+            .inner_margin(theme::PADDING)
+            .show(ui, |ui| {
+                ui.set_width(ui.available_width());
+                let response = ui.add(egui::Label::new(theme::BODY.text(text).color(color)).wrap());
+                response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Status, true, text));
+                ui.ctx().accesskit_node_builder(response.id, |node| {
+                    node.set_live(egui::accesskit::Live::Polite)
+                });
+            });
+    });
+}
+pub fn empty_state(ui: &mut Ui, icon: Icon, title: &str, description: &str) {
+    card(ui, |ui| {
+        icon_tile(ui, icon);
+        heading(ui, title, 2);
+        body(ui, description);
+    });
+}
+pub fn progress(ui: &mut Ui, label: &str, fraction: Option<f32>) {
+    body(ui, label);
+    if let Some(fraction) = fraction {
+        let response = ui.add(
+            egui::ProgressBar::new(fraction.clamp(0.0, 1.0))
+                .desired_height(theme::PROGRESS_HEIGHT)
+                .fill(theme::BLUE),
+        );
+        response
+            .widget_info(|| egui::WidgetInfo::labeled(egui::Role::ProgressIndicator, true, label));
+    } else {
+        ui.horizontal(|ui| {
+            let response = ui.spinner();
+            response.widget_info(|| {
+                egui::WidgetInfo::labeled(egui::Role::ProgressIndicator, true, label)
+            });
+            secondary(ui, "Please wait…");
+        });
+    }
+}
+
+/// In-root modal so it uses ROOT's initialized AccessKit adapter.
+pub struct Dialog {
+    pub title: &'static str,
+    pub opener: Id,
+    first_frame: bool,
+}
+/// Call at the beginning of the root UI pass. Egui retains the previous modal
+/// layer for one pass; restoring earlier would immediately surrender focus.
+pub fn restore_dialog_focus(ctx: &egui::Context) {
+    let key = Id::unique("dialog-return-focus");
+    if let Some(opener) = ctx.data(|data| data.get_temp::<Id>(key)) {
+        if ctx.memory(|m| m.top_modal_layer().is_none()) {
+            ctx.memory_mut(|m| m.request_focus(opener));
+            ctx.data_mut(|data| data.remove::<Id>(key));
+        } else {
+            ctx.request_repaint();
+        }
+    }
+}
+impl Dialog {
+    pub fn new(title: &'static str, opener: Id) -> Self {
+        Self {
+            title,
+            opener,
+            first_frame: true,
+        }
+    }
+    /// `content` returns true to close. Escape/backdrop also close and restore focus.
+    pub fn show(
+        &mut self,
+        ctx: &egui::Context,
+        content: impl FnOnce(&mut Ui, bool) -> bool,
+    ) -> bool {
+        let first = self.first_frame;
+        let modal = egui::Modal::new(Id::unique("shared-dialog"))
+            .area(
+                egui::Modal::default_area(Id::unique("shared-dialog")).accessible_name(self.title),
+            )
+            .backdrop_color(theme::SCRIM)
+            .show(ctx, |ui| {
+                ui.set_width(
+                    theme::DIALOG_WIDTH.min(
+                        (ctx.content_rect().width() - f32::from(theme::PADDING) * 2.0)
+                            .max(theme::CONTROL_HEIGHT),
+                    ),
+                );
+                heading(ui, self.title, 2);
+                egui::ScrollArea::vertical()
+                    .max_height((ctx.content_rect().height() - 120.0).max(theme::CONTROL_HEIGHT))
+                    .show(ui, |ui| content(ui, first))
+                    .inner
+            });
+        self.first_frame = false;
+        let close = modal.inner || modal.should_close();
+        if close {
+            ctx.data_mut(|data| data.insert_temp(Id::unique("dialog-return-focus"), self.opener));
+            ctx.request_repaint();
+        }
+        close
+    }
+}

@@ -14,6 +14,14 @@ fn main() -> eframe::Result {
                 .with_resizable(true),
             ..Default::default()
         },
-        Box::new(move |cc| Ok(Box::new(authenticator::ui::FoundationApp::new(cc, spike)))),
+        Box::new(move |cc| {
+            if spike {
+                Ok(Box::new(authenticator::ui::FoundationApp::new(cc, true)))
+            } else {
+                Ok(Box::new(authenticator::ui::shell::AuthenticatorApp::new(
+                    cc,
+                )))
+            }
+        }),
     )
 }

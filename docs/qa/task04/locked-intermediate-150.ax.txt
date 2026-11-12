@@ -1,0 +1,28 @@
+Window: "Authenticator UI gallery", App: ui_gallery.exe.
+	0 window (region) Authenticator UI gallery Secondary Actions: Raise
+		1 title bar (settable, string) Value: Authenticator UI gallery
+			2 menu bar System ID: MenuBar
+				3 menu item System
+			4 button Minimize
+			5 button Maximize
+			6 button Close
+		7 pane (region)
+			8 text DISPOSABLE UI PREVIEW · no real credentials
+			9 button Shell
+			10 button Controls
+			11 button Preview tools
+		12 pane (region)
+			13 text AUTHENTICATOR · LOCAL VAULT
+			14 text (heading) 2FA Codes Value: 2FA Codes
+			15 button Help for this screen
+			16 text Vault locked · credentials hidden
+			17 tab item 2FA Codes
+			18 tab item Backup Codes
+			19 tab item Settings
+			20 text (heading) Your vault is locked Value: Your vault is locked
+			21 text Account names, codes and recovery codes stay hidden until you unlock your local vault.
+			22 button Vault setup and unlock
+			23 text Development build: setup and unlock are the next implementation stage.
+			119 scroll bar
+
+The focused UI element is 0 window (region) Authenticator UI gallery Secondary Actions: Raise.
