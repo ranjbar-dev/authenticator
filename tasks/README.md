@@ -9,7 +9,7 @@ No app implementation has been started by generating this plan. Every initial st
 | Task | Work | Status |
 |---|---|---|
 | 01 | [Rust foundation, reference evidence and architecture](01-foundation-and-decisions.md) | done |
-| 02 | [TOTP engine, data model and credential validation](02-totp-domain-and-uri-parser.md) | todo |
+| 02 | [TOTP engine, data model and credential validation](02-totp-domain-and-uri-parser.md) | done |
 | 03 | [Encrypted local persistence and key management](03-encrypted-local-vault.md) | todo |
 | 04 | [Reference-based Rust shell and shared controls](04-shared-ui-shell.md) | todo |
 | 05 | [Local vault setup, unlock and lock lifecycle](05-vault-setup-and-lock-screen.md) | todo |
@@ -72,4 +72,4 @@ Codex orchestration was checked against the installed CLI help/features and [off
 
 ## Checkpoint
 
-2026-11-12: Task01 accepted after independent review_01/re-review and hosted Windows CI success: https://github.com/ranjbar-dev/authenticator/actions/runs/43227714011. Implementation commit 7502fa4dc82d5904c457f2cfda396d56badf044d pushed to main. Local six tests/build/fmt/clippy and real main AccessKit/pointer/key/overlay/resize/app-zoom checks pass. Exact commands/evidence/limits: docs/qa/task01/implementation-evidence.md. Last accepted task: 01. Next active task: 02 TOTP domain/parser; spawn exactly one implementer with task02/PRD/source paths, review after final. Physical DPI/Narrator/full capture remain later obligations; secondary egui viewport UIA limitation requires native accessible task07 overlay. No close-thread API exposed; completed children are inactive before any next child. Resume: Read tasks/CODEX_PROMPT.md and execute its instructions.
+2026-11-12: Last accepted task02, distinct review_02 approved without material findings. Exact paths/20tests/fmt/clippy/parser/vector/redaction evidence in docs/qa/task02/implementation-evidence.md and task02 Evidence. Task01 implementation7502fa4 + acceptancea727516 pushed; task02 implementation/acceptance commit follows this checkpoint and its SHA goes in the next update. Active next task03 encrypted local vault: read dependency sources and task03, spawn one implementer then focused independent security/data-loss review. No app vault, QR/capture or usable credential UI yet. Physical DPI/Narrator/reference fidelity and native accessible capture overlay remain later obligations. Children complete before next child; runtime has no close-thread API. Resume: Read tasks/CODEX_PROMPT.md and execute its instructions.

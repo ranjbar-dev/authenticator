@@ -8,13 +8,13 @@ Status of every row at plan generation: **planned, not implemented or verified**
 | Reference inventory and honest visual evidence | 01, 04, 21 | docs/reference-ui.md and comparison report | task01 foundation verified; remaining owning tasks pending |
 | Screenshot-first primary workflow and local import | 06–08, 21 | Complete capture/review/save/code-verification journey offline | planned |
 | FR-1.1 real cards, icons, code, time, empty/loading/error/locked | 04, 05, 10, 21 | State screenshots and real-vault UI checks | planned |
-| FR-1.2 exact boundaries, sleep/resume, clock problems | 02, 10, 19, 20 | Clock-injected tests and Windows lifecycle checks | planned |
+| FR-1.2 exact boundaries, sleep/resume, clock problems | 02, 10, 19, 20 | Clock-injected tests and Windows lifecycle checks | task02 domain verified; integration/remaining owners pending |
 | FR-1.3 copy confirmation, near-expiry, safe clipboard cleanup | 10, 16, 20 | Real clipboard ownership/race tests | planned |
 | FR-1.4 search, no results, all six sorts, list/grid persistence | 10, 21 | UI interactions and restart tests | planned |
 | FR-1.5 explicit edit/delete and trash | 09, 18 | Edit/delete/cancel/restore journey | planned |
-| FR-2.1 fields and Base32 validation/normalization | 02, 09 | Parser/unit and editor tests | planned |
+| FR-2.1 fields and Base32 validation/normalization | 02, 09 | Parser/unit and editor tests | task02 domain verified; integration/remaining owners pending |
 | FR-2.2 image/region local QR and editable review | 06–09 | PNG/JPEG and screenshot import tests | planned |
-| FR-2.3 algorithms/digits/periods/defaults/URI preservation | 02, 08, 09 | Standard vectors and all parameter combinations | planned |
+| FR-2.3 algorithms/digits/periods/defaults/URI preservation | 02, 08, 09 | Standard vectors and all parameter combinations | task02 domain verified; integration/remaining owners pending |
 | FR-2.4 safe invalid-input errors, retained edits, duplicate warning | 02, 06, 08, 09 | Negative/duplicate/failure UI tests | planned |
 | FR-2.5 creation with recovery codes and overwrite intent | 09, 15 | Atomic account-plus-codes transaction tests | planned |
 | FR-2A.1 discoverable capture without login/network/file save | 04, 07, 08 | Main-screen action and offline journey | planned |
@@ -47,7 +47,7 @@ Status of every row at plan generation: **planned, not implemented or verified**
 | PRD §8 no secrets/PII in diagnostics, no telemetry or raw captures | 03, 06–08, 20 | Sentinel file/log/crash/network audit | planned |
 | PRD §8 untrusted parsing bounds, schema checks, transactions | 02, 03, 06, 11, 20 | Adversarial/fault-injection test results | planned |
 | PRD §8 locked UI/accessibility, clipboard and endpoint limits | 05, 10, 16, 20 | Lock checks and accurate limitations docs | planned |
-| PRD §9 entities/relations/migrations/rollback/no secret filenames | 02, 03, 11, 18, 20 | Migration/referential integrity/filename tests | planned |
+| PRD §9 entities/relations/migrations/rollback/no secret filenames | 02, 03, 11, 18, 20 | Migration/referential integrity/filename tests | task02 domain verified; integration/remaining owners pending |
 | PRD §10 deterministic clock, separate layers/adapters, offline | 01–03, 06–07, 19–20 | Architecture and adapter tests | task01 foundation verified; remaining owning tasks pending |
 | PRD §11 full correctness/workflow/recovery/privacy/UI/reliability | 02–21, 23–24 | Consolidated regression and QA report | planned |
 | Clean Windows package, English usage/developer/recovery docs | 23 | Package build, clean-profile smoke/recovery | planned |
@@ -57,3 +57,5 @@ Status of every row at plan generation: **planned, not implemented or verified**
 
 Task01 accepted: implementation 7502fa4, independent review_01 re-review approved, Windows CI run 43227714011 succeeded, six local tests and live inert spike evidence in docs/qa/task01/. No full multi-owner requirement row is yet verified. Replace each row's state with verified only after its acceptance checks pass; link commands, report paths and commit IDs here or in owning task evidence. Hardware or reference limitations must stay explicitly unverified. Optional reference-format compatibility may be unsupported with a completed discovery report; mandatory core features may not be silently waived.
 
+
+Task02: separate review_02 approved;20 tests incl published vectors/all24settings, strict bounded parser, redacted aggregates and validated relations pass. See docs/qa/task02/implementation-evidence.md. Full multi-owner UI/persistence rows remain pending.

@@ -1,6 +1,6 @@
 # Product Requirements Document: Authenticator
 
-**Status:** Implementation in progress; task01 Rust foundation independently reviewed, remaining tasks pending  
+**Status:** Implementation in progress; task01 Rust foundation independently reviewed, tasks02–24 pending  
 **Basis:** Direct inspection of the running Windows app “Authenticator App · 2FA” on 12 November 2026.  
 **Purpose:** Define Authenticator, a Rust desktop app matching the inspected reference UI, with screenshot-based 2FA import as its defining feature and encrypted local-only storage.  
 **Repository:** https://github.com/ranjbar-dev/authenticator  
@@ -257,3 +257,5 @@ Plan generation does not constitute implementation. Initial task status is todo,
 ### Current implementation checkpoint (12 November 2026)
 
 Task01 selected eframe/egui 0.37 with AccessKit and Glow for the native Rust UI, Rust MSRV1.95 (tested1.98). The intended Windows distribution is an x64 portable ZIP; actual packaging remains task23. Root accessibility, real pointer/key input, resizing and an inert region viewport spike are evidenced; actual capture, storage and TOTP are not yet implemented. Secondary egui viewport accessibility is limited, so task07 must implement and verify a native accessible Windows capture overlay. Full details and unresolved hardware/reference limits are in docs/architecture.md and docs/qa/task01/implementation-evidence.md. Task01 hosted Windows checks passed on commit7502fa4; the product is not yet usable as an authenticator.
+
+Task02 now implements the validated in-memory schema, deterministic OTP engine and strict bounded URI/Base32 validation. Native TOTP supports SHA1/256/512,6/8digits,15/30/60/120seconds;18 RFC6238 vectors and all24 parameter combinations pass. Domain records and secret wrappers redact Debug; seed duplicates are compared only in unlocked memory. Serialization, encrypted vault and UI integration remain subsequent tasks. See docs/architecture.md for concrete parser/field bounds and issuer policy.

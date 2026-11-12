@@ -11,11 +11,15 @@ pub struct SystemClock;
 
 impl Clock for SystemClock {
     fn unix_seconds(&self) -> Result<u64, AppError> {
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .map(|d| d.as_secs())
-            .map_err(|_| AppError::ClockUnavailable)
+        unix_seconds_at(SystemTime::now())
     }
+}
+
+/// UTC conversion; local timezone and daylight-saving settings never enter OTP.
+pub fn unix_seconds_at(time: SystemTime) -> Result<u64, AppError> {
+    time.duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .map_err(|_| AppError::ClockUnavailable)
 }
 
 /// Test clock never reads or changes the machine's time.

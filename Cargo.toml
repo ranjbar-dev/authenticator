@@ -17,6 +17,12 @@ path = "src/main.rs"
 
 [dependencies]
 eframe = { version = "=0.37.0", default-features = false, features = ["accesskit", "default_fonts", "glow"] }
+data-encoding = "=2.11.1"
+totp-rs = { version = "=6.0.0", default-features = false, features = ["alloc", "zeroize"] }
+zeroize = "=1.9.1"
+subtle = "=2.6.1"
+uuid = { version = "=1.29.2", features = ["v4"] }
+url = "=2.5.8"
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.61", features = ["Win32_UI_WindowsAndMessaging"] }
