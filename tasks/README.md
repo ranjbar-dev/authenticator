@@ -8,7 +8,7 @@ No app implementation has been started by generating this plan. Every initial st
 
 | Task | Work | Status |
 |---|---|---|
-| 01 | [Rust foundation, reference evidence and architecture](01-foundation-and-decisions.md) | in_progress |
+| 01 | [Rust foundation, reference evidence and architecture](01-foundation-and-decisions.md) | done |
 | 02 | [TOTP engine, data model and credential validation](02-totp-domain-and-uri-parser.md) | todo |
 | 03 | [Encrypted local persistence and key management](03-encrypted-local-vault.md) | todo |
 | 04 | [Reference-based Rust shell and shared controls](04-shared-ui-shell.md) | todo |
@@ -72,4 +72,4 @@ Codex orchestration was checked against the installed CLI help/features and [off
 
 ## Checkpoint
 
-2026-11-12: Task01 implementation independently approved by review_01 after material fixes. Six tests/build/fmt/clippy pass; real main AccessKit, pointer/key/overlay/resize/app-zoom checked. Initial hosted CI remains pending: next action commit/push foundation, inspect GitHub Actions, then mark task01 accepted and start task02. Last accepted task: none yet. Baseline SHA f7ea0ccf61051d0aa46359fdcd53cdd809131732; upcoming foundation SHA recorded in following checkpoint. See docs/qa/task01/implementation-evidence.md and task01 Evidence for exact limits. No close-thread API is exposed; children completed before any next child. Resume: Read tasks/CODEX_PROMPT.md and execute its instructions.
+2026-11-12: Task01 accepted after independent review_01/re-review and hosted Windows CI success: https://github.com/ranjbar-dev/authenticator/actions/runs/43227714011. Implementation commit 7502fa4dc82d5904c457f2cfda396d56badf044d pushed to main. Local six tests/build/fmt/clippy and real main AccessKit/pointer/key/overlay/resize/app-zoom checks pass. Exact commands/evidence/limits: docs/qa/task01/implementation-evidence.md. Last accepted task: 01. Next active task: 02 TOTP domain/parser; spawn exactly one implementer with task02/PRD/source paths, review after final. Physical DPI/Narrator/full capture remain later obligations; secondary egui viewport UIA limitation requires native accessible task07 overlay. No close-thread API exposed; completed children are inactive before any next child. Resume: Read tasks/CODEX_PROMPT.md and execute its instructions.

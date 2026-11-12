@@ -71,3 +71,7 @@ Rechecks after material fixes:
 - `rtk cargo test --locked --all-targets --target-dir target/task01-checks` — pass, 6 tests across 4 suites (example added), exit 0.
 
 Ready for independent re-review of this task's foundation/spike scope. Current inert example at material-fix handoff: PID **7904**, returned main window **5638976**, `process:D:\Projects\github\authenticator\target\debug\examples\framework_spike.exe`, title `Authenticator framework spike`. Overlay is closed and app scale restored to 100%. Refresh inventory before input. The spike contains only the inert letter `a`; no credentials/pixels/payloads were imported or captured.
+
+## Parent acceptance checkpoint
+
+Independent reviewer review_01 rechecked material fixes, sanitized screenshots and live pointer/keyboard/overlay behavior and approved task01 scope. Hosted Windows CI passed all format/lint/test/build steps on 7502fa4dc82d5904c457f2cfda396d56badf044d: https://github.com/ranjbar-dev/authenticator/actions/runs/43227714011. Parent accepted task01; future requirements and the explicit physical DPI/Narrator/secondary-overlay/reference limitations above remain unverified. No current security certification or usable vault is implied.

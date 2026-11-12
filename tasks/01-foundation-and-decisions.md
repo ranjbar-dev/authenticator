@@ -1,6 +1,6 @@
 # Task 01: Rust foundation, reference evidence and architecture
 
-Status: in_progress
+Status: done
 Priority: P0 foundation / screenshot-first
 Dependencies: None
 Requirements: PRD §§1–5, 7–10, 12–14
@@ -11,19 +11,19 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Implementation
 
-- [ ] Create the Windows-first Rust workspace, executable named Authenticator, Cargo.lock, module boundaries, local test support, formatting/lint configuration and Windows CI. Document reproducible build/run/test commands and required toolchain.
-- [ ] Use a Rust UI framework; evaluate egui/eframe first with a small accessibility, resizable-window and Windows capture-integration spike. If it cannot meet the PRD, select another Rust UI framework and record evidence; do not substitute a JavaScript/web UI.
-- [ ] Write docs/architecture.md, docs/security-design.md and docs/reference-ui.md. Record the PRD's settled defaults and format/version boundaries before implementing persistence.
-- [ ] Inspect the installed reference app or available screenshots non-destructively if accessible. Record exact evidence paths and observed structure. Never inspect real secrets or change the reference vault. If screenshots/app are unavailable, use PRD §5 as the explicit fallback, record visual details as unverified, and proceed without questions.
-- [ ] Record repository baseline: no application source, components, theme or DESIGN.md existed when tasks were authored. Do not invent reuse counts. Propose one shared Rust theme/components layer for all screens.
-- [ ] Establish secret-safe errors, test-only data directories and .gitignore for real vaults, backups, captures, target output and credentials. Preserve these task files and PRD.
+- [x] Create the Windows-first Rust workspace, executable named Authenticator, Cargo.lock, module boundaries, local test support, formatting/lint configuration and Windows CI. Document reproducible build/run/test commands and required toolchain.
+- [x] Use a Rust UI framework; evaluate egui/eframe first with a small accessibility, resizable-window and Windows capture-integration spike. If it cannot meet the PRD, select another Rust UI framework and record evidence; do not substitute a JavaScript/web UI.
+- [x] Write docs/architecture.md, docs/security-design.md and docs/reference-ui.md. Record the PRD's settled defaults and format/version boundaries before implementing persistence.
+- [x] Inspect the installed reference app or available screenshots non-destructively if accessible. Record exact evidence paths and observed structure. Never inspect real secrets or change the reference vault. If screenshots/app are unavailable, use PRD §5 as the explicit fallback, record visual details as unverified, and proceed without questions.
+- [x] Record repository baseline: no application source, components, theme or DESIGN.md existed when tasks were authored. Do not invent reuse counts. Propose one shared Rust theme/components layer for all screens.
+- [x] Establish secret-safe errors, test-only data directories and .gitignore for real vaults, backups, captures, target output and credentials. Preserve these task files and PRD.
 
 ## Acceptance and verification
 
-- [ ] A clean Windows checkout builds and launches an Authenticator window; formatting, linting and initial CI succeed.
-- [ ] Architecture identifies UI/domain/storage/platform boundaries and an injectable clock; offline runtime has no network adapter.
-- [ ] Framework spike proves keyboard focus, accessible widget labels, resizing and the planned capture overlay are feasible.
-- [ ] Reference evidence and limitations are recorded honestly; security decisions specify encryption, passphrase recovery, atomic writes and key lifetimes before later tasks.
+- [x] A clean Windows checkout builds and launches an Authenticator window; formatting, linting and initial CI succeed.
+- [x] Architecture identifies UI/domain/storage/platform boundaries and an injectable clock; offline runtime has no network adapter.
+- [x] Framework spike proves keyboard focus, accessible widget labels, resizing and the planned capture overlay are feasible.
+- [x] Reference evidence and limitations are recorded honestly; security decisions specify encryption, passphrase recovery, atomic writes and key lifetimes before later tasks.
 
 ## Handoff and completion
 
@@ -35,5 +35,5 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Evidence
 
-Implementation and independent re-review approved 2026-11-12; hosted CI pending. Full commands and sanitized evidence: docs/qa/task01/implementation-evidence.md. Implementer implement_01; distinct reviewer review_01 initially found per-frame drag origin and missing packaging choice, both fixed and independently rechecked. Six tests, fmt, clippy and Windows build pass; real pointer/key/AccessKit, drag/Escape/Cancel/resize/app-zoom checked. Root input failure traced to elevated launch; use helper normal launch. Secondary viewport accessibility remains a documented task07 native-adapter obligation. Physical DPI, Narrator, actual capture and reference pixel fidelity are not task01 passes. Parent is pushing reviewed foundation for initial Windows CI; final acceptance/status awaits that result. Commit reference follows in next checkpoint.
+Implementation and independent re-review approved 2026-11-12; hosted Windows CI passed: https://github.com/ranjbar-dev/authenticator/actions/runs/43227714011 on implementation commit 7502fa4dc82d5904c457f2cfda396d56badf044d. Full commands and sanitized evidence: docs/qa/task01/implementation-evidence.md. Implementer implement_01; distinct reviewer review_01 initially found per-frame drag origin and missing packaging choice, both fixed and independently rechecked. Six tests, fmt, clippy and Windows build pass; real pointer/key/AccessKit, drag/Escape/Cancel/resize/app-zoom checked. Root input failure traced to elevated launch; use helper normal launch. Secondary viewport accessibility remains a documented task07 native-adapter obligation. Physical DPI, Narrator, actual capture and reference pixel fidelity are not task01 passes. Parent verified hosted formatting/lint/tests/Windows build success, accepted scoped task01, and is continuing task02. Review outcome: review_01 approved initial material fixes after separate re-review. Implementation commit 7502fa4dc82d5904c457f2cfda396d56badf044d is pushed to main; this evidence update is a following commit.
 
