@@ -61,7 +61,7 @@ Pinned maintained primitives: argon2 0.6.0 (zeroize, explicit owned scratch), ch
 
 ## Authenticated plaintext schema
 
-Only decrypted in zeroizing memory. No serde/general-purpose deserializer is used. `codec.rs` is the normative field order; all enums have fixed explicit match tables on decode. Version 1 uses:
+Only decrypted in zeroizing memory. No serde/general-purpose deserializer is used. `codec.rs` is the normative field order; all enums have fixed explicit match tables on decode. Current payload schema is **2**; envelope version remains **1**. The original version 1 layout is:
 
 1. u32 schema (exactly 1), vault UUID bytes and record state.
 2. Preferences UUID/state, sort/view/startup u8s and timeout u32s.
@@ -74,7 +74,9 @@ State is creation u64 seconds, update u64 seconds, deletion boolean u8, and dele
 
 Maximum plaintext is 64 MiB, maximum file is 67,109,024 bytes (144+64MiB+16). The public file reader checks metadata then uses a bounded take, covering growth races. Each count is <=10,000 and <=remaining bytes/minimum record size before loops; vectors grow from parsed records rather than reserving attacker-requested capacities. Total recovery codes <=10,000. Each field length is checked before slicing/copying: service/folder256, website2048, identifier320, seed1024, recovery value4096 bytes. The complete candidate must pass `Vault::validate`, including normalized fields, UUID uniqueness/references and timestamp ordering. This imposes additional consistency bounds after bounded parsing.
 
-Schema 1 is the first supported schema. There are no released older schemas to migrate, so schema0/future versions fail without writes. A future schema upgrade must add an explicit version decoder/transform, operate on detached state, validate the complete result and use the transaction commit boundary. The current rejected-schema and failed-candidate tests exercise preservation; no fictitious legacy migration compatibility is claimed.
+Schema 2 adds fields immediately after the existing clipboard timeout: u32 UTF-8 query byte length + query bytes (0..1024, no control characters), then folder-filter u8 (0 All, 1 Unfiled, 2 Folder) and a nonnil folder UUID only for tag2. All original fields retain their order and encoding. The selected folder must reference an active existing folder. Folder-removal operations must reset a selected removed folder to All in the same transaction. The query, selected folder, sort, view and all other preferences remain inside the authenticated encrypted payload; no framework preference file or plaintext index is used.
+
+The bounded decoder explicitly accepts schemas1 and2. Schema1 is transformed in detached memory to schema2 with empty query and All filter; every original ID, state, field, association, used code, preference and wrapping key is retained and validated. Unlock performs **no migration write**. The next successful ordinary atomic encrypted transaction serializes schema2. Schema0/future versions, corrupt/truncated old payloads and invalid references fail without writes. The frozen independently packed public schema1 fixture in `tests/fixtures/schema1-public.bin` includes account/folder/membership/recovery IDs, used state and nondefault preferences. Tests encrypt that exact legacy payload with the unchanged real envelope, reopen/unlock without a write, inject a failed upgrade write, then commit/reopen schema2 and check retained data and encrypted query. This is native Authenticator schema migration; it makes no claim about the excluded reference application's private `.vault` format.
 
 ## Files, transaction commit and session lifetime
 

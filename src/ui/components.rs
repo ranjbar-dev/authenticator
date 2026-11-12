@@ -58,9 +58,12 @@ pub enum ButtonStyle {
     Secondary,
 }
 pub fn button(ui: &mut Ui, text: &str, style: ButtonStyle) -> Response {
+    button_with_height(ui, text, style, theme::CONTROL_HEIGHT)
+}
+pub fn button_with_height(ui: &mut Ui, text: &str, style: ButtonStyle, height: f32) -> Response {
     let primary = matches!(style, ButtonStyle::Primary);
     let response = ui.add_sized(
-        [ui.available_width(), theme::CONTROL_HEIGHT],
+        [ui.available_width(), height],
         egui::Button::new(theme::LABEL.text(text).color(if primary {
             theme::ON_BLUE
         } else {
@@ -181,13 +184,18 @@ pub fn tabs(ui: &mut Ui, selected: Route) -> Option<Route> {
     let width = if compact {
         ui.available_width()
     } else {
-        (ui.available_width() - theme::SMALL_GAP * 2.0) / 3.0
+        ((ui.available_width() - theme::SMALL_GAP * 2.0) / 3.0).floor()
+    };
+    let height = if !compact && ui.available_width() < theme::TABS_SINGLE_LINE_WIDTH {
+        theme::WRAPPED_TAB_HEIGHT
+    } else {
+        theme::CONTROL_HEIGHT
     };
     let render = |ui: &mut Ui| {
         for route in Route::ALL {
             let active = route == selected;
             let response = ui.add_sized(
-                [width, theme::CONTROL_HEIGHT],
+                [width, height],
                 egui::Button::new(theme::LABEL.text(route.title()).color(if active {
                     theme::ON_BLUE
                 } else {
@@ -224,6 +232,22 @@ pub fn labeled_field(
 ) -> Response {
     labeled_field_impl(ui, id, label, value, helper, error, FieldMode::Plain)
 }
+pub fn labeled_search_field(
+    ui: &mut Ui,
+    id: impl std::hash::Hash + std::fmt::Debug,
+    value: &mut String,
+    error: Option<&str>,
+) -> Response {
+    labeled_field_impl(
+        ui,
+        id,
+        "Search accounts",
+        value,
+        "",
+        error,
+        FieldMode::Search,
+    )
+}
 
 /// Explicit secret adapter: native password semantics AND a masked display
 /// layouter. A custom TextEdit layouter bypasses egui's default masking.
@@ -258,6 +282,7 @@ pub fn clear_sensitive_widget_memory(ctx: &egui::Context) {
 #[derive(Clone, Copy)]
 enum FieldMode {
     Plain,
+    Search,
     Secret,
     Revealed,
 }
@@ -274,6 +299,7 @@ pub fn labeled_choice(
         let label = ui.label(theme::LABEL.text(label));
         let mut changed = false;
         let response = egui::ComboBox::from_id_salt("choice")
+            .truncate()
             .selected_text(theme::BODY.text(value.as_str()).color(theme::TEXT))
             .width(ui.available_width())
             .show_ui(ui, |ui| {
@@ -293,6 +319,58 @@ pub fn labeled_choice(
                         changed = true;
                         ui.close();
                     }
+                }
+            })
+            .response
+            .labelled_by(label.id);
+        if changed {
+            response.request_focus();
+        }
+        focus(ui, &response);
+        changed
+    })
+    .inner
+}
+
+/// Stable-value counterpart for folders whose visible names may be identical.
+pub fn labeled_selection<T: Copy + Eq + std::fmt::Debug>(
+    ui: &mut Ui,
+    id: impl std::hash::Hash + std::fmt::Debug,
+    label: &str,
+    value: &mut T,
+    choices: &[(T, &str)],
+) -> bool {
+    ui.push_id(id, |ui| {
+        let label = ui.label(theme::LABEL.text(label));
+        let mut changed = false;
+        let selected_text = choices
+            .iter()
+            .find(|(id, _)| id == value)
+            .map(|(_, text)| *text)
+            .unwrap_or("Selected folder");
+        let response = egui::ComboBox::from_id_salt("choice")
+            .truncate()
+            .selected_text(theme::BODY.text(selected_text).color(theme::TEXT))
+            .width(ui.available_width())
+            .show_ui(ui, |ui| {
+                for (index, (id, text)) in choices.iter().enumerate() {
+                    ui.push_id(index, |ui| {
+                        let selected = id == value;
+                        let response = ui.selectable_label(
+                            selected,
+                            theme::BODY.text(*text).color(if selected {
+                                theme::ON_BLUE
+                            } else {
+                                theme::TEXT
+                            }),
+                        );
+                        focus(ui, &response);
+                        if response.clicked() {
+                            *value = *id;
+                            changed = true;
+                            ui.close();
+                        }
+                    });
                 }
             })
             .response
@@ -403,7 +481,7 @@ fn field_editor(
     mode: FieldMode,
     typography: theme::Typography,
 ) -> egui::text_edit::TextEditOutput {
-    let secret = !matches!(mode, FieldMode::Plain);
+    let secret = !matches!(mode, FieldMode::Plain | FieldMode::Search);
     let masked = matches!(mode, FieldMode::Secret);
     let mut layouter = |ui: &Ui, buffer: &dyn egui::TextBuffer, _wrap_width: f32| {
         // Concealed mode never hands raw secret text to retained font layout.
@@ -429,6 +507,11 @@ fn field_editor(
             layout,
             |ui| {
                 egui::TextEdit::singleline(value)
+                    .char_limit(if matches!(mode, FieldMode::Search) {
+                        crate::domain::records::CodesPreferences::MAX_QUERY_BYTES + 1
+                    } else {
+                        usize::MAX
+                    })
                     .font(typography.font())
                     .password(secret)
                     .layouter(&mut layouter)
@@ -461,19 +544,23 @@ fn labeled_field_impl(
             .response
             .response
             .labelled_by(label.id);
-        let detail = ui.add(
-            egui::Label::new(theme::CAPTION.text(error.unwrap_or(helper)).color(
-                if error.is_some() {
-                    theme::ERROR
-                } else {
-                    theme::MUTED
-                },
-            ))
-            .wrap(),
-        );
+        let detail = (!helper.is_empty() || error.is_some()).then(|| {
+            ui.add(
+                egui::Label::new(theme::CAPTION.text(error.unwrap_or(helper)).color(
+                    if error.is_some() {
+                        theme::ERROR
+                    } else {
+                        theme::MUTED
+                    },
+                ))
+                .wrap(),
+            )
+        });
         ui.ctx().accesskit_node_builder(response.id, |node| {
             node.set_description(error.unwrap_or(helper));
-            node.push_described_by(detail.id.accesskit_id());
+            if let Some(detail) = &detail {
+                node.push_described_by(detail.id.accesskit_id());
+            }
             if error.is_some() {
                 node.set_invalid(egui::accesskit::Invalid::True);
             }
@@ -487,6 +574,82 @@ fn labeled_field_impl(
 #[cfg(test)]
 mod field_tests {
     use super::*;
+    #[test]
+    fn narrow_tabs_keep_full_labels_equal_wrapped_height_and_one_keyboard_row() {
+        let ctx = egui::Context::default();
+        theme::apply(&ctx);
+        ctx.enable_accesskit();
+        let mut output = ctx.run_ui(
+            egui::RawInput {
+                screen_rect: Some(egui::Rect::from_min_size(
+                    egui::Pos2::ZERO,
+                    egui::vec2(340., 780.),
+                )),
+                ..Default::default()
+            },
+            |root| {
+                egui::CentralPanel::default()
+                    .frame(egui::Frame::new().inner_margin(theme::PADDING))
+                    .show(root, |ui| {
+                        tabs(ui, Route::Codes);
+                    });
+            },
+        );
+        output.textures_delta.clear();
+        let Some(tree) = output.platform_output.accesskit_update.as_ref() else {
+            panic!("accessibility test output")
+        };
+        let tabs = tree
+            .nodes
+            .iter()
+            .filter(|(_, node)| node.role() == egui::Role::Tab)
+            .collect::<Vec<_>>();
+        assert_eq!(tabs.len(), 3);
+        let mut positions = Vec::new();
+        for (_, node) in tabs {
+            assert!(
+                Route::ALL
+                    .iter()
+                    .any(|route| Some(route.title()) == node.label())
+            );
+            let Some(bounds) = node.bounds() else {
+                panic!("tab bounds")
+            };
+            assert!((bounds.y1 - bounds.y0 - f64::from(theme::WRAPPED_TAB_HEIGHT)).abs() < 0.1);
+            positions.push(bounds);
+        }
+        positions.sort_by(|a, b| a.x0.total_cmp(&b.x0));
+        assert!(
+            positions
+                .iter()
+                .all(|bounds| (bounds.y0 - positions[0].y0).abs() < 0.1)
+        );
+        assert!(
+            positions
+                .windows(2)
+                .all(|bounds| bounds[0].x1 <= bounds[1].x0)
+        );
+        assert!(positions[2].x1 - positions[0].x0 <= 308.1, "{positions:?}");
+        assert!(
+            output
+                .shapes
+                .iter()
+                .filter_map(|shape| match &shape.shape {
+                    egui::Shape::Text(text)
+                        if Route::ALL
+                            .iter()
+                            .any(|route| route.title() == text.galley.job.text) =>
+                        Some(&text.galley),
+                    _ => None,
+                })
+                .all(|galley| galley
+                    .job
+                    .sections
+                    .iter()
+                    .all(|section| section.format.font_id == theme::LABEL.font()
+                        && section.format.line_height == Some(theme::LABEL.line_height)))
+        );
+    }
     #[test]
     fn many_recovery_lines_keep_the_editor_viewport_and_save_compact() {
         let ctx = egui::Context::default();

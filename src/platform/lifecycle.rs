@@ -27,6 +27,18 @@ pub struct LifecycleWatch {
     epoch: u64,
 }
 impl LifecycleWatch {
+    #[cfg(test)]
+    pub(crate) fn healthy_for_test() -> Self {
+        Self {
+            signal: Arc::new(Signal {
+                pending: AtomicBool::new(false),
+                healthy: AtomicBool::new(true),
+                epoch: AtomicU64::new(0),
+                repaint: Box::new(|| {}),
+            }),
+            epoch: 0,
+        }
+    }
     pub fn changed(&self) -> bool {
         !self.signal.healthy.load(Ordering::SeqCst)
             || self.signal.pending.load(Ordering::SeqCst)

@@ -3,7 +3,8 @@ use crate::{
     domain::{
         clock::{Clock, SystemClock},
         records::{
-            AccountDraft, AccountId, BackupCode, DeletionState, RecordState, Timestamp, Vault,
+            AccountDraft, AccountId, BackupCode, CodesPreferences, DeletionState, RecordState,
+            Timestamp, Vault,
         },
     },
     error::AppError,
@@ -53,6 +54,13 @@ pub enum ScanAlternative {
 
 /// Explicit operation intent. An edit can only update its selected stable ID.
 pub enum SaveIntent {
+    CodesPreferences(CodesPreferences),
+    ClipboardTimeout(u32),
+    IdleTimeout(u32),
+    Trash {
+        id: AccountId,
+        expected: RecordState,
+    },
     Import(Vec<AccountDraft>),
     Create {
         draft: AccountDraft,
@@ -69,6 +77,13 @@ pub enum SaveIntent {
 impl SaveIntent {
     fn validate(&self) -> Result<(), AppError> {
         match self {
+            Self::CodesPreferences(value) => value.validate()?,
+            Self::ClipboardTimeout(seconds) | Self::IdleTimeout(seconds) => {
+                if !(1..=86_400).contains(seconds) {
+                    return Err(AppError::InvalidRecord);
+                }
+            }
+            Self::Trash { .. } => {}
             Self::Import(drafts) => {
                 if drafts.is_empty() || drafts.len() > crate::qr::MAX_CANDIDATES {
                     return Err(AppError::InvalidRecord);
@@ -96,6 +111,23 @@ impl SaveIntent {
         at: Timestamp,
     ) -> Result<Vec<AccountId>, AppError> {
         match self {
+            Self::CodesPreferences(value) => {
+                vault.set_codes_preferences(value, at)?;
+                Ok(Vec::new())
+            }
+            Self::ClipboardTimeout(seconds) => {
+                vault.set_clipboard_timeout(seconds, at)?;
+                Ok(Vec::new())
+            }
+            Self::IdleTimeout(seconds) => {
+                let at = vault.mutation_time(at);
+                vault.set_lock_timeout(seconds, at)?;
+                Ok(Vec::new())
+            }
+            Self::Trash { id, expected } => {
+                vault.trash_account(id, expected, at)?;
+                Ok(Vec::new())
+            }
             Self::Import(drafts) => drafts
                 .into_iter()
                 .map(|draft| vault.add_account(draft, at))
@@ -157,6 +189,8 @@ pub struct AppState {
     repository: Option<Result<VaultStore, AppError>>,
     pub route: Route,
     pub query: String,
+    /// Backup Codes has an independent, session-only search projection.
+    pub backup_query: String,
     pending: Option<Workflow>,
     generation: u64,
     worker: Option<Worker>,
@@ -238,6 +272,7 @@ impl AppState {
             repository: Some(repository),
             route: Route::Codes,
             query: String::new(),
+            backup_query: String::new(),
             pending: None,
             generation: 0,
             worker: None,
@@ -291,7 +326,6 @@ impl AppState {
     }
     pub fn navigate(&mut self, route: Route) {
         self.route = route;
-        self.query.zeroize();
         self.pending = None;
     }
     pub fn request(&mut self, workflow: Workflow) -> Result<(), AppError> {
@@ -313,6 +347,7 @@ impl AppState {
     pub fn lock(&mut self) {
         self.generation = self.generation.wrapping_add(1);
         self.query.zeroize();
+        self.backup_query.zeroize();
         self.pending = None;
         if let Some((_, capture)) = &self.capture {
             capture.cancel();
@@ -611,10 +646,13 @@ impl AppState {
     pub fn activity(&mut self, now: Instant) {
         self.last_activity = now;
     }
-    pub fn set_idle_timeout(&mut self, seconds: u32) -> Result<(), AppError> {
-        let at = Timestamp(SystemClock.unix_seconds()?);
-        self.repository_mut()?
-            .transaction(|v| v.set_lock_timeout(seconds, at))
+    pub fn set_idle_timeout(
+        &mut self,
+        seconds: u32,
+        watch: LifecycleWatch,
+        repaint: impl Fn() + Send + 'static,
+    ) -> Result<(), AppError> {
+        self.begin_save(SaveIntent::IdleTimeout(seconds), watch, repaint)
     }
 }
 impl Drop for AppState {
@@ -811,7 +849,10 @@ mod tests {
         assert!(!state.idle_due(now + Duration::from_secs(299)));
         assert!(state.idle_due(now + Duration::from_secs(300)));
         assert!(!state.idle_due(now.checked_sub(Duration::from_secs(1)).ok_or("instant")?));
-        state.set_idle_timeout(3)?;
+        let listener = crate::platform::lifecycle::Lifecycle::start(|| {})?;
+        state.set_idle_timeout(3, listener.watch(), || {})?;
+        assert_eq!(finish(&mut state)?, Some(Ok(())));
+        state.activity(now);
         assert!(!state.idle_due(now + Duration::from_secs(2)));
         assert!(state.idle_due(now + Duration::from_secs(3)));
         let before = std::fs::read(dir.path().join("vault.bin"))?;
@@ -975,11 +1016,13 @@ mod tests {
         assert_eq!(state.vault()?.accounts().len(), 1);
         assert_eq!(state.vault()?.backup_sets().len(), 1);
         state.query = "private query".into();
+        state.backup_query = "private backup query".into();
         state.request(Workflow::AddAccount)?;
         let generation = state.generation();
         state.lock();
         assert!(!state.is_unlocked());
         assert!(state.query.is_empty());
+        assert!(state.backup_query.is_empty());
         assert_eq!(state.pending(), None);
         assert_ne!(state.generation(), generation);
         assert_eq!(state.vault().err(), Some(AppError::VaultLocked));

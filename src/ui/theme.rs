@@ -28,7 +28,13 @@ pub const FOCUS_STROKE: f32 = 2.0;
 pub const RADIUS: u8 = 10;
 pub const CONTROL_RADIUS: u8 = 6;
 pub const CONTENT_MAX_WIDTH: f32 = 640.0;
-pub const COMPACT_TABS_WIDTH: f32 = 310.0;
+pub const CODES_GRID_MIN_WIDTH: f32 = 600.0;
+pub const CODES_TOOLBAR_WIDE: f32 = 500.0;
+pub const CODE_CARD_CONTENT_HEIGHT: f32 = 240.0;
+pub const COMPACT_TABS_WIDTH: f32 = 292.0;
+pub const TABS_SINGLE_LINE_WIDTH: f32 = 380.0;
+pub const WRAPPED_TAB_HEIGHT: f32 = BODY.line_height * 2.0 + SMALL_GAP * 2.0;
+pub const CLIPBOARD_FEEDBACK_HEIGHT: f32 = BODY.line_height * 3.0 + PADDING as f32 * 2.0;
 pub const DIALOG_WIDTH: f32 = 360.0;
 pub const PROGRESS_HEIGHT: f32 = UNIT * 2.0;
 // Native selector geometry, in the same logical-pixel scale as ROOT controls.

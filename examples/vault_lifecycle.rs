@@ -47,7 +47,7 @@ impl eframe::App for Preview {
                     )
                     .clicked()
                 {
-                    let _ = self.app.state.set_idle_timeout(3);
+                    self.app.set_idle_timeout(3);
                     self.app.state.activity(std::time::Instant::now());
                     ui.close();
                 }

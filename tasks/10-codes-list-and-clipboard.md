@@ -1,6 +1,6 @@
 # Task 10: Complete 2FA list, search, sort, views and copy
 
-Status: todo
+Status: in_progress - reviewed source accepted; core interactive Copy acceptance open
 Priority: Required for complete v1
 Dependencies: 02–09
 Requirements: FR-1; PRD §§5.1, 7, 11
@@ -11,31 +11,31 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Implementation
 
-- [ ] Build real account cards showing local icon/fallback, service, optional account identifier, formatted code and accurate remaining-time progress.
-- [ ] Refresh at exact configured boundaries, time changes and resume; suspend unnecessary repainting while hidden/locked. Treat implausible clock shifts as actionable guidance without claiming remote verification.
-- [ ] Implement live service/account search, no-results state, all six reference sort modes, persistent list/grid preference and stable tie-breaking.
+- [x] Build real account cards showing local icon/fallback, service, optional account identifier, formatted code and accurate remaining-time progress.
+- [x] Refresh at exact configured boundaries, time changes and resume; suspend unnecessary repainting while hidden/locked. Treat implausible clock shifts as actionable guidance without claiming remote verification.
+- [x] Implement live service/account search, no-results state, all six reference sort modes, persistent list/grid preference and stable tie-breaking.
 - [ ] Implement explicit copy with confirmation and configurable default 30-second clearing. Clear only if the clipboard still contains the app-owned copy; use ownership/sequence metadata when available. Do not overwrite subsequent external copies.
-- [ ] Expose edit and confirmed delete-to-trash actions; code copy must not navigate/edit/delete. Use local icons without network requests.
+- [x] Expose edit and confirmed delete-to-trash actions; code copy must not navigate/edit/delete. Use local icons without network requests.
 
 ## Screen checklist
 
 Planning snapshot, 12 November 2026: no existing application source, screen family, theme or shared components was present. These are PRD/reference-derived roles, not measured project conventions. Use the shared Rust theme and widgets created by task 04 (or create those primitives in task 04 itself); reread this checklist before editing. Refresh implementation paths from the actual code.
 
-- [ ] Header uses reference-style title/help and prominent add/Screenshot to Scan access. — PRD/reference structure; shared implementation from task 04.
-- [ ] Toolbar offers folder navigation, search, six-way sort and list/grid selection with visible current states. — PRD/reference structure; shared implementation from task 04.
-- [ ] Cards prioritize service/account, readable code and remaining-time indicator. — PRD/reference structure; shared implementation from task 04.
-- [ ] Service icons use consistent solid tiles with opaque contrasting strokes. — PRD/reference structure; shared implementation from task 04.
-- [ ] Copy and account actions are explicit and individually keyboard reachable. — PRD/reference structure; shared implementation from task 04.
-- [ ] Empty/loading/no-results/clock-error states retain useful actions near the top. — PRD/reference structure; shared implementation from task 04.
-- [ ] List/grid preserve readable hierarchy at narrow, intermediate and desktop widths. — PRD/reference structure; shared implementation from task 04.
-- [ ] Locked state removes codes and metadata from the UI/accessibility tree; shared tokens and focus rules are used. — PRD/reference structure; shared implementation from task 04.
+- [x] Header uses reference-style title/help and prominent add/Screenshot to Scan access. — PRD/reference structure; shared implementation from task 04.
+- [x] Toolbar offers folder navigation, search, six-way sort and list/grid selection with visible current states. — PRD/reference structure; shared implementation from task 04.
+- [x] Cards prioritize service/account, readable code and remaining-time indicator. — PRD/reference structure; shared implementation from task 04.
+- [x] Service icons use consistent solid tiles with opaque contrasting strokes. — PRD/reference structure; shared implementation from task 04.
+- [x] Copy and account actions are explicit and individually keyboard reachable. — PRD/reference structure; shared implementation from task 04.
+- [x] Empty/loading/no-results/clock-error states retain useful actions near the top. — PRD/reference structure; shared implementation from task 04.
+- [x] List/grid preserve readable hierarchy at narrow, intermediate and desktop widths. — PRD/reference structure; shared implementation from task 04.
+- [x] Locked state removes codes and metadata from the UI/accessibility tree; shared tokens and focus rules are used. — PRD/reference structure; shared implementation from task 04.
 
 Must not be copied from the reference: profile/sign-in, cloud sync/backup, language selector, extension/companion promotions, optional encryption switches or swipe-only desktop actions. Reuse shared field, button, dialog and feedback components; do not recreate their styling per page.
 
 ## Acceptance and verification
 
 - [ ] Cards match independent TOTP values at boundaries and after sleep/resume/clock jumps; no stale code remains.
-- [ ] Search, every sort mode and both views persist correctly through restart.
+- [x] Search, every sort mode and both views persist correctly through restart.
 - [ ] Clipboard timeout/lock clearing works without overwriting newer user clipboard content, including race cases.
 - [ ] Real pointer clicks and keyboard shortcuts reach copy/edit/delete/search/sort/view without drag scrolling stealing clicks.
 
@@ -49,5 +49,34 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 
 ## Evidence
 
-Not started. On execution record changed files, test commands/results, sanitized UI evidence paths where applicable, independent reviewer result and commit reference. If blocked, retain incomplete status and record exact cause, attempted remedies and resumption steps.
+Reviewed source is accepted after distinct review_10 and focused re-review resolved
+P2 shared route-query desynchronization and P3 stale corrected-search feedback.
+The task is NOT fully accepted: final live pointer/key Copy reports a safe post-close
+ownership-change failure; exact subcondition/cause is unknown. Interactive success,
+expiry, Lock and exit cleanup remain open. Actual hardware suspend/clock delivery
+and a final full native interaction repeat are also unverified. Isolated/native
+and injected-clock passes do not silently close those gates.
 
+- Implementation, changed paths, exact command inventory, native interaction table,
+  sanitized framebuffer images and known limitations: [author evidence](../docs/qa/task10/implementation-evidence.md).
+- Independent source/security/data-loss/UI review, original findings, focused fixes
+  and remaining gates: [review report](../docs/qa/task10/independent-review.md).
+- Final parent all-target suite104 passed,3 subprocess helper entrypoints ignored
+  directly but exercised by their parents,14 suites62.84s. Formatting, strict
+  all-target/all-feature Clippy, five binary/example target build and diff pass.
+- Independent real isolated clipboard parent1 plus actor5, migration1, encrypted
+  sorts1, Trash1, codes2, serial privacy7, components7 and120/120 HMAC comparisons
+  passed. Focused re-review route/correction1 and both-query lock1 passed.
+- Eight complete PNGs cover340/600/960 list/grid/no-results/editor/delete/locked;
+  parent independently checked all CRCs/IEND/dimensions. Native framebuffer scale2
+  does not establish physical DPI. Screenshot code rectangles were redacted before
+  disk; JSON evidence contains booleans/timestamps, not code values.
+- Reviewer normal launches were denied GetCursorPos0x80070005; no bypass occurred.
+  That separate limitation does not establish the cause of author live Changed.
+  Owned previews/profiles/locators were cleaned; default/reference data untouched.
+
+Clipboard implementation and its explicit failure feedback are source-reviewed;
+its unchecked implementation/acceptance item remains open until actual final
+interactive Copy success is evidenced. Continue independent Task11 after this
+review/integration; revisit Copy in20/21 without weakening ownership checks.
+Commit reference is recorded in the following parent checkpoint.

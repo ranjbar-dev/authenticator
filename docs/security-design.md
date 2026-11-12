@@ -131,3 +131,47 @@ Strict Base32/URI and field limits, enum-constrained OTP settings, checked bound
 The implemented local repository starts locked, retains an OS concurrent-instance lock and exposes immutable reads plus whole-aggregate transactions. Wrong passphrase, header/wrapped-key/nonce/payload tampering, truncation, oversized file/KDF settings and authenticated future schema reject without writes. Tests inject partial/pre-rename write failure, a real Windows sharing violation, abrupt child-process termination before rename, cancellation, invalid candidate, migration rejection and panic. Failed operations retain the last committed in-memory aggregate and ciphertext. Passphrase rewrap preserves payload bytes and changes only the wrapping header; old passphrases fail against the new envelope.
 
 Only ciphertext reaches temporary files. Ordinary failed writes remove their pending file; abrupt termination can leave an encrypted orphan, never automatically adopted. Protected DACLs are verified natively against the process-token user SID, and a second process is refused. No corruption reset, plaintext journal, decrypted cache, hidden recovery key or automatic network path exists. Lock drops zeroizing secrets/keys/plaintext buffers, but caller/dependency/compiler/OS copies cannot be guaranteed cleared. The format has no anti-replay counter; old copies/backups remain decryptable under their original passphrases. These tests establish specific behavior, not a claim of absolute durability, memory erasure or cryptographic certification.
+## App-owned clipboard leases (Task10)
+
+Explicit code Copy recomputes current digits and sends no seed to the dedicated
+clipboard actor. Counter/period validity, session generation and native lifecycle
+watch are checked at mutation admission and immediately before text publication.
+Expiry/clock jumps while queued reject the old digits. A call already in the OS
+cannot be forcibly revoked; an already admitted late copy is cleared best effort
+and cannot publish stale success after Lock. The UI confirms actual actor success
+in a visible shared footer. Framework text-copy commands are routed through the
+same guard; revealed secret editors still block framework CopyText themselves.
+
+GlobalAlloc uses MOVEABLE|ZEROINIT. Owned allocation guards free only on failed
+SetClipboardData and attempt wiping such failed buffers; successful publication
+transfers memory to Windows. Clipboard close is RAII. Registered marker and zero
+DWORD CanIncludeInClipboardHistory/CanUploadToCloudClipboard formats are published
+before UTF-16 text. A final sequence is established after the observed close-time
+sequence change by verifying the owned HWND, random marker and exact salted
+content digest under a fresh exclusive open. Provisional evidence on Busy is never
+rebased to a later sequence. Cleanup checks sequence and HWND before reading the
+marker, then checks the marker before a bounded read of the app's own Unicode
+format. It allocates no buffer from an unrelated clipboard's declared size.
+Ownership verification and EmptyClipboard share one OpenClipboard interval.
+
+The lease retains only marker, digest/length, sequence and HWND; it does not retain
+raw expected OTP text during expiry/Busy retries. The queue is bounded to8 texts,
+each <=1MiB and zeroizing on drop. Lock invalidates queued generations immediately;
+an OS call already running can retain its current/queued buffers until it returns.
+Busy cleanup warns after2seconds and keeps retrying without raw expected text.
+Native OpenClipboard failures do not reliably distinguish a competing holder from
+all access failures, so persistent denial is also an honest cleanup limitation.
+Shutdown's UI wait is bounded300ms and the actor's stop retry budget is2seconds.
+Neither can guarantee cleanup after abrupt termination, a stalled kernel/API call,
+denied station access, device failure, Windows/third-party history or clipboard
+observers. No private clipboard contents are backed up/restored or logged.
+
+Primary contracts checked during implementation: [OpenClipboard](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-openclipboard),
+[SetClipboardData](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setclipboarddata),
+[sequence numbers](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getclipboardsequencenumber),
+[clipboard formats/history hints](https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats),
+and [window stations](https://learn.microsoft.com/en-us/windows/win32/winstation/window-stations).
+Tests use a separate process and a newly created random CREATE_ONLY noninteractive
+window station/desktop for actual Win32 clipboard races. They never open WinSta0's
+clipboard or switch the input desktop. This is native ownership evidence, not a
+substitute for the actual user-pointer journey or hardware lock/suspend delivery.

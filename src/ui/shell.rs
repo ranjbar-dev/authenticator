@@ -1,15 +1,18 @@
 //! Inventory-derived shell and local vault lifecycle.
+use super::codes;
 use super::import_review::ImportReview;
 use super::{
     components as c,
-    state::{AppState, CaptureEvent, Route, ScanAlternative, VaultAction, Workflow},
+    state::{AppState, CaptureEvent, Route, SaveIntent, ScanAlternative, VaultAction, Workflow},
     theme,
 };
 use crate::{
     domain::{
-        clock::SystemClock,
+        clock::{Clock, SystemClock},
         otp,
-        records::{AccountId, DeletionState},
+        records::{
+            AccountId, CodesPreferences, DeletionState, FolderFilter, RecordState, ViewMode,
+        },
     },
     storage::VaultStore,
 };
@@ -18,6 +21,11 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
 };
 type ImageResult = Result<Option<crate::qr::ScanReview>, crate::qr::QrError>;
+enum CodeAction {
+    Copy(AccountId),
+    Edit(AccountId),
+    Delete(AccountId, RecordState, egui::Id),
+}
 struct ImageJob {
     generation: u64,
     cancelled: Arc<AtomicBool>,
@@ -56,6 +64,25 @@ pub struct AuthenticatorApp {
     image: Option<ImageJob>,
     imported: Vec<AccountId>,
     show_imported: bool,
+    clipboard: crate::platform::clipboard::Clipboard,
+    codes_preferences: Option<CodesPreferences>,
+    preferences_dirty: Option<Instant>,
+    preferences_error: bool,
+    pending_mutation: bool,
+    pending_preferences: bool,
+    ordered_ids: Option<Vec<AccountId>>,
+    delete: Option<(AccountId, RecordState, c::Dialog)>,
+    clock: codes::ClockTracker,
+    wall_clock: Box<dyn Clock + Send + Sync>,
+    clipboard_feedback: Option<(&'static str, Instant)>,
+    closing: bool,
+    close_locked: bool,
+    close_cleanup_deadline: Option<Instant>,
+    exit_approved: bool,
+    #[cfg(debug_assertions)]
+    evidence_code_bounds: Vec<egui::Rect>,
+    #[cfg(debug_assertions)]
+    evidence_copy_queued: Option<bool>,
 }
 impl AuthenticatorApp {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
@@ -85,6 +112,7 @@ impl AuthenticatorApp {
         let state = AppState::new(repository);
         let exists = state.vault_exists().unwrap_or(true);
         let repaint = context.clone();
+        let clipboard_repaint = context.clone();
         Self {
             state,
             dialog: None,
@@ -109,9 +137,52 @@ impl AuthenticatorApp {
             image: None,
             imported: Vec::new(),
             show_imported: false,
+            clipboard: crate::platform::clipboard::Clipboard::new(owner, move || {
+                clipboard_repaint.request_repaint()
+            }),
+            codes_preferences: None,
+            preferences_dirty: None,
+            preferences_error: false,
+            pending_mutation: false,
+            pending_preferences: false,
+            ordered_ids: None,
+            delete: None,
+            clock: codes::ClockTracker::default(),
+            wall_clock: Box::new(SystemClock),
+            clipboard_feedback: None,
+            closing: false,
+            close_locked: false,
+            close_cleanup_deadline: None,
+            exit_approved: false,
+            #[cfg(debug_assertions)]
+            evidence_code_bounds: Vec::new(),
+            #[cfg(debug_assertions)]
+            evidence_copy_queued: None,
         }
     }
     pub fn lock(&mut self) {
+        #[cfg(debug_assertions)]
+        {
+            self.evidence_copy_queued = None;
+        }
+        if self.closing {
+            self.close_locked = true;
+            self.close_cleanup_deadline
+                .get_or_insert(Instant::now() + Duration::from_millis(300));
+        }
+        #[cfg(debug_assertions)]
+        self.evidence_code_bounds.clear();
+        let restore_capture = self.capture_preparing.is_some() || self.state.capture_busy();
+        self.clipboard.clear();
+        self.clipboard_feedback = None;
+        self.codes_preferences = None;
+        self.preferences_dirty = None;
+        self.preferences_error = false;
+        self.pending_mutation = false;
+        self.pending_preferences = false;
+        self.ordered_ids = None;
+        self.delete = None;
+        self.clock.clear();
         egui::Popup::close_all(&self.context);
         self.review = None;
         self.image = None;
@@ -131,8 +202,15 @@ impl AuthenticatorApp {
         self.operation_cancelled = self.state.busy();
         // ROOT will render the locked state before the visibility command is
         // applied. Native overlay never restores an old unlocked framebuffer.
+        if restore_capture {
+            self.context
+                .send_viewport_cmd(egui::ViewportCommand::Visible(true));
+        }
+        self.context.request_repaint();
+        // One public one-shot hidden pass removes old AccessKit nodes and the
+        // cached unlocked framebuffer without showing/unminimizing the window.
         self.context
-            .send_viewport_cmd(egui::ViewportCommand::Visible(true));
+            .send_viewport_cmd(egui::ViewportCommand::RequestPaintWhileHidden);
     }
     fn clear_form(&mut self) {
         self.passphrase.zeroize();
@@ -152,8 +230,28 @@ impl AuthenticatorApp {
         }
     }
     pub fn show(&mut self, root: &mut egui::Ui) {
+        #[cfg(debug_assertions)]
+        self.evidence_code_bounds.clear();
         let ctx = root.ctx().clone();
         let now = Instant::now();
+        let close_requested = ctx.input(|i| i.viewport().close_requested());
+        let was_closing = self.closing;
+        if close_requested && !self.closing && !self.exit_approved {
+            ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
+            self.closing = true;
+            self.clipboard.clear();
+            self.clipboard_feedback = None;
+            self.clear_form();
+            let can_flush = (self.preferences_dirty.is_some() || self.pending_preferences)
+                && self.review.is_none()
+                && self.image.is_none()
+                && self.capture_preparing.is_none()
+                && !self.state.capture_busy()
+                && (!self.state.busy() || self.pending_preferences);
+            if !can_flush {
+                self.lock();
+            }
+        }
         // Match the key event's modifiers. A complete physical chord can be
         // pressed/released in one frame, leaving the final modifiers empty.
         let lock_shortcut = ctx.input_mut(|i| {
@@ -165,17 +263,35 @@ impl AuthenticatorApp {
         if self.lifecycle.as_ref().is_ok_and(|l| l.take_lock())
             || self.state.idle_due(now)
             || ctx.input(|i| {
-                i.viewport().close_requested()
+                (close_requested && (!self.closing || was_closing))
                     || lock_shortcut
                     || (i.key_pressed(egui::Key::Escape) && self.state.busy())
             })
         {
             self.lock();
+            if self.closing {
+                self.closing = false;
+                self.exit_approved = true;
+                ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+            }
         }
         let was_importing = self.state.importing();
         let save_mode = self.review.as_ref().map(|r| r.mode);
         if let Some(outcome) = self.state.poll(now) {
-            if was_importing {
+            self.ordered_ids = None;
+            if self.pending_mutation {
+                self.pending_mutation = false;
+                self.preferences_error = self.pending_preferences && outcome.is_err();
+                self.status = Some(if outcome.is_ok() {
+                    "Changes saved in your encrypted vault."
+                } else {
+                    "Changes could not be saved. Your previous vault is unchanged. Retry the action."
+                });
+                if self.preferences_error {
+                    self.preferences_dirty = Some(now);
+                }
+                self.pending_preferences = false;
+            } else if was_importing {
                 match outcome {
                     Ok(()) => {
                         self.imported = self.state.take_imported().unwrap_or_default();
@@ -213,6 +329,82 @@ impl AuthenticatorApp {
                 self.form_error = outcome.err().map(|e| e.to_string());
                 self.operation_cancelled = false;
             }
+        }
+        if self.codes_preferences.is_none()
+            && let Ok(vault) = self.state.vault()
+        {
+            let preferences = vault.preferences().codes();
+            self.state.query = preferences.query.to_string();
+            self.codes_preferences = Some(preferences);
+        }
+        if self.state.session_active()
+            && let Some(result) = self.clipboard.poll()
+        {
+            self.clipboard_feedback = Some((
+                match result {
+                    Ok(()) => "Copied. The app-owned clipboard copy will expire automatically.",
+                    Err(crate::platform::clipboard::ClipboardError::Busy) => {
+                        "Clipboard is busy. Copy again when the other application releases it."
+                    }
+                    Err(crate::platform::clipboard::ClipboardError::Expired) => {
+                        "The code changed before Windows could copy it. Copy the current code again."
+                    }
+                    Err(crate::platform::clipboard::ClipboardError::Changed) => {
+                        "The clipboard changed before copying finished. Try Copy again; newer clipboard data is preserved."
+                    }
+                    Err(_) => {
+                        "Windows could not update the clipboard. Copy or clear may be unavailable."
+                    }
+                },
+                now + Duration::from_secs(5),
+            ));
+        }
+        if self.closing {
+            self.advance_close();
+            egui::CentralPanel::default().show(root, |ui| {
+                c::heading(ui, "Closing Authenticator", 1);
+                if self.close_locked {
+                    c::progress(ui, "Clearing the app-owned clipboard…", None);
+                } else if self.preferences_error {
+                    c::status(
+                        ui,
+                        "close-save-error",
+                        "Display changes could not be saved. Your previous vault is unchanged.",
+                        c::StatusKind::Error,
+                    );
+                    if c::button(ui, "Retry saving display changes", c::ButtonStyle::Primary)
+                        .clicked()
+                    {
+                        self.preferences_changed();
+                    }
+                } else {
+                    c::progress(ui, "Saving encrypted display preferences…", None);
+                }
+                c::body(ui, "Account codes and metadata are hidden.");
+                if !self.close_locked
+                    && c::button(
+                        ui,
+                        "Close without saving display changes",
+                        c::ButtonStyle::Secondary,
+                    )
+                    .clicked()
+                {
+                    self.lock();
+                    self.advance_close();
+                }
+            });
+            ctx.output_mut(|output| {
+                output.commands.retain_mut(|command| {
+                    if let egui::OutputCommand::CopyText(value) = command {
+                        value.zeroize();
+                        false
+                    } else {
+                        true
+                    }
+                })
+            });
+            ctx.request_repaint_after(Duration::from_millis(100));
+            return;
         }
         if !self.state.session_active() && !self.state.busy() {
             self.review = None;
@@ -293,28 +485,64 @@ impl AuthenticatorApp {
             self.state.activity(now);
         }
         // Real monotonic expiry continues even with no pointer/keyboard events.
-        ctx.request_repaint_after(Duration::from_millis(200));
+        if self.state.busy()
+            || self.image.is_some()
+            || self.capture_preparing.is_some()
+            || self.state.capture_busy()
+        {
+            ctx.request_repaint_after(Duration::from_millis(100));
+        } else if self.state.session_active() {
+            // Countdown/clock reads on UTC seconds, including the exact OTP boundary.
+            let until_second = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| Duration::from_secs(1) - Duration::from_nanos(u64::from(d.subsec_nanos())))
+                .unwrap_or(Duration::from_secs(1));
+            ctx.request_repaint_after(until_second);
+        }
         c::restore_dialog_focus(&ctx);
+        if self
+            .clipboard_feedback
+            .is_some_and(|(_, until)| now >= until)
+        {
+            self.clipboard_feedback = None;
+        }
+        // Keep this holder in the tree even when empty: conditionally inserting
+        // a Root panel changes later auto-IDs and would drop Copy's focus.
+        egui::Panel::bottom("clipboard-feedback")
+            .frame(egui::Frame::NONE)
+            .exact_size(if self.clipboard_feedback.is_some() {
+                theme::CLIPBOARD_FEEDBACK_HEIGHT
+            } else {
+                0.
+            })
+            .show(root, |ui| {
+                if let Some((text, until)) = self.clipboard_feedback {
+                    c::status(ui, "clipboard-result", text, c::StatusKind::Info);
+                    ctx.request_repaint_after(until.saturating_duration_since(now));
+                }
+            });
         // This single scroll holder keeps all controls reachable at high app zoom.
         egui::CentralPanel::default().frame(egui::Frame::new().fill(theme::BACKGROUND).inner_margin(theme::PADDING)).show(root,|ui| {
-            let holder = egui::ScrollArea::vertical().id_salt("screen-holder");
+            let holder = egui::ScrollArea::vertical().id_salt("screen-holder").scroll_source(egui::scroll_area::ScrollSource { drag: egui::scroll_area::DragScroll::Never, ..Default::default() });
             let holder = if self.review.as_ref().is_some_and(|r|r.focus) { holder.vertical_scroll_offset(0.) } else { holder };
             holder.show(ui,|ui| {
                     ui.set_max_width(theme::CONTENT_MAX_WIDTH.min(ui.available_width()));
-                c::secondary(ui,"AUTHENTICATOR · LOCAL VAULT");
+                let codes_home=self.state.session_active() && self.state.route==Route::Codes && self.review.is_none() && self.capture_preparing.is_none() && !self.state.capture_busy();
+                if !codes_home { c::secondary(ui,"AUTHENTICATOR · LOCAL VAULT"); }
                 c::toolbar(ui,|ui| {
-                    c::heading(ui,if self.state.importing() {"Saving accounts"} else if self.review.as_ref().is_some_and(|r| !r.mode.is_import()) {"Account"} else if self.state.is_unlocked() && (self.capture_preparing.is_some() || self.state.capture_busy()) {"Screenshot to Scan"} else if self.state.session_active() {self.state.route.title()} else if self.exists {"Unlock vault"} else {"Create vault"},1);
+                    c::heading(ui,if self.pending_mutation {self.state.route.title()} else if self.state.importing() {"Saving accounts"} else if self.review.as_ref().is_some_and(|r| !r.mode.is_import()) {"Account"} else if self.state.is_unlocked() && (self.capture_preparing.is_some() || self.state.capture_busy()) {"Screenshot to Scan"} else if self.state.session_active() {self.state.route.title()} else if self.exists {"Unlock vault"} else {"Create vault"},1);
                     let help=c::icon_button(ui,c::Icon::Help,"Help for this screen");
                     if help.clicked() {self.dialog=Some(c::Dialog::new("Offline help",help.id)); self.help_open=true;}
                     if self.state.session_active() && c::icon_button(ui,c::Icon::Lock,"Lock vault").clicked() {self.lock();}
                 });
-                c::secondary(ui,if self.state.session_active() {"Vault unlocked on this device"} else {"Vault locked · credentials hidden"});
+                if !codes_home { c::secondary(ui,if self.state.session_active() {"Vault unlocked on this device"} else {"Vault locked · credentials hidden"}); }
                 ui.add_space(theme::SMALL_GAP);
                 if self.review.is_none() && self.image.is_none() && self.capture_preparing.is_none() && !self.state.capture_busy() && let Some(route)=c::tabs(ui,self.state.route) { self.state.navigate(route); self.status=None; }
                 ui.add_space(theme::SMALL_GAP);
                 if let Some(error)=self.state.storage_error() {
                     c::status(ui,"storage-error",&error.to_string(),c::StatusKind::Error);
                     c::secondary(ui,"Close other Authenticator instances and restart. No replacement vault is created here.");
+                } else if self.pending_mutation { self.unlocked_content(ui);
                 } else if self.state.importing() { self.review_content(ui);
                 } else if !self.state.is_unlocked() {
                     self.locked_content(ui);
@@ -323,6 +551,24 @@ impl AuthenticatorApp {
             });
         });
         self.show_dialog(&ctx);
+        self.delete_dialog(&ctx);
+        self.persist_codes_preferences();
+        // Guard framework Copy/Cut/selection routes too; never let eframe's
+        // unowned clipboard adapter publish text behind the lease actor.
+        let mut copies = Vec::new();
+        ctx.output_mut(|output| {
+            output.commands.retain_mut(|command| {
+                if let egui::OutputCommand::CopyText(value) = command {
+                    copies.push(Zeroizing::new(std::mem::take(value)));
+                    false
+                } else {
+                    true
+                }
+            })
+        });
+        for value in copies {
+            self.copy_text(value);
+        }
     }
     fn locked_content(&mut self, ui: &mut egui::Ui) {
         if !self.lifecycle.as_ref().is_ok_and(|l| l.healthy()) {
@@ -467,6 +713,10 @@ impl AuthenticatorApp {
         }
     }
     fn unlocked_content(&mut self, ui: &mut egui::Ui) {
+        if self.pending_mutation && self.state.route == Route::Settings {
+            c::progress(ui, "Saving encrypted settings…", None);
+            return;
+        }
         if self.review.is_some() {
             self.review_content(ui);
             return;
@@ -493,21 +743,47 @@ impl AuthenticatorApp {
                         return;
                     }
                 }
-                let search = c::labeled_field(
-                    ui,
-                    "search",
-                    if backups {
-                        "Search backup codes"
-                    } else {
-                        "Search accounts"
-                    },
-                    &mut self.state.query,
-                    "Search your unlocked vault.",
-                    None,
-                );
+                let search_error = (self.state.query.len() > CodesPreferences::MAX_QUERY_BYTES
+                    || self.state.query.chars().any(char::is_control))
+                .then_some("Use at most 1024 UTF-8 bytes without control characters.");
+                let search = if !backups {
+                    c::labeled_search_field(ui, "search", &mut self.state.query, search_error)
+                } else {
+                    c::labeled_field(
+                        ui,
+                        "backup-search",
+                        "Search backup codes",
+                        &mut self.state.backup_query,
+                        "Search your unlocked vault.",
+                        None,
+                    )
+                };
                 if self.focus_form {
                     search.request_focus();
                     self.focus_form = false;
+                }
+                if !backups {
+                    if search.changed() {
+                        // Bound native edits without silently accepting a truncated query.
+                        if self.state.query.len() <= CodesPreferences::MAX_QUERY_BYTES
+                            && !self.state.query.chars().any(char::is_control)
+                        {
+                            if let Some(preferences) = &mut self.codes_preferences {
+                                preferences.query = Zeroizing::new(self.state.query.clone());
+                            }
+                            self.preferences_changed();
+                        }
+                    }
+                    self.codes_toolbar(ui);
+                    if self.state.query.len() > CodesPreferences::MAX_QUERY_BYTES
+                        || self.state.query.chars().any(char::is_control)
+                    {
+                        return;
+                    }
+                    if self.pending_mutation {
+                        c::progress(ui, "Saving encrypted changes…", None);
+                        return;
+                    }
                 }
                 // Counts derive solely from the authenticated repository. No sample
                 // accounts or invented current codes exist in production UI.
@@ -597,11 +873,31 @@ impl AuthenticatorApp {
                             label.into()
                         };
                         if c::button(ui, &label, c::ButtonStyle::Secondary).clicked() {
-                            self.status = Some(if self.state.set_idle_timeout(seconds).is_ok() {
-                                "Auto lock saved in your encrypted vault."
+                            self.begin_mutation(SaveIntent::IdleTimeout(seconds));
+                        }
+                    }
+                    c::heading(ui, "Clipboard expiry", 2);
+                    c::body(
+                        ui,
+                        "Clear only the copy still owned by Authenticator. Windows or other clipboard tools may retain copies.",
+                    );
+                    let current = self
+                        .state
+                        .vault()
+                        .map(|v| v.preferences().clipboard_timeout_seconds())
+                        .unwrap_or(30);
+                    for seconds in [15, 30, 60, 120] {
+                        let label = format!(
+                            "{}{} seconds",
+                            if current == seconds {
+                                "Selected · "
                             } else {
-                                "Auto lock could not be saved. Your previous setting is unchanged."
-                            });
+                                ""
+                            },
+                            seconds
+                        );
+                        if c::button(ui, &label, c::ButtonStyle::Secondary).clicked() {
+                            self.begin_mutation(SaveIntent::ClipboardTimeout(seconds));
                         }
                     }
                 });
@@ -629,22 +925,42 @@ impl AuthenticatorApp {
             }
             return;
         }
-        let start = c::button(
-            ui,
-            if self.capture_failed {
-                "Retry Screenshot to Scan"
-            } else {
-                "Screenshot to Scan"
-            },
-            c::ButtonStyle::Primary,
-        );
+        let mut manual = false;
+        let action_height = if ui.available_width() < theme::CODES_TOOLBAR_WIDE {
+            theme::WRAPPED_TAB_HEIGHT
+        } else {
+            theme::CONTROL_HEIGHT
+        };
+        let start = ui.columns(2, |columns| {
+            let start = c::button_with_height(
+                &mut columns[0],
+                if self.capture_failed {
+                    "Retry Screenshot to Scan"
+                } else {
+                    "Screenshot to Scan"
+                },
+                c::ButtonStyle::Primary,
+                action_height,
+            );
+            manual = c::button_with_height(
+                &mut columns[1],
+                "Add Account",
+                c::ButtonStyle::Primary,
+                action_height,
+            )
+            .clicked();
+            start
+        });
+        if manual {
+            self.start_alternative(ScanAlternative::Manual);
+        }
         if self.capture_focus {
             start.request_focus();
             self.capture_focus = false;
         }
         c::secondary(
             ui,
-            "Drag around a QR code in another window. Escape or Cancel returns here. Up to 4096 pixels per side and 4,194,304 pixels total.",
+            "Scan a QR in another window, or add an account manually.",
         );
         if start.clicked() {
             self.capture_message = None;
@@ -669,9 +985,6 @@ impl AuthenticatorApp {
         }
         if c::button(ui, "Import from Photos", c::ButtonStyle::Secondary).clicked() {
             self.start_alternative(ScanAlternative::Image);
-        }
-        if c::button(ui, "Manually Input", c::ButtonStyle::Secondary).clicked() {
-            self.start_alternative(ScanAlternative::Manual);
         }
         ui.add_space(theme::SMALL_GAP);
     }
@@ -1159,7 +1472,281 @@ impl AuthenticatorApp {
             }
         }
     }
+    fn preferences_changed(&mut self) {
+        self.preferences_dirty = Some(Instant::now());
+        self.preferences_error = false;
+        self.ordered_ids = None;
+        self.context
+            .request_repaint_after(Duration::from_millis(500));
+    }
+    pub fn set_idle_timeout(&mut self, seconds: u32) {
+        self.begin_mutation(SaveIntent::IdleTimeout(seconds));
+    }
+    fn begin_mutation(&mut self, intent: SaveIntent) -> bool {
+        let preferences = matches!(&intent, SaveIntent::CodesPreferences(_));
+        let Some(watch) = self.lifecycle.as_ref().ok().map(|l| l.watch()) else {
+            self.status =
+                Some("Windows lifecycle protection is unavailable. Restart before saving.");
+            return false;
+        };
+        let repaint = self.context.clone();
+        match self
+            .state
+            .begin_save(intent, watch, move || repaint.request_repaint())
+        {
+            Ok(()) => {
+                self.pending_mutation = true;
+                self.pending_preferences = preferences;
+                true
+            }
+            Err(_) => {
+                self.status = Some("Another operation is active. Finish it before saving changes.");
+                false
+            }
+        }
+    }
+    fn persist_codes_preferences(&mut self) {
+        if self.preferences_error
+            || self.state.busy()
+            || !self.state.is_unlocked()
+            || self.review.is_some()
+            || self.delete.is_some()
+            || self.state.capture_busy()
+            || self.image.is_some()
+            || self.capture_preparing.is_some()
+        {
+            return;
+        }
+        if self
+            .preferences_dirty
+            .is_some_and(|at| at.elapsed() >= Duration::from_millis(500))
+            && let Some(preferences) = self.codes_preferences.clone()
+            && self.begin_mutation(SaveIntent::CodesPreferences(preferences))
+        {
+            self.preferences_dirty = None;
+        }
+    }
+    fn advance_close(&mut self) {
+        if !self.closing {
+            return;
+        }
+        if let Some(outcome) = self.state.poll(Instant::now()) {
+            self.pending_mutation = false;
+            self.pending_preferences = false;
+            self.preferences_error = outcome.is_err();
+        }
+        if self.preferences_error && !self.close_locked {
+            return;
+        }
+        if self.state.is_unlocked()
+            && !self.state.busy()
+            && self.preferences_dirty.is_some()
+            && !self.preferences_error
+        {
+            self.preferences_dirty = Instant::now().checked_sub(Duration::from_secs(1));
+            self.persist_codes_preferences();
+        }
+        if self.close_locked
+            || (!self.state.busy()
+                && (self.preferences_dirty.is_none()
+                    || self.preferences_error
+                    || !self.state.is_unlocked()))
+        {
+            if !self.close_locked {
+                self.lock();
+            }
+            if !self.clipboard.cleanup_pending()
+                || self
+                    .close_cleanup_deadline
+                    .is_some_and(|deadline| Instant::now() >= deadline)
+            {
+                self.closing = false;
+                self.exit_approved = true;
+                self.context.send_viewport_cmd(egui::ViewportCommand::Close);
+            }
+        }
+    }
+    fn codes_toolbar(&mut self, ui: &mut egui::Ui) {
+        let Some(preferences) = &mut self.codes_preferences else {
+            return;
+        };
+        let folders = self
+            .state
+            .vault()
+            .map(|vault| {
+                vault
+                    .folders()
+                    .iter()
+                    .filter(|folder| folder.state().deletion == DeletionState::Active)
+                    .map(|folder| (folder.id(), folder.name().to_owned()))
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        let mut choices = vec![
+            (FolderFilter::All, "All accounts"),
+            (FolderFilter::Unfiled, "Unfiled"),
+        ];
+        choices.extend(
+            folders
+                .iter()
+                .map(|(id, name)| (FolderFilter::Folder(*id), name.as_str())),
+        );
+        let mut changed = false;
+        let columns = if ui.available_width() >= theme::CODES_TOOLBAR_WIDE {
+            3
+        } else {
+            2
+        };
+        let mut label = codes::sort_label(preferences.sort).to_owned();
+        let mut view = if preferences.view == ViewMode::List {
+            "List".to_owned()
+        } else {
+            "Grid".to_owned()
+        };
+        ui.columns(columns, |uis| {
+            if c::labeled_choice(
+                &mut uis[0],
+                "codes-sort",
+                "Sort accounts",
+                &mut label,
+                &codes::SORT_LABELS,
+            ) && let Some(index) = codes::SORT_LABELS.iter().position(|value| *value == label)
+            {
+                preferences.sort = codes::SORTS[index];
+                changed = true;
+            }
+            // Stable IDs, not possibly duplicate names, identify folders.
+            if c::labeled_selection(
+                &mut uis[1],
+                "codes-folder",
+                "Folder",
+                &mut preferences.folder,
+                &choices,
+            ) {
+                changed = true;
+            }
+            if columns == 3
+                && c::labeled_choice(
+                    &mut uis[2],
+                    "codes-view",
+                    "View",
+                    &mut view,
+                    &["List", "Grid"],
+                )
+            {
+                preferences.view = if view == "List" {
+                    ViewMode::List
+                } else {
+                    ViewMode::Grid
+                };
+                changed = true;
+            }
+        });
+        if columns == 2 && c::labeled_choice(ui, "codes-view", "View", &mut view, &["List", "Grid"])
+        {
+            preferences.view = if view == "List" {
+                ViewMode::List
+            } else {
+                ViewMode::Grid
+            };
+            changed = true;
+        }
+        if changed {
+            self.preferences_changed();
+        }
+        if self.preferences_dirty.is_some() {
+            c::secondary(ui, "Saving display preferences locally…");
+        }
+        if self.preferences_error
+            && c::button(
+                ui,
+                "Retry saving display preferences",
+                c::ButtonStyle::Secondary,
+            )
+            .clicked()
+        {
+            self.preferences_changed();
+        }
+    }
+    fn copy_text(&mut self, text: Zeroizing<String>) {
+        self.copy_with_window(text, None);
+    }
+    fn copy_with_window(
+        &mut self,
+        text: Zeroizing<String>,
+        window: Option<crate::platform::clipboard::CodeWindow>,
+    ) {
+        #[cfg(debug_assertions)]
+        {
+            self.evidence_copy_queued = None;
+        }
+        if !self.state.is_unlocked() {
+            return;
+        }
+        if let (Ok(vault), Ok(lifecycle)) = (self.state.vault(), &self.lifecycle)
+            && lifecycle.healthy()
+        {
+            let seconds = vault.preferences().clipboard_timeout_seconds();
+            let queued = if let Some(window) = window {
+                self.clipboard
+                    .copy_code(text, seconds, lifecycle.watch(), window)
+            } else {
+                self.clipboard.copy(text, seconds, lifecycle.watch())
+            };
+            #[cfg(debug_assertions)]
+            {
+                self.evidence_copy_queued = Some(queued);
+            }
+            if !queued {
+                self.clipboard_feedback = Some((
+                    "Clipboard queue is busy. Try Copy again.",
+                    Instant::now() + Duration::from_secs(5),
+                ));
+            }
+        } else {
+            self.clipboard_feedback = Some((
+                "Windows lifecycle protection is unavailable. Restart Authenticator before copying.",
+                Instant::now() + Duration::from_secs(5),
+            ));
+        }
+    }
+    fn delete_dialog(&mut self, ctx: &egui::Context) {
+        let Some((id, expected, mut dialog)) = self.delete.take() else {
+            return;
+        };
+        let mut confirm = false;
+        let close = dialog.show(ctx, |ui, first| {
+            c::body(ui, "Move this account to Trash? Its recovery codes and folder memberships are retained. You can restore it from Trash when the Trash screen is available.");
+            let cancel = c::button(ui, "Keep account", c::ButtonStyle::Secondary);
+            if first { cancel.request_focus(); }
+            if c::button(ui, "Move to Trash", c::ButtonStyle::Primary).clicked() { confirm = true; }
+            cancel.clicked() || confirm
+        });
+        if confirm {
+            self.begin_mutation(SaveIntent::Trash { id, expected });
+        } else if !close {
+            self.delete = Some((id, expected, dialog));
+        }
+    }
     fn code_cards(&mut self, ui: &mut egui::Ui) {
+        let frame_clock = codes::FrameClock(self.wall_clock.unix_seconds());
+        self.clock.observe(frame_clock.0, Instant::now());
+        if frame_clock.0.is_err() {
+            c::status(
+                ui,
+                "clock-unavailable",
+                "Codes are unavailable. Check the Windows date, time and time zone, then retry. No remote clock check is performed.",
+                c::StatusKind::Error,
+            );
+        } else if self.clock.shifted {
+            c::body(
+                ui,
+                "The system clock changed unexpectedly. Codes use the current local clock. Check Windows date/time if a service rejects them; no remote accuracy check is performed.",
+            );
+            if c::button(ui, "Dismiss clock guidance", c::ButtonStyle::Secondary).clicked() {
+                self.clock.shifted = false;
+            }
+        }
         let scroll_to = self
             .show_imported
             .then(|| self.imported.first().copied())
@@ -1168,86 +1755,201 @@ impl AuthenticatorApp {
         let Ok(vault) = self.state.vault() else {
             return;
         };
-        let query = Zeroizing::new(self.state.query.to_lowercase());
-        let mut found = false;
-        // Imported identity is ordered first, derived from committed account IDs.
-        let accounts = vault
+        let Some(preferences) = &self.codes_preferences else {
+            return;
+        };
+        if self.ordered_ids.is_none() {
+            self.ordered_ids = Some(codes::ordered(vault, preferences));
+        }
+        let ids = self.ordered_ids.as_deref().unwrap_or_default();
+        if ids.is_empty() {
+            c::heading(ui, "No matching accounts", 2);
+            c::body(
+                ui,
+                "Try another service or account name, or clear the search and folder filter.",
+            );
+            if c::button(ui, "Show all accounts", c::ButtonStyle::Secondary).clicked() {
+                self.state.query.zeroize();
+                if let Some(preferences) = &mut self.codes_preferences {
+                    preferences.query.zeroize();
+                    preferences.folder = FolderFilter::All;
+                }
+                self.preferences_changed();
+            }
+            return;
+        }
+        c::secondary(ui, &format!("{} matching account(s)", ids.len()));
+        let columns = if preferences.view == ViewMode::Grid
+            && ui.available_width() >= theme::CODES_GRID_MIN_WIDTH
+        {
+            2
+        } else {
+            1
+        };
+        let records = vault
             .accounts()
             .iter()
-            .filter(|a| a.state().deletion == DeletionState::Active);
-        let mut edit = None;
-        for account in accounts
-            .clone()
-            .filter(|a| self.imported.contains(&a.id()))
-            .chain(accounts.filter(|a| !self.imported.contains(&a.id())))
-        {
-            let draft = account.credential();
-            if !query.is_empty()
-                && !draft.service().to_lowercase().contains(&*query)
-                && !draft
-                    .account_identifier()
-                    .unwrap_or_default()
-                    .to_lowercase()
-                    .contains(&*query)
-            {
-                continue;
-            }
-            found = true;
-            let card = c::card(ui, |ui| {
-                if self.imported.contains(&account.id()) {
-                    c::secondary(ui, "SAVED · encrypted locally");
-                }
-                c::heading(ui, draft.service(), 2);
-                if let Some(identifier) = draft.account_identifier() {
-                    c::body(ui, identifier);
-                }
-                match otp::current_code(draft.secret(), draft.settings(), &SystemClock) {
-                    Ok(code) => {
-                        // Ordinary text, not a live region: avoid announcing every
-                        // countdown/code update to assistive technology.
-                        ui.add(egui::Label::new(theme::CODE.text(code.expose_value())));
-                        c::secondary(
-                            ui,
-                            &format!(
-                                "{} seconds remaining · {} digits",
-                                code.remaining_seconds,
-                                draft.settings().digits.count()
-                            ),
-                        );
-                        ui.add(
-                            egui::ProgressBar::new(
-                                code.remaining_seconds as f32
-                                    / draft.settings().period.seconds() as f32,
-                            )
-                            .fill(theme::BLUE),
-                        );
-                    }
-                    Err(error) => {
-                        c::status(ui, "clock-error", &error.to_string(), c::StatusKind::Error);
-                    }
-                }
-                if c::button(ui, "Edit account", c::ButtonStyle::Secondary).clicked() {
-                    edit = Some(account.id());
+            .map(|account| (account.id(), account))
+            .collect::<std::collections::BTreeMap<_, _>>();
+        let mut action = None;
+        for row in ids.chunks(columns) {
+            ui.columns(columns, |uis| {
+                for (index, id) in row.iter().enumerate() {
+                    let Some(account) = records.get(id) else {
+                        continue;
+                    };
+                    let ui = &mut uis[index];
+                    ui.push_id(id, |ui| {
+                        let card = c::card(ui, |ui| {
+                            ui.horizontal(|ui| {
+                                c::icon_tile(ui, c::Icon::Key);
+                                ui.vertical(|ui| {
+                                    c::heading(ui, account.credential().service(), 2);
+                                    if let Some(identifier) =
+                                        account.credential().account_identifier()
+                                    {
+                                        c::body(ui, identifier);
+                                    }
+                                });
+                            });
+                            if self.imported.contains(id) {
+                                c::secondary(ui, "Saved · encrypted locally");
+                            }
+                            let visible = ui.clip_rect().intersects(egui::Rect::from_min_size(
+                                ui.cursor().min,
+                                egui::vec2(ui.available_width(), theme::CODE_CARD_CONTENT_HEIGHT),
+                            ));
+                            let draft = account.credential();
+                            let code = if visible {
+                                otp::current_code(draft.secret(), draft.settings(), &frame_clock)
+                                    .ok()
+                            } else {
+                                None
+                            };
+                            if let Some(code) = &code {
+                                // Nonselectable ordinary text; never a live region or an
+                                // unguarded framework selection-copy route.
+                                let _code_label = ui.add(
+                                    egui::Label::new(
+                                        theme::CODE.text(&*codes::formatted(code.expose_value())),
+                                    )
+                                    .selectable(false),
+                                );
+                                #[cfg(debug_assertions)]
+                                self.evidence_code_bounds.push(_code_label.rect);
+                                c::secondary(
+                                    ui,
+                                    &format!("{} seconds remaining", code.remaining_seconds),
+                                );
+                                ui.add(
+                                    egui::ProgressBar::new(
+                                        code.remaining_seconds as f32
+                                            / draft.settings().period.seconds() as f32,
+                                    )
+                                    .desired_height(theme::PROGRESS_HEIGHT)
+                                    .fill(theme::BLUE),
+                                );
+                            } else {
+                                ui.add(egui::Label::new(theme::CODE.text("— —")).selectable(false));
+                                c::secondary(
+                                    ui,
+                                    if frame_clock.0.is_err() {
+                                        "Check Windows date and time"
+                                    } else {
+                                        "Code refreshes when visible"
+                                    },
+                                );
+                                ui.add(
+                                    egui::ProgressBar::new(0.)
+                                        .desired_height(theme::PROGRESS_HEIGHT),
+                                );
+                            }
+                            ui.add_enabled_ui(frame_clock.0.is_ok(), |ui| {
+                                if c::button(ui, "Copy code", c::ButtonStyle::Primary).clicked() {
+                                    action = Some(CodeAction::Copy(*id));
+                                }
+                            });
+                            if c::button(ui, "Edit account", c::ButtonStyle::Secondary).clicked() {
+                                action = Some(CodeAction::Edit(*id));
+                            }
+                            let delete = c::button(ui, "Delete account", c::ButtonStyle::Secondary);
+                            if delete.clicked() {
+                                action = Some(CodeAction::Delete(*id, account.state(), delete.id));
+                            }
+                        });
+                        if scroll_to == Some(*id) {
+                            card.response.scroll_to_me(Some(egui::Align::Center));
+                        }
+                    });
                 }
             });
-            if scroll_to == Some(account.id()) {
-                card.response.scroll_to_me(Some(egui::Align::Center));
-            }
             ui.add_space(theme::SMALL_GAP);
         }
-        if let Some(id) = edit {
-            self.review = vault
-                .accounts()
-                .iter()
-                .find(|a| a.id() == id)
-                .and_then(|a| ImportReview::edit(a).ok());
-            c::clear_sensitive_widget_memory(&self.context);
+        match action {
+            Some(CodeAction::Copy(id)) => {
+                // A click on a rendered old frame must never copy its old value.
+                let value = records.get(&id).and_then(|account| {
+                    let now = self.wall_clock.unix_seconds().ok()?;
+                    let value = codes::copy_value(account, &codes::FrameClock(Ok(now))).ok()?;
+                    let period = account.credential().settings().period.seconds();
+                    Some((
+                        value,
+                        crate::platform::clipboard::CodeWindow {
+                            counter: now / period,
+                            period,
+                        },
+                    ))
+                });
+                if let Some((value, window)) = value {
+                    self.copy_with_window(value, Some(window));
+                } else {
+                    self.status = Some("Cannot copy a code while the system clock is unavailable.");
+                }
+            }
+            Some(CodeAction::Edit(id)) => {
+                self.review = records
+                    .get(&id)
+                    .and_then(|account| ImportReview::edit(account).ok());
+                c::clear_sensitive_widget_memory(&self.context);
+            }
+            Some(CodeAction::Delete(id, expected, opener)) => {
+                self.delete = Some((
+                    id,
+                    expected,
+                    c::Dialog::new("Move account to Trash?", opener),
+                ));
+            }
+            None => {}
         }
-        if !found {
-            c::secondary(
-                ui,
-                "No matching accounts. Clear the search to see your accounts.",
-            );
+    }
+    /// Geometry only, for the isolated debug fixture to redact real framebuffer
+    /// screenshots before any pixels reach disk. No values/keys or AX IDs.
+    #[cfg(debug_assertions)]
+    pub fn code_bounds_for_evidence(&self) -> Vec<egui::Rect> {
+        self.evidence_code_bounds.clone()
+    }
+    #[cfg(debug_assertions)]
+    pub fn copy_diagnostics_for_evidence(&self) -> (bool, bool, bool, bool, Option<bool>) {
+        (
+            self.state.is_unlocked(),
+            self.lifecycle.is_ok(),
+            self.lifecycle.as_ref().is_ok_and(|value| value.healthy()),
+            self.owner != 0,
+            self.evidence_copy_queued,
+        )
+    }
+    fn background_logic(&mut self, ctx: &egui::Context, now: Instant) {
+        // run_logic deliberately retains the last UI events/time. Read neither
+        // for activity/shortcuts here; only real show passes record new input.
+        if self.lifecycle.as_ref().is_ok_and(|l| l.take_lock()) || self.state.idle_due(now) {
+            self.lock();
+        }
+        self.persist_codes_preferences();
+        if self.closing {
+            self.advance_close();
+        }
+        if self.state.session_active() {
+            ctx.request_repaint_after(Duration::from_secs(1));
         }
     }
     fn show_dialog(&mut self, ctx: &egui::Context) {
@@ -1280,6 +1982,15 @@ impl AuthenticatorApp {
     }
 }
 impl eframe::App for AuthenticatorApp {
+    fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
+        self.lock();
+        self.clipboard.shutdown();
+    }
+    fn logic(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // Eframe calls logic while hidden without painting UI. Lifecycle events
+        // independently request this pass; monotonic idle checks need no input.
+        self.background_logic(ctx, Instant::now());
+    }
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         self.show(ui);
     }
@@ -1305,6 +2016,639 @@ mod capture_privacy_tests {
                     })
                     .collect()
             })
+    }
+    #[test]
+    fn route_searches_stay_separate_and_corrected_input_clears_only_query_feedback()
+    -> Result<(), Box<dyn std::error::Error>> {
+        use crate::domain::{
+            otp::{OtpSettings, Secret},
+            records::{AccountDraft, Timestamp, Vault},
+        };
+        let directory = tempfile::tempdir()?;
+        let pass = || Zeroizing::new("disposable-route-search".into());
+        let mut vault = Vault::new(Timestamp(1));
+        let public = vault.add_account(
+            AccountDraft::new(
+                "Public search fixture",
+                None,
+                None,
+                Secret::from_base32("MY")?,
+                OtpSettings::default(),
+            )?,
+            Timestamp(2),
+        )?;
+        vault.add_account(
+            AccountDraft::new(
+                "Other search fixture",
+                None,
+                None,
+                Secret::from_base32("MY")?,
+                OtpSettings::default(),
+            )?,
+            Timestamp(3),
+        )?;
+        let mut preferences = vault.preferences().codes();
+        preferences.query = Zeroizing::new("public".into());
+        vault.set_codes_preferences(preferences, Timestamp(4))?;
+        let mut store = VaultStore::open_directory(directory.path())?;
+        store.create(pass(), vault)?;
+        let context = egui::Context::default();
+        context.enable_accesskit();
+        let mut app = AuthenticatorApp::with_context(context.clone(), Ok(store), 0);
+        app.state.repository_mut()?.unlock(pass())?;
+        let render = |app: &mut AuthenticatorApp, events| {
+            let mut output = context.run_ui(
+                egui::RawInput {
+                    screen_rect: Some(egui::Rect::from_min_size(
+                        egui::Pos2::ZERO,
+                        egui::vec2(600., 1800.),
+                    )),
+                    events,
+                    ..Default::default()
+                },
+                |root| app.show(root),
+            );
+            output.textures_delta.clear();
+            output
+        };
+        let first = render(&mut app, vec![]);
+        assert_eq!(app.state.query, "public");
+        assert_eq!(app.ordered_ids.as_deref(), Some([public].as_slice()));
+        assert!(
+            labels(&first)
+                .iter()
+                .any(|text| text == "1 matching account(s)")
+        );
+        app.state.navigate(Route::BackupCodes);
+        app.focus_form = true;
+        render(&mut app, vec![]);
+        render(&mut app, vec![egui::Event::Paste("absent".into())]);
+        assert_eq!(app.state.backup_query, "absent");
+        assert_eq!(app.state.query, "public");
+        assert_eq!(
+            &*app.codes_preferences.as_ref().ok_or("preferences")?.query,
+            "public"
+        );
+        app.state.navigate(Route::Codes);
+        app.focus_form = true;
+        let restored = render(&mut app, vec![]);
+        assert_eq!(app.state.query, "public");
+        assert_eq!(app.ordered_ids.as_deref(), Some([public].as_slice()));
+        assert!(
+            labels(&restored)
+                .iter()
+                .any(|text| text == "Public search fixture")
+        );
+        assert!(
+            !labels(&restored)
+                .iter()
+                .any(|text| text == "Other search fixture" || text == "absent")
+        );
+        assert_eq!(&*app.state.vault()?.preferences().codes().query, "public");
+
+        // Drive the actual TextEdit change path. These are deterministic input
+        // events, not a claim of an OS pointer/keyboard acceptance check.
+        let replace = |value: String| {
+            vec![
+                egui::Event::Key {
+                    key: egui::Key::A,
+                    physical_key: Some(egui::Key::A),
+                    pressed: true,
+                    repeat: false,
+                    modifiers: egui::Modifiers {
+                        ctrl: true,
+                        command: true,
+                        ..Default::default()
+                    },
+                },
+                egui::Event::Paste(value),
+            ]
+        };
+        app.status = Some("Unrelated operation notice");
+        render(
+            &mut app,
+            replace("x".repeat(CodesPreferences::MAX_QUERY_BYTES + 1)),
+        );
+        assert_eq!(app.state.query.len(), CodesPreferences::MAX_QUERY_BYTES + 1);
+        let invalid = render(&mut app, vec![]);
+        assert!(
+            labels(&invalid)
+                .iter()
+                .any(|text| text.contains("Use at most 1024 UTF-8 bytes"))
+        );
+        assert_eq!(
+            &*app.codes_preferences.as_ref().ok_or("preferences")?.query,
+            "public"
+        );
+        assert_eq!(app.status, Some("Unrelated operation notice"));
+        render(&mut app, replace("public".into()));
+        app.preferences_dirty = None;
+        let corrected = render(&mut app, vec![]);
+        assert_eq!(app.state.query, "public");
+        assert_eq!(app.status, Some("Unrelated operation notice"));
+        assert!(
+            labels(&corrected)
+                .iter()
+                .all(|text| !text.contains("1024 UTF-8 bytes"))
+        );
+        assert_eq!(app.ordered_ids.as_deref(), Some([public].as_slice()));
+        app.state.navigate(Route::BackupCodes);
+        render(&mut app, vec![]);
+        assert_eq!(app.state.backup_query, "absent");
+        app.lock();
+        assert!(app.state.query.is_empty() && app.state.backup_query.is_empty());
+        drop(app);
+        let mut reopened = VaultStore::open_directory(directory.path())?;
+        reopened.unlock(pass())?;
+        assert_eq!(&*reopened.vault()?.preferences().codes().query, "public");
+        Ok(())
+    }
+    #[test]
+    fn ordinary_close_write_failure_retains_hidden_latest_query_until_retry_or_deliberate_discard()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let directory = tempfile::tempdir()?;
+        let pass = || Zeroizing::new("disposable-close-error".into());
+        let mut store = VaultStore::open_directory(directory.path())?;
+        store.create(pass(), Vault::new(Timestamp(1)))?;
+        drop(store);
+        for retry in [true, false] {
+            let original = std::fs::read(directory.path().join("vault.bin"))?;
+            let ctx = egui::Context::default();
+            ctx.enable_accesskit();
+            let mut app = AuthenticatorApp::with_context(
+                ctx.clone(),
+                VaultStore::open_directory(directory.path()),
+                0,
+            );
+            app.state.repository_mut()?.unlock(pass())?;
+            let input = || egui::RawInput {
+                screen_rect: Some(egui::Rect::from_min_size(
+                    egui::Pos2::ZERO,
+                    egui::vec2(600., 900.),
+                )),
+                ..Default::default()
+            };
+            let mut first = ctx.run_ui(input(), |root| app.show(root));
+            first.textures_delta.clear();
+            app.state.query = if retry {
+                "private-close-error-query"
+            } else {
+                "private-discard-query"
+            }
+            .into();
+            app.codes_preferences.as_mut().ok_or("preferences")?.query =
+                Zeroizing::new(app.state.query.clone());
+            app.preferences_changed();
+            std::fs::write(
+                directory.path().join("vault.bin"),
+                b"disposable-preference-conflict",
+            )?;
+            let mut close = input();
+            close
+                .viewports
+                .entry(egui::ViewportId::ROOT)
+                .or_default()
+                .events
+                .push(egui::ViewportEvent::Close);
+            let mut started = ctx.run_ui(close, |root| app.show(root));
+            started.textures_delta.clear();
+            let deadline = Instant::now() + Duration::from_secs(25);
+            let mut error_labels = Vec::new();
+            while !app.preferences_error && Instant::now() < deadline {
+                let mut frame = ctx.run_ui(input(), |root| app.show(root));
+                frame.textures_delta.clear();
+                error_labels = labels(&frame);
+                assert!(
+                    !frame
+                        .viewport_output
+                        .get(&egui::ViewportId::ROOT)
+                        .is_some_and(|v| v
+                            .commands
+                            .iter()
+                            .any(|command| matches!(command, egui::ViewportCommand::Close)))
+                );
+                std::thread::sleep(Duration::from_millis(10));
+            }
+            assert!(app.closing && app.preferences_error && !app.close_locked);
+            assert!(
+                error_labels
+                    .iter()
+                    .any(|v| v.contains("Display changes could not be saved"))
+            );
+            assert!(
+                error_labels
+                    .iter()
+                    .any(|v| v == "Retry saving display changes")
+            );
+            assert!(
+                error_labels
+                    .iter()
+                    .any(|v| v == "Close without saving display changes")
+            );
+            assert!(
+                error_labels
+                    .iter()
+                    .all(|v| !v.contains("private-close-error"))
+            );
+            assert_eq!(
+                std::fs::read(directory.path().join("vault.bin"))?,
+                b"disposable-preference-conflict"
+            );
+            if retry {
+                std::fs::write(directory.path().join("vault.bin"), &original)?;
+                app.preferences_changed();
+            } else {
+                app.lock();
+                assert!(app.close_locked && app.close_cleanup_deadline.is_some());
+                app.advance_close();
+            }
+            while app.closing && Instant::now() < deadline {
+                let mut frame = ctx.run_ui(input(), |root| app.show(root));
+                frame.textures_delta.clear();
+                std::thread::sleep(Duration::from_millis(10));
+            }
+            assert!(!app.closing && !app.state.is_unlocked());
+            assert!(app.state.query.is_empty());
+            drop(app);
+            if !retry {
+                assert_eq!(
+                    std::fs::read(directory.path().join("vault.bin"))?,
+                    b"disposable-preference-conflict"
+                );
+                std::fs::write(directory.path().join("vault.bin"), &original)?;
+            }
+            let mut reopened = VaultStore::open_directory(directory.path())?;
+            reopened.unlock(pass())?;
+            assert_eq!(
+                &*reopened.vault()?.preferences().codes().query,
+                "private-close-error-query"
+            );
+        }
+        Ok(())
+    }
+    #[test]
+    fn hidden_logic_ignores_stale_events_and_requests_one_nonsensitive_ax_paint_without_showing()
+    -> Result<(), Box<dyn std::error::Error>> {
+        use crate::domain::{
+            otp::{OtpSettings, Secret},
+            records::AccountDraft,
+        };
+        let directory = tempfile::tempdir()?;
+        let pass = || Zeroizing::new("disposable-hidden-logic".into());
+        let mut vault = Vault::new(Timestamp(1));
+        vault.add_account(
+            AccountDraft::new(
+                "private-hidden-service-sentinel",
+                None,
+                Some("private-hidden-user-sentinel"),
+                Secret::from_base32("MY")?,
+                OtpSettings::default(),
+            )?,
+            Timestamp(2),
+        )?;
+        let mut store = VaultStore::open_directory(directory.path())?;
+        store.create(pass(), vault)?;
+        let ctx = egui::Context::default();
+        ctx.enable_accesskit();
+        let mut app = AuthenticatorApp::with_context(ctx.clone(), Ok(store), 0);
+        app.state.repository_mut()?.unlock(pass())?;
+        let mut shown = egui::RawInput {
+            screen_rect: Some(egui::Rect::from_min_size(
+                egui::Pos2::ZERO,
+                egui::vec2(600., 1800.),
+            )),
+            events: vec![egui::Event::PointerMoved(egui::pos2(30., 30.))],
+            ..Default::default()
+        };
+        let mut frame = ctx.run_ui(shown.clone(), |root| app.show(root));
+        frame.textures_delta.clear();
+        assert!(
+            labels(&frame)
+                .iter()
+                .any(|value| value.contains("private-hidden-service"))
+        );
+        assert!(ctx.input(|input| !input.events.is_empty()));
+        let base = Instant::now();
+        app.state.activity(base);
+        shown.events.clear();
+        let info = shown.viewports.entry(egui::ViewportId::ROOT).or_default();
+        info.minimized = Some(true);
+        let logic = ctx.run_logic(&shown, |context| {
+            app.background_logic(context, base + Duration::from_secs(301))
+        });
+        assert!(!app.state.session_active());
+        assert!(app.state.query.is_empty());
+        assert!(
+            ctx.input(|input| !input.events.is_empty()),
+            "the framework contract retains old UI input"
+        );
+        let commands = logic
+            .viewport_commands
+            .get(&egui::ViewportId::ROOT)
+            .ok_or("hidden scrub command")?;
+        assert_eq!(
+            commands
+                .iter()
+                .filter(|command| matches!(command, egui::ViewportCommand::RequestPaintWhileHidden))
+                .count(),
+            1
+        );
+        assert!(!commands.iter().any(|command| matches!(
+            command,
+            egui::ViewportCommand::Visible(true) | egui::ViewportCommand::Minimized(false)
+        )));
+        // Execute the one pass the integration was explicitly asked to run.
+        let mut scrubbed = ctx.run_ui(shown.clone(), |root| app.show(root));
+        scrubbed.textures_delta.clear();
+        assert!(
+            labels(&scrubbed)
+                .iter()
+                .all(|value| !value.contains("private-hidden-"))
+        );
+        assert!(
+            scrubbed
+                .viewport_output
+                .get(&egui::ViewportId::ROOT)
+                .is_none_or(|viewport| !viewport.commands.iter().any(|command| matches!(
+                    command,
+                    egui::ViewportCommand::RequestPaintWhileHidden
+                )))
+        );
+        Ok(())
+    }
+    #[test]
+    fn live_query_coalesces_during_real_held_write_and_normal_close_flushes_latest_without_ax()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let directory = tempfile::tempdir()?;
+        let pass = || Zeroizing::new("disposable-close-preferences".into());
+        let mut store = VaultStore::open_directory(directory.path())?;
+        store.create(pass(), Vault::new(Timestamp(1)))?;
+        let ctx = egui::Context::default();
+        ctx.enable_accesskit();
+        let mut app = AuthenticatorApp::with_context(ctx.clone(), Ok(store), 0);
+        app.state.repository_mut()?.unlock(pass())?;
+        let input = || egui::RawInput {
+            screen_rect: Some(egui::Rect::from_min_size(
+                egui::Pos2::ZERO,
+                egui::vec2(600., 900.),
+            )),
+            ..Default::default()
+        };
+        let mut initial = ctx.run_ui(input(), |root| app.show(root));
+        initial.textures_delta.clear();
+        app.state.query = "private-first-query".into();
+        app.codes_preferences.as_mut().ok_or("preferences")?.query =
+            Zeroizing::new(app.state.query.clone());
+        app.preferences_changed();
+        app.preferences_dirty = Instant::now().checked_sub(Duration::from_secs(1));
+        let gate = Arc::new(crate::storage::test_gate::CommitGate::default());
+        let _release = gate.release_on_drop();
+        app.state.hold_next_save_after_admission(gate.clone());
+        app.persist_codes_preferences();
+        assert!(gate.wait_entered(Duration::from_secs(10)));
+        app.state.query = "private-latest-query".into();
+        let preferences = app.codes_preferences.as_mut().ok_or("preferences")?;
+        preferences.query = Zeroizing::new(app.state.query.clone());
+        preferences.sort = crate::domain::records::SortOrder::ServiceDescending;
+        preferences.view = ViewMode::Grid;
+        app.preferences_changed();
+        let mut live = ctx.run_ui(input(), |root| app.show(root));
+        live.textures_delta.clear();
+        assert!(labels(&live).iter().any(|v| v == "private-latest-query"));
+        assert!(app.state.busy());
+        let mut close = input();
+        close
+            .viewports
+            .entry(egui::ViewportId::ROOT)
+            .or_default()
+            .events
+            .push(egui::ViewportEvent::Close);
+        let mut closing = ctx.run_ui(close, |root| app.show(root));
+        closing.textures_delta.clear();
+        assert!(app.closing);
+        assert!(
+            labels(&closing)
+                .iter()
+                .all(|v| !v.contains("private-first") && !v.contains("private-latest"))
+        );
+        assert!(
+            closing
+                .viewport_output
+                .get(&egui::ViewportId::ROOT)
+                .is_some_and(|viewport| viewport
+                    .commands
+                    .iter()
+                    .any(|command| matches!(command, egui::ViewportCommand::CancelClose)))
+        );
+        gate.release();
+        let deadline = Instant::now() + Duration::from_secs(30);
+        while app.closing && Instant::now() < deadline {
+            let mut frame = ctx.run_ui(input(), |root| app.show(root));
+            frame.textures_delta.clear();
+            assert!(labels(&frame).iter().all(|v| !v.contains("private-latest")));
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        assert!(!app.closing);
+        assert!(!app.state.is_unlocked());
+        assert!(app.state.query.is_empty());
+        assert!(app.exit_approved);
+        // The integration reports the programmatic Close back as another close
+        // request. It must be allowed through, not start another CancelClose loop.
+        let mut approved = input();
+        approved
+            .viewports
+            .entry(egui::ViewportId::ROOT)
+            .or_default()
+            .events
+            .push(egui::ViewportEvent::Close);
+        let mut final_frame = ctx.run_ui(approved, |root| app.show(root));
+        final_frame.textures_delta.clear();
+        assert!(!app.closing);
+        assert!(
+            final_frame
+                .viewport_output
+                .get(&egui::ViewportId::ROOT)
+                .is_none_or(|viewport| !viewport
+                    .commands
+                    .iter()
+                    .any(|command| matches!(command, egui::ViewportCommand::CancelClose)))
+        );
+        drop(app);
+        let mut reopened = VaultStore::open_directory(directory.path())?;
+        reopened.unlock(pass())?;
+        let preferences = reopened.vault()?.preferences();
+        assert_eq!(&*preferences.codes().query, "private-latest-query");
+        assert_eq!(
+            preferences.sort(),
+            crate::domain::records::SortOrder::ServiceDescending
+        );
+        assert_eq!(preferences.view(), ViewMode::Grid);
+        Ok(())
+    }
+    #[test]
+    fn codes_frame_clock_jump_failure_preferences_restore_copy_output_and_lock_ax()
+    -> Result<(), Box<dyn std::error::Error>> {
+        use crate::domain::{
+            otp::{OtpSettings, Secret},
+            records::{AccountDraft, Timestamp, Vault},
+        };
+        use std::sync::atomic::AtomicU64;
+        struct TestClock(Arc<AtomicU64>);
+        impl Clock for TestClock {
+            fn unix_seconds(&self) -> Result<u64, crate::error::AppError> {
+                let value = self.0.load(Ordering::SeqCst);
+                if value == u64::MAX {
+                    Err(crate::error::AppError::ClockUnavailable)
+                } else {
+                    Ok(value)
+                }
+            }
+        }
+        let directory = tempfile::tempdir()?;
+        let pass = || Zeroizing::new("disposable-code-frame".into());
+        let mut v = Vault::new(Timestamp(1));
+        v.add_account(
+            AccountDraft::new(
+                "Private clock metadata sentinel",
+                None,
+                Some("fixture-user"),
+                Secret::from_base32("GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ")?,
+                OtpSettings::default(),
+            )?,
+            Timestamp(2),
+        )?;
+        let mut preferences = v.preferences().codes();
+        preferences.query = Zeroizing::new("metadata".into());
+        preferences.view = ViewMode::Grid;
+        v.set_codes_preferences(preferences, Timestamp(3))?;
+        let mut store = VaultStore::open_directory(directory.path())?;
+        store.create(pass(), v)?;
+        let ctx = egui::Context::default();
+        ctx.enable_accesskit();
+        let mut app = AuthenticatorApp::with_context(ctx.clone(), Ok(store), 0);
+        app.state.repository_mut()?.unlock(pass())?;
+        let seconds = Arc::new(AtomicU64::new(59));
+        app.wall_clock = Box::new(TestClock(seconds.clone()));
+        let render = |app: &mut AuthenticatorApp| {
+            let mut output = ctx.run_ui(
+                egui::RawInput {
+                    screen_rect: Some(egui::Rect::from_min_size(
+                        egui::Pos2::ZERO,
+                        egui::vec2(600., 1800.),
+                    )),
+                    ..Default::default()
+                },
+                |root| app.show(root),
+            );
+            output.textures_delta.clear();
+            output
+        };
+        let before = render(&mut app);
+        let copy_ids = |frame: &egui::FullOutput| {
+            frame
+                .platform_output
+                .accesskit_update
+                .as_ref()
+                .map(|tree| {
+                    tree.nodes
+                        .iter()
+                        .filter(|(_, node)| node.label() == Some("Copy code"))
+                        .map(|(id, _)| *id)
+                        .collect::<Vec<_>>()
+                })
+                .unwrap_or_default()
+        };
+        let ids_before = copy_ids(&before);
+        assert!(!ids_before.is_empty());
+        app.clipboard_feedback = Some(("Copied.", Instant::now() + Duration::from_secs(5)));
+        let feedback_frame = render(&mut app);
+        assert_eq!(
+            copy_ids(&feedback_frame),
+            ids_before,
+            "clipboard feedback must preserve card/control identity and keyboard focus"
+        );
+        app.clipboard_feedback = None;
+        let cleared_feedback = render(&mut app);
+        assert_eq!(copy_ids(&cleared_feedback), ids_before);
+        assert_eq!(app.state.query, "metadata");
+        assert_eq!(
+            app.codes_preferences.as_ref().map(|p| p.view),
+            Some(ViewMode::Grid)
+        );
+        let initial = labels(&before)
+            .into_iter()
+            .find(|v| v.chars().filter(char::is_ascii_digit).count() == 6 && v.len() == 7)
+            .ok_or("missing initial code")?;
+        seconds.store(60, Ordering::SeqCst);
+        let boundary = render(&mut app);
+        assert!(!labels(&boundary).contains(&initial));
+        let next = labels(&boundary)
+            .into_iter()
+            .find(|v| v.chars().filter(char::is_ascii_digit).count() == 6 && v.len() == 7)
+            .ok_or("missing next code")?;
+        seconds.store(0, Ordering::SeqCst);
+        let back = render(&mut app);
+        assert!(!labels(&back).contains(&next));
+        assert!(labels(&back).iter().any(|v| v.contains("clock changed")));
+        seconds.store(u64::MAX, Ordering::SeqCst);
+        let failed = render(&mut app);
+        assert!(
+            labels(&failed)
+                .iter()
+                .any(|v| v.contains("Codes are unavailable"))
+        );
+        assert!(!labels(&failed).contains(&initial));
+        assert!(!labels(&failed).contains(&next));
+        assert!(
+            failed
+                .platform_output
+                .accesskit_update
+                .as_ref()
+                .is_some_and(|tree| tree
+                    .nodes
+                    .iter()
+                    .filter(|(_, node)| node.label() == Some("Copy code"))
+                    .all(|(_, node)| node.is_disabled()))
+        );
+        // Simulate the framework output route directly. Native owner=0 fails
+        // before OpenClipboard: no interactive user clipboard is touched.
+        ctx.copy_text("public framework metadata".into());
+        let guarded = render(&mut app);
+        assert!(
+            !guarded
+                .platform_output
+                .commands
+                .iter()
+                .any(|command| matches!(command, egui::OutputCommand::CopyText(_)))
+        );
+        app.lifecycle = Err(crate::error::AppError::StorageUnavailable);
+        app.copy_with_window(
+            Zeroizing::new("123456".into()),
+            Some(crate::platform::clipboard::CodeWindow {
+                counter: 1,
+                period: 30,
+            }),
+        );
+        assert!(
+            app.clipboard_feedback
+                .is_some_and(|(text, _)| text.contains("lifecycle protection is unavailable"))
+        );
+        #[cfg(debug_assertions)]
+        assert_eq!(app.evidence_copy_queued, None);
+        app.lock();
+        let locked = render(&mut app);
+        assert!(app.state.query.is_empty());
+        assert!(app.codes_preferences.is_none());
+        assert!(app.ordered_ids.is_none());
+        assert!(
+            labels(&locked)
+                .iter()
+                .all(|value| !value.contains("metadata sentinel")
+                    && !value.contains("fixture-user")
+                    && !value.contains(&initial)
+                    && !value.contains(&next))
+        );
+        Ok(())
     }
     #[test]
     fn lock_clears_ui_before_an_actual_admitted_save_action_is_released()
@@ -1519,10 +2863,11 @@ mod capture_privacy_tests {
     -> Result<(), Box<dyn std::error::Error>> {
         let directory = tempfile::tempdir()?;
         let mut store = VaultStore::open_directory(directory.path())?;
-        store.create(
-            Zeroizing::new("disposable-private-frame".into()),
-            Vault::new(Timestamp(1)),
-        )?;
+        let mut vault = Vault::new(Timestamp(1));
+        let mut preferences = vault.preferences().codes();
+        preferences.query = Zeroizing::new("disposable private query sentinel".into());
+        vault.set_codes_preferences(preferences, Timestamp(1))?;
+        store.create(Zeroizing::new("disposable-private-frame".into()), vault)?;
         let context = egui::Context::default();
         context.enable_accesskit();
         let mut app = AuthenticatorApp::with_context(context.clone(), Ok(store), 0);

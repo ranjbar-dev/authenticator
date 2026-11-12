@@ -499,7 +499,7 @@ fn validation_errors_are_actionable_fixed_and_seed_safe() -> Result<(), AppError
 #[test]
 fn stable_identity_timestamps_associations_and_nonblocking_duplicates() -> Result<(), AppError> {
     let mut vault = Vault::new(Timestamp(100));
-    assert_eq!(vault.schema_version(), 1);
+    assert_eq!(vault.schema_version(), 2);
     assert_eq!(vault.preferences().lock_timeout_seconds(), 300);
     assert_eq!(vault.preferences().clipboard_timeout_seconds(), 30);
     assert!(!vault.preferences().auto_start());

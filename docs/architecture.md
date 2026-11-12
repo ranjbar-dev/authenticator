@@ -274,7 +274,7 @@ There is no network-service layer. UTC seconds are injected for OTP generation; 
 
 Task 03 now implements `VaultStore`: a random 256-bit DEK wrapped under an Argon2id-derived passphrase KEK; RustCrypto argon2 0.6.0 and chacha20poly1305 0.11.0, both with zeroize enabled. OS randomness comes from getrandom 0.4.3/Windows ProcessPrng. All domain entities, IDs, timestamps, seeds, recovery codes, trash and preferences are inside authenticated ciphertext. Exact binary encoding, AAD, calibration, bounds and honest limitations are specified in [storage-format.md](storage-format.md). No UI integration is claimed until task 05.
 
-The local format discriminator is AUTHLOC1, envelope/schema version 1. Schema version stays encrypted. The bounded custom codec has no general-purpose deserialize allocations: file/plaintext cap64MiB plus envelope/tag, per-field byte limits, collection/count/minimum-byte checks, total recovery count and whole `Vault::validate` before session installation or commit. Schema1 is the first supported version, so unsupported older/future schemas fail without migration/write; future migration transforms must use detached state and the same validated transaction boundary. Never initialize over an existing unreadable/corrupt file. Task 11 must define a distinct independent backup format/passphrase/keys; reference `.vault` compatibility remains task 22 discovery.
+The local format discriminator is AUTHLOC1, envelope version1 and current encrypted payload schema2. The bounded custom codec has no general-purpose deserialize allocations: file/plaintext cap64MiB plus envelope/tag, per-field byte limits, collection/count/minimum-byte checks, total recovery count and whole `Vault::validate` before session installation or commit. Schema1 migrates explicitly in detached memory to2 with empty query/All folder; unlock never writes, and the next successful atomic transaction serializes2. Schema0/future/corrupt schemas fail without writes. Never initialize over an existing unreadable/corrupt file. Task11 must define a distinct independent backup format/passphrase/keys; reference `.vault` compatibility remains Task22 discovery.
 
 Windows SHGetKnownFolderPath resolves per-user LocalAppData/Authenticator. `vault.bin`, empty `session.lock` and random pending files use protected current-user-only DACLs; failure is fatal. A lifetime OS instance lock and exclusive mutable repository API serialize access. Transactions edit detached clones and preserve prior memory/disk on cancellation, invalid aggregates, panic and precommit failures. A ciphertext snapshot rejects unexpected external edits. Ciphertext temporary files are flushed before same-volume MoveFileExW replacement; rename success is the commit point and no fallible postcommit step reports a false rollback. Real subprocess termination and native sharing-violation tests verify preservation. Hardware power-loss durability is not certified. Tests use only disposable tempfile directories, never user AppData.
 
@@ -394,3 +394,94 @@ three existing unmaintained notices concern zbus_names/zvariant/zvariant_derive
 in the Unix accessibility dependency tree, not the new decoding path. No quircs
 advisory matched the current RustSec listing. This is a point-in-time dependency
 check, not certification of decoder security or future maintenance.
+## Codes list and clipboard (Task10)
+
+`ui/codes.rs` derives a cached list of stable account IDs from the single unlocked
+Vault; it does not own credentials or clone a store/DEK. Only active accounts are
+shown. Search and metadata sorts use locale-independent Unicode16 full case
+folding (`caseless0.2.2`), without accent removal, normalization or email aliases.
+Latest/Earliest use creation time, not edit time. All ties use ascending stable ID;
+missing account identifiers sort last in both account directions. All/Unfiled/
+existing-folder navigation reads actual many-to-many memberships. A recently saved
+ID receives a highlight/scroll target without overriding the requested order.
+
+Codes and Backup Codes keep separate search buffers and widget identities. Only
+the Codes query projects the encrypted Codes preferences; editing the other tab
+cannot change its visible query or filtering. Both session buffers clear on Lock.
+Query validation is derived inline from the current input, so correction removes
+its error immediately without overwriting unrelated operation feedback.
+
+The shared header retains Help, Lock, Screenshot to Scan and Add Account; photo
+input stays local. Shared native labeled choices provide all six exact reference
+sort labels and List/Grid. Grid uses two columns when the content holder has600
+logical points, otherwise one readable column. The root scroll holder disables
+content drag scrolling; wheel/bar/caret/focus scrolling and explicit separate
+Copy/Edit/Delete buttons remain. Codes group6 digits3+3 or8 digits4+4 and use the
+whole CODE typography role. Key fallback tiles use opaque BLUE/ON_BLUE vectors.
+
+One wall-clock sample serves each frame. Only visible cards compute HMACs; cached
+ID ordering is invalidated by list/filter changes and mutation completion. UTC
+second repaint deadlines include every configured OTP boundary. A click samples
+the clock again, copies raw digits and passes only period/counter validity metadata
+to the clipboard actor. That actor checks the wall clock again immediately before
+native mutation and text publication, rejecting a queued expired code rather than
+receiving a seed. Clock failure removes values and disables Copy. A wall versus
+monotonic delta >5seconds shows local date/time guidance; there is no remote time
+verification or OS clock mutation. Resume/session events use the existing native
+lifecycle gate, lock and request fresh state.
+
+`App::logic` uses monotonic idle time and lifecycle signals while hidden/minimized;
+it never consumes the stale UI events/time retained by pinned eframe0.37's public
+`Context::run_logic` contract. On Lock the app requests exactly one public
+RequestPaintWhileHidden scrub pass, without unminimizing/showing an ordinary hidden
+window. Actual capture restoration still follows its full nonsensitive-frame rule.
+Locked idle UI does not request a periodic repaint. The clipboard actor/timer is
+independent of Root paint and native lifecycle events.
+
+All display and timeout writes use the existing sole-store-owner cancellable async
+SaveIntent worker. Query saves debounce500ms and coalesce edits made during a write;
+completion never overwrites newer live input. Failure keeps the previous vault and
+offers Retry. Hidden logic also services pending display saves. Normal Close flushes
+the latest valid display preferences behind a nonsensitive closing frame. A failed
+flush remains on that nonsensitive error screen with Retry and deliberate Close
+without saving. That discard action still performs the bounded native clipboard
+cleanup ACK stage while Root pumps owner messages. Ordinary successful close also
+waits up to300ms in that pumping stage, followed by the at-most300ms on-exit wait;
+an approved programmatic close is not intercepted again. A second forced close can
+cancel the wait. OS/idle/explicit
+Lock immediately clears UI/query/widget state and cancels outstanding operations;
+uncommitted display changes may be lost on Lock, force-close, storage failure or
+process termination. Already admitted complete encrypted operations retain the
+existing honest cancellation semantics. New preference/Trash mutations clamp their
+metadata timestamp to the aggregate update time after local clock correction;
+OTP generation continues to use actual wall time.
+
+Payload schema2 adds encrypted bounded query and stable folder-filter identity with
+an explicit lazy schema1 migration; envelope1 is unchanged. See storage-format.md.
+Confirmed Delete sets only the account's Trash state in one real atomic transaction,
+retaining IDs, recovery values/used states and folder associations. Cancel is inert.
+The full Trash screen/restoration/permanent deletion remain Task18. Task17 should
+reuse FolderFilter, `Preferences::codes` and `Vault::set_codes_preferences`; deleting
+the selected folder must reset that filter to All in the same transaction.
+
+`platform/clipboard.rs` owns a bounded eight-message actor, zeroizing queued text,
+Win32 global-memory ownership and a nonplaintext lease (HWND, random16-byte marker,
+sequence and salted SHA256 of exact UTF-16 bytes/length). Native isolated tests
+observed sequence advancement at CloseClipboard, so a fresh exclusive reopen
+verifies owner/marker/content before sampling the established sequence. If that
+reopen is Busy, conservative provisional evidence is retained without rebasing its
+sequence; cleanup later still requires the exact sequence and all ownership proof
+in one exclusive open. A post-close external replacement, including identical text,
+cannot be adopted as an owned copy. No unrelated Unicode clipboard text is read.
+Framework CopyText output is intercepted too; secret/recovery editors retain their
+native password clipboard guard even when visually revealed.
+
+Expiry/Lock/lifecycle cleanup opens with NULL (so Root HWND destruction cannot make
+opening fail) and conditionally clears inside the same exclusive interval. Busy
+clears retry off UI; after2seconds the actor warns and continues with only the
+nonplaintext lease. Normal shutdown requests cleanup and waits at most300ms on UI;
+the actor has a2second best-effort stop budget. Windows calls already admitted may
+finish after cancellation or stall; process termination/OS denial can defeat final
+cleanup. History/cloud opt-out formats are hints to Windows, not protection against
+third-party clipboard observers. Full constraints and primary references are in
+security-design.md and docs/qa/task10/implementation-evidence.md.

@@ -410,6 +410,30 @@ pub enum ViewMode {
     List,
     Grid,
 }
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum FolderFilter {
+    #[default]
+    All,
+    Unfiled,
+    Folder(FolderId),
+}
+#[derive(Clone)]
+pub struct CodesPreferences {
+    pub query: Zeroizing<String>,
+    pub sort: SortOrder,
+    pub view: ViewMode,
+    pub folder: FolderFilter,
+}
+redacted_debug!(CodesPreferences);
+impl CodesPreferences {
+    pub const MAX_QUERY_BYTES: usize = 1024;
+    pub fn validate(&self) -> Result<(), AppError> {
+        if self.query.len() > Self::MAX_QUERY_BYTES || self.query.chars().any(char::is_control) {
+            return Err(AppError::InvalidRecord);
+        }
+        Ok(())
+    }
+}
 #[derive(Clone)]
 pub struct Preferences {
     pub(crate) id: PreferencesId,
@@ -419,6 +443,8 @@ pub struct Preferences {
     pub(crate) auto_start: bool,
     pub(crate) lock_timeout_seconds: u32,
     pub(crate) clipboard_timeout_seconds: u32,
+    pub(crate) query: Zeroizing<String>,
+    pub(crate) folder: FolderFilter,
 }
 impl Preferences {
     pub fn new(at: Timestamp) -> Self {
@@ -430,6 +456,8 @@ impl Preferences {
             auto_start: false,
             lock_timeout_seconds: 300,
             clipboard_timeout_seconds: 30,
+            query: Zeroizing::new(String::new()),
+            folder: FolderFilter::All,
         }
     }
     pub fn id(&self) -> PreferencesId {
@@ -453,8 +481,17 @@ impl Preferences {
     pub fn clipboard_timeout_seconds(&self) -> u32 {
         self.clipboard_timeout_seconds
     }
+    pub fn codes(&self) -> CodesPreferences {
+        CodesPreferences {
+            query: self.query.clone(),
+            sort: self.sort,
+            view: self.view,
+            folder: self.folder,
+        }
+    }
     pub fn validate(&self) -> Result<(), AppError> {
         self.state.validate()?;
+        self.codes().validate()?;
         if !(1..=86_400).contains(&self.lock_timeout_seconds)
             || !(1..=86_400).contains(&self.clipboard_timeout_seconds)
         {
@@ -484,7 +521,7 @@ pub struct Vault {
     pub(crate) backup_sets: Vec<BackupCodeSet>,
 }
 impl Vault {
-    pub const SCHEMA_VERSION: u32 = 1;
+    pub const SCHEMA_VERSION: u32 = 2;
     /// Bound entity vectors and total recovery-code count at every import boundary.
     /// The encrypted reader must ALSO bound bytes before deserializing allocations.
     pub const MAX_RECORDS: usize = 10_000;
@@ -521,6 +558,61 @@ impl Vault {
         }
         self.preferences.lock_timeout_seconds = seconds;
         self.preferences.state.touch(at)?;
+        self.state.touch(at)
+    }
+    /// Preference/Trash writes use a monotonic metadata timestamp after local
+    /// clock correction; OTP itself always uses the actual current wall clock.
+    pub fn mutation_time(&self, at: Timestamp) -> Timestamp {
+        Timestamp(at.0.max(self.state.updated_at.0))
+    }
+    pub fn set_codes_preferences(
+        &mut self,
+        value: CodesPreferences,
+        at: Timestamp,
+    ) -> Result<(), AppError> {
+        value.validate()?;
+        if let FolderFilter::Folder(id) = value.folder
+            && !self
+                .folders
+                .iter()
+                .any(|f| f.id == id && f.state.deletion == DeletionState::Active)
+        {
+            return Err(AppError::InvalidRecord);
+        }
+        let at = self.mutation_time(at);
+        self.preferences.state.touch(at)?;
+        self.preferences.sort = value.sort;
+        self.preferences.view = value.view;
+        self.preferences.query = value.query;
+        self.preferences.folder = value.folder;
+        self.state.touch(at)
+    }
+    pub fn set_clipboard_timeout(&mut self, seconds: u32, at: Timestamp) -> Result<(), AppError> {
+        if !(1..=86_400).contains(&seconds) {
+            return Err(AppError::InvalidRecord);
+        }
+        let at = self.mutation_time(at);
+        self.preferences.state.touch(at)?;
+        self.preferences.clipboard_timeout_seconds = seconds;
+        self.state.touch(at)
+    }
+    pub fn trash_account(
+        &mut self,
+        id: AccountId,
+        expected: RecordState,
+        at: Timestamp,
+    ) -> Result<(), AppError> {
+        let at = self.mutation_time(at);
+        let account = self
+            .accounts
+            .iter_mut()
+            .find(|a| a.id == id)
+            .ok_or(AppError::StaleAccount)?;
+        if account.state != expected || account.state.deletion != DeletionState::Active {
+            return Err(AppError::StaleAccount);
+        }
+        account.state.touch(at)?;
+        account.state.deletion = DeletionState::Trashed { at };
         self.state.touch(at)
     }
     pub fn accounts(&self) -> &[Account] {
@@ -706,6 +798,14 @@ impl Vault {
             }
         }
         let mut memberships = BTreeSet::new();
+        if let FolderFilter::Folder(id) = self.preferences.folder
+            && !self
+                .folders
+                .iter()
+                .any(|f| f.id == id && f.state.deletion == DeletionState::Active)
+        {
+            return Err(AppError::InvalidRecord);
+        }
         let mut pairs = BTreeSet::new();
         for membership in &self.memberships {
             membership.state.validate()?;

@@ -79,6 +79,15 @@ pub(super) fn encode(v: &Vault) -> Result<Zeroizing<Vec<u8>>> {
     w.u8(u8::from(p.auto_start))?;
     w.u32(p.lock_timeout_seconds)?;
     w.u32(p.clipboard_timeout_seconds)?;
+    w.text(&p.query)?;
+    match p.folder {
+        FolderFilter::All => w.u8(0)?,
+        FolderFilter::Unfiled => w.u8(1)?,
+        FolderFilter::Folder(id) => {
+            w.u8(2)?;
+            w.bytes(id.as_uuid().as_bytes())?;
+        }
+    }
     w.count(v.accounts.len())?;
     for a in &v.accounts {
         w.identity(a.id.as_uuid(), a.state)?;
@@ -208,7 +217,7 @@ pub(super) fn decode(bytes: &[u8]) -> Result<Vault> {
     // Schema 1 is the first released schema. There is no legitimate schema 0.
     // Future migrations must transform a detached candidate and validate before commit.
     let schema_version = r.u32()?;
-    if schema_version != Vault::SCHEMA_VERSION {
+    if !(1..=Vault::SCHEMA_VERSION).contains(&schema_version) {
         return Err(AppError::UnsupportedVault);
     }
     let id = VaultId::from_uuid(r.id()?)?;
@@ -237,10 +246,25 @@ pub(super) fn decode(bytes: &[u8]) -> Result<Vault> {
         auto_start: r.boolean()?,
         lock_timeout_seconds: r.u32()?,
         clipboard_timeout_seconds: r.u32()?,
+        query: if schema_version >= 2 {
+            Zeroizing::new(r.text(CodesPreferences::MAX_QUERY_BYTES)?.to_owned())
+        } else {
+            Zeroizing::new(String::new())
+        },
+        folder: if schema_version >= 2 {
+            match r.u8()? {
+                0 => FolderFilter::All,
+                1 => FolderFilter::Unfiled,
+                2 => FolderFilter::Folder(FolderId::from_uuid(r.id()?)?),
+                _ => return Err(AppError::InvalidVault),
+            }
+        } else {
+            FolderFilter::All
+        },
     };
     let mut v = Vault {
         id,
-        schema_version,
+        schema_version: Vault::SCHEMA_VERSION,
         state,
         preferences,
         accounts: Vec::new(),
