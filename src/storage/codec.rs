@@ -7,7 +7,7 @@ use crate::{
 use uuid::Uuid;
 use zeroize::Zeroizing;
 
-pub(super) const MAX_PLAINTEXT: usize = 64 * 1024 * 1024;
+pub(crate) const MAX_PLAINTEXT: usize = 64 * 1024 * 1024;
 type Result<T> = std::result::Result<T, AppError>;
 
 struct Writer(Zeroizing<Vec<u8>>);
@@ -61,7 +61,7 @@ impl Writer {
         self.u32(u32::try_from(n).map_err(|_| AppError::InvalidRecord)?)
     }
 }
-pub(super) fn encode(v: &Vault) -> Result<Zeroizing<Vec<u8>>> {
+pub(crate) fn encode(v: &Vault) -> Result<Zeroizing<Vec<u8>>> {
     v.validate()?;
     // Reserve once including AEAD tag space: growth must not leave abandoned
     // plaintext allocations. This is a fixed bounded 64MiB session operation.
@@ -209,7 +209,7 @@ impl<'a> Reader<'a> {
         Ok(n)
     }
 }
-pub(super) fn decode(bytes: &[u8]) -> Result<Vault> {
+pub(crate) fn decode(bytes: &[u8]) -> Result<Vault> {
     if bytes.len() > MAX_PLAINTEXT {
         return Err(AppError::InvalidVault);
     }

@@ -550,6 +550,7 @@ impl Vault {
         &self.preferences
     }
     pub fn set_lock_timeout(&mut self, seconds: u32, at: Timestamp) -> Result<(), AppError> {
+        let at = self.mutation_time(at);
         if !(1..=86_400).contains(&seconds)
             || at < self.state.updated_at
             || at < self.preferences.state.updated_at
@@ -560,7 +561,7 @@ impl Vault {
         self.preferences.state.touch(at)?;
         self.state.touch(at)
     }
-    /// Preference/Trash writes use a monotonic metadata timestamp after local
+    /// Vault mutations use a monotonic logical metadata timestamp after local
     /// clock correction; OTP itself always uses the actual current wall clock.
     pub fn mutation_time(&self, at: Timestamp) -> Timestamp {
         Timestamp(at.0.max(self.state.updated_at.0))
@@ -658,6 +659,7 @@ impl Vault {
         credential: AccountDraft,
         at: Timestamp,
     ) -> Result<AccountId, AppError> {
+        let at = self.mutation_time(at);
         if self.accounts.len() >= Self::MAX_RECORDS {
             return Err(AppError::InvalidRecord);
         }
@@ -673,6 +675,7 @@ impl Vault {
         credential: AccountDraft,
         at: Timestamp,
     ) -> Result<(), AppError> {
+        let at = self.mutation_time(at);
         let account = self
             .accounts
             .iter_mut()
@@ -691,6 +694,7 @@ impl Vault {
         color: FolderColor,
         at: Timestamp,
     ) -> Result<FolderId, AppError> {
+        let at = self.mutation_time(at);
         if self.folders.len() >= Self::MAX_RECORDS {
             return Err(AppError::InvalidRecord);
         }
@@ -706,6 +710,7 @@ impl Vault {
         account_id: AccountId,
         at: Timestamp,
     ) -> Result<MembershipId, AppError> {
+        let at = self.mutation_time(at);
         if self.memberships.len() >= Self::MAX_RECORDS
             || !self.folders.iter().any(|f| f.id == folder_id)
             || !self.accounts.iter().any(|a| a.id == account_id)
@@ -732,6 +737,7 @@ impl Vault {
         codes: Vec<BackupCode>,
         at: Timestamp,
     ) -> Result<BackupSetId, AppError> {
+        let at = self.mutation_time(at);
         if self.backup_sets.len() >= Self::MAX_RECORDS
             || codes.is_empty()
             || codes.len()

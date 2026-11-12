@@ -485,3 +485,31 @@ finish after cancellation or stall; process termination/OS denial can defeat fin
 cleanup. History/cloud opt-out formats are hints to Windows, not protection against
 third-party clipboard observers. Full constraints and primary references are in
 security-design.md and docs/qa/task10/implementation-evidence.md.
+
+## Portable backup engine (Task11)
+
+`backup` provides synchronous selected-path export, authenticated preview,
+opaque final plans and consuming transactional apply for the existing sole-store
+worker. It reuses crate-private reviewed KDF/AEAD and bounded codec primitives,
+not the local envelope, local DEK, protected directory writer or session lock.
+`AUTHPBK1` uses fresh independent randomness, a separately entered passphrase and
+explicit portable AEAD domain separation. Exact bytes, migration, graph conflict
+policy and filesystem limits are normative in
+[portable-backup-format.md](portable-backup-format.md).
+
+The preview binds authenticated incoming records to an exact committed local
+ciphertext revision. KeepLocal/KeepBoth merge operates on complete incoming
+account/membership/recovery bundles; all folder copies and cross-type ID remaps
+are reviewable. Explicit whole Replace reports removed local counts. Local
+vault/preferences identities and startup remain local. Display and security
+preference import each require an explicit option. Final plans validate before
+the existing atomic local transaction. Source-file changes and local revision
+changes invalidate old plans.
+
+All Vault aggregate mutation APIs now clamp metadata time to their current
+logical aggregate update time. Incoming record creation/update/trash/used dates
+remain truthful, while a future-dated imported snapshot no longer makes current
+wall-clock account edits or creation fail. OTP uses actual UTC as before. Direct
+recovery-code updates must use the aggregate logical time and update their set
+and vault together (Task16). Tasks12/13 own all GUI/worker/session wiring and
+post-import cached display/ID/code invalidation; this task adds no UI route.

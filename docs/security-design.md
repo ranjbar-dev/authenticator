@@ -175,3 +175,50 @@ Tests use a separate process and a newly created random CREATE_ONLY noninteracti
 window station/desktop for actual Win32 clipboard races. They never open WinSta0's
 clipboard or switch the input desktop. This is native ownership evidence, not a
 substitute for the actual user-pointer journey or hardware lock/suspend delivery.
+
+## Portable backups (Task11)
+
+Native `AUTHPBK1` backups are independent of local wrapping keys and Windows user
+or device secrets. A fresh random DEK is wrapped with a separately entered exact
+backup passphrase using the same bounded Argon2id floor and reviewed AEAD
+primitives. Both wrapping and payload authenticate explicit portable domain data
+and all header fields; local vault bytes are not accepted as backups. The full
+payload, metadata, preferences, trash and per-code used state are encrypted.
+[portable-backup-format.md](portable-backup-format.md) is normative for byte
+offsets, limits, migration and decisions.
+
+Parsing rejects unbounded lengths/unknown versions/KDF parameters before heavy
+work. Wrong password/authentication/validation errors never yield an empty
+successful preview. Opaque previews/plans own immutable candidates, bind to exact
+ciphertext source/local revisions and expose only sensitive read-only review
+accessors. Debug and error text never include paths, passphrases, IDs or metadata.
+Duplicate comparison indices borrow seed data; owned lowercase metadata and
+plaintext/key/KDF buffers use zeroizing owners. Dense conflicts reject rather
+than silently truncate. Memory/allocator/OS erasure limits remain unchanged.
+
+The portable writer deliberately never modifies Desktop/Documents/USB parent
+ACLs or creates a local vault/session lock there. Its same-directory pending
+files contain ciphertext only. Cleanup becomes active after successful exclusive
+creation and is disarmed after a native move. Reviewed overwrite consent is bound
+to prior bytes and revalidated inside nonblocking commit admission. Pre-admission
+cancellation/faults preserve the prior file; an admitted whole encrypted commit
+may finish after cancellation. Process termination before rename preserves the
+prior backup, leaving at most generic ciphertext pending files.
+
+Path/handle regular-file checks and bounds reject observed symlinks/reparse/device
+endpoints. They do not anchor directory handles or provide a hostile filesystem
+compare-and-swap during the final revalidation-to-rename interval. Device stalls,
+power-loss durability and adversarial directory replacement remain OS limits.
+All imported startup remains local with no registry action. Local security policy
+stays current unless an explicit plan option adopts imported lock/clipboard
+values. Full UI confirmation/session integration and actual different Windows
+user/device recovery remain later gates, not inferred from engine tests.
+
+Task11 also repairs a historical Task03 cleanup ownership error in the local
+atomic writer used by import: its previous guard was constructed before exclusive
+temporary-file creation succeeded, so an exact preexisting pending-name collision
+could cause deletion of an unowned file. Both local and portable guards now start
+only after successful creation, close owned handles before failure cleanup and
+disarm when a move consumes the name. Separate deterministic collision regressions
+preserve the unowned file and prior ciphertext. This correction does not change
+local ACL policy, encryption or transaction admission.

@@ -12,7 +12,7 @@ pub(super) const MAGIC: &[u8; 8] = b"AUTHLOC1";
 pub(super) const PREFIX: usize = 68;
 pub(super) const HEADER: usize = 144;
 pub(super) const MAX_FILE: usize = HEADER + MAX_PLAINTEXT + 16;
-pub(super) type Key = Zeroizing<[u8; 32]>;
+pub(crate) type Key = Zeroizing<[u8; 32]>;
 
 /// Fixed policy envelope; never run a KDF from unvalidated disk parameters.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -48,18 +48,18 @@ impl KdfParameters {
         Ok(p)
     }
 }
-pub(super) fn random<const N: usize>() -> Result<[u8; N], AppError> {
+pub(crate) fn random<const N: usize>() -> Result<[u8; N], AppError> {
     let mut b = [0; N];
     getrandom::fill(&mut b).map_err(|_| AppError::StorageUnavailable)?;
     Ok(b)
 }
-pub(super) fn check_passphrase(p: &[u8]) -> Result<(), AppError> {
+pub(crate) fn check_passphrase(p: &[u8]) -> Result<(), AppError> {
     if !(12..=1024).contains(&p.len()) {
         return Err(AppError::InvalidPassphrase);
     }
     Ok(())
 }
-fn derive(pass: &[u8], salt: &[u8], p: KdfParameters) -> Result<Key, AppError> {
+pub(crate) fn derive(pass: &[u8], salt: &[u8], p: KdfParameters) -> Result<Key, AppError> {
     p.validate()?;
     check_passphrase(pass)?;
     let params = Params::new(p.memory_kib, p.iterations, p.lanes, Some(32))
@@ -77,7 +77,12 @@ fn derive(pass: &[u8], salt: &[u8], p: KdfParameters) -> Result<Key, AppError> {
         .map_err(|_| AppError::StorageUnavailable)?;
     Ok(key)
 }
-fn seal(key: &Key, nonce: &[u8], aad: &[u8], plain: &mut Vec<u8>) -> Result<(), AppError> {
+pub(crate) fn seal(
+    key: &Key,
+    nonce: &[u8],
+    aad: &[u8],
+    plain: &mut Vec<u8>,
+) -> Result<(), AppError> {
     let cipher =
         XChaCha20Poly1305::new_from_slice(&key[..]).map_err(|_| AppError::StorageUnavailable)?;
     let nonce = <&XNonce>::try_from(nonce).map_err(|_| AppError::StorageUnavailable)?;
@@ -85,7 +90,12 @@ fn seal(key: &Key, nonce: &[u8], aad: &[u8], plain: &mut Vec<u8>) -> Result<(), 
         .encrypt_in_place(nonce, aad, plain)
         .map_err(|_| AppError::StorageUnavailable)
 }
-fn open(key: &Key, nonce: &[u8], aad: &[u8], ciphertext: &mut Vec<u8>) -> Result<(), AppError> {
+pub(crate) fn open(
+    key: &Key,
+    nonce: &[u8],
+    aad: &[u8],
+    ciphertext: &mut Vec<u8>,
+) -> Result<(), AppError> {
     let cipher = XChaCha20Poly1305::new_from_slice(&key[..]).map_err(|_| AppError::InvalidVault)?;
     let nonce = <&XNonce>::try_from(nonce).map_err(|_| AppError::InvalidVault)?;
     cipher

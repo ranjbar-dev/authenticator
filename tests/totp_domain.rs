@@ -565,12 +565,13 @@ fn stable_identity_timestamps_associations_and_nonblocking_duplicates() -> Resul
     assert_eq!(vault.backup_sets()[0].id(), set_id);
     assert_eq!(vault.backup_sets()[0].account_id(), first);
     assert_eq!(vault.backup_sets()[0].codes()[0].id(), recovery_id);
-    assert!(
-        vault
-            .edit_account(first, draft("Should not apply", None)?, Timestamp(99))
-            .is_err()
+    vault.edit_account(first, draft("Corrected clock", None)?, Timestamp(99))?;
+    assert_eq!(
+        vault.accounts()[0].credential().service(),
+        "Corrected clock"
     );
-    assert_eq!(vault.accounts()[0].credential().service(), "Renamed");
+    assert_eq!(vault.accounts()[0].state().created_at, Timestamp(101));
+    assert_eq!(vault.accounts()[0].state().updated_at, Timestamp(110));
     assert_eq!(vault.state().updated_at, Timestamp(110));
     assert!(
         vault

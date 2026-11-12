@@ -71,10 +71,17 @@ pub(super) enum WriteFault {
     #[cfg(test)]
     TerminateBeforeReplace,
 }
-struct Temporary(PathBuf);
+struct Temporary {
+    path: PathBuf,
+    file: Option<File>,
+    remove: bool,
+}
 impl Drop for Temporary {
     fn drop(&mut self) {
-        let _ = fs::remove_file(&self.0);
+        drop(self.file.take());
+        if self.remove {
+            let _ = fs::remove_file(&self.path);
+        }
     }
 }
 pub(super) fn atomic(
@@ -98,18 +105,36 @@ pub(super) fn atomic_guarded(
     fault: WriteFault,
     cancel: &super::OperationCancellation,
 ) -> Result<(), AppError> {
-    let destination = dir.join("vault.bin");
-    reject_links(&destination)?;
-    let temp = Temporary(dir.join(format!(
+    let pending = dir.join(format!(
         "pending-{}.bin",
         uuid::Uuid::from_bytes(random::<16>()?)
-    )));
-    let mut file = OpenOptions::new()
+    ));
+    atomic_guarded_at(dir, bytes, replace, fault, cancel, pending)
+}
+fn atomic_guarded_at(
+    dir: &Path,
+    bytes: &[u8],
+    replace: bool,
+    fault: WriteFault,
+    cancel: &super::OperationCancellation,
+    pending: PathBuf,
+) -> Result<(), AppError> {
+    let destination = dir.join("vault.bin");
+    reject_links(&destination)?;
+    let file = OpenOptions::new()
         .write(true)
         .create_new(true)
-        .open(&temp.0)
+        .open(&pending)
         .map_err(|_| AppError::StorageUnavailable)?;
-    protect(&temp.0)?;
+    // The guard cannot remove an unowned preexisting path after create_new fails.
+    // It owns the handle too, so every failure closes before unlinking on Windows.
+    let mut temp = Temporary {
+        path: pending,
+        file: Some(file),
+        remove: true,
+    };
+    protect(&temp.path)?;
+    let file = temp.file.as_mut().ok_or(AppError::StorageUnavailable)?;
     #[cfg(test)]
     if matches!(fault, WriteFault::AfterPartial) {
         file.write_all(&bytes[..bytes.len() / 2])
@@ -120,7 +145,7 @@ pub(super) fn atomic_guarded(
     file.write_all(bytes)
         .and_then(|()| file.sync_all())
         .map_err(|_| AppError::StorageUnavailable)?;
-    drop(file);
+    drop(temp.file.take());
     #[cfg(test)]
     if matches!(fault, WriteFault::BeforeReplace) {
         return Err(AppError::StorageUnavailable);
@@ -130,7 +155,10 @@ pub(super) fn atomic_guarded(
         std::process::exit(73);
     }
     // The temp and destination are same-volume. No delete-original/rename pair.
-    cancel.commit(|| replace_file(&temp.0, &destination, replace))?;
+    cancel.commit(|| replace_file(&temp.path, &destination, replace))?;
+    if cfg!(windows) || replace {
+        temp.remove = false;
+    }
     // No fallible operation after the commit point: memory can now adopt candidate.
     Ok(())
 }
@@ -278,6 +306,32 @@ pub(super) fn protect(_: &Path) -> Result<(), AppError> {
 mod cancellation_tests {
     use super::*;
     use crate::storage::OperationCancellation;
+    #[test]
+    fn existing_pending_collision_never_deletes_unowned_file()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let dir = tempfile::tempdir()?;
+        let existing = dir.path().join("pending-deterministic.bin");
+        fs::write(&existing, b"unowned inert file")?;
+        fs::write(dir.path().join("vault.bin"), b"prior inert ciphertext")?;
+        assert!(
+            atomic_guarded_at(
+                dir.path(),
+                b"candidate inert ciphertext",
+                true,
+                WriteFault::None,
+                &OperationCancellation::default(),
+                existing.clone()
+            )
+            .is_err()
+        );
+        assert_eq!(fs::read(&existing)?, b"unowned inert file");
+        assert_eq!(
+            fs::read(dir.path().join("vault.bin"))?,
+            b"prior inert ciphertext"
+        );
+        assert_eq!(fs::read_dir(dir.path())?.count(), 2);
+        Ok(())
+    }
     #[test]
     fn cancelled_precommit_removes_pending_and_preserves_destination()
     -> Result<(), Box<dyn std::error::Error>> {

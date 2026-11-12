@@ -1,7 +1,7 @@
 //! Authenticated local-only storage. A repository owns the instance lock even
 //! while locked. Callers never receive mutable access to committed records.
-mod codec;
-mod crypto;
+pub(crate) mod codec;
+pub(crate) mod crypto;
 mod files;
 #[cfg(test)]
 pub(crate) mod test_gate;
@@ -59,7 +59,7 @@ impl OperationCancellation {
         self.shared.flags.load(std::sync::atomic::Ordering::Acquire) & REQUESTED != 0
             || self.guard.as_ref().is_some_and(|g| !g())
     }
-    pub(super) fn commit<R>(
+    pub(crate) fn commit<R>(
         &self,
         action: impl FnOnce() -> Result<R, AppError>,
     ) -> Result<R, AppError> {
@@ -128,6 +128,11 @@ impl std::fmt::Debug for VaultStore {
     }
 }
 impl VaultStore {
+    /// Opaque encrypted revision for reviewed import plans. No plaintext digest.
+    pub(crate) fn backup_revision(&self) -> Result<&[u8], AppError> {
+        self.vault()?;
+        self.committed.as_deref().ok_or(AppError::VaultLocked)
+    }
     pub fn open_default() -> Result<Self, AppError> {
         Self::open_directory(files::default_directory()?)
     }
@@ -187,13 +192,21 @@ impl VaultStore {
         self.create_guarded(passphrase, vault, parameters, cancel)
     }
     #[cfg(test)]
-    fn create_with_parameters(
+    pub(crate) fn create_with_parameters(
         &mut self,
         passphrase: Zeroizing<String>,
         vault: Vault,
         p: KdfParameters,
     ) -> Result<(), AppError> {
         self.create_guarded(passphrase, vault, p, &OperationCancellation::default())
+    }
+    #[cfg(test)]
+    pub(crate) fn fail_next_backup_write_for_test(&mut self, fail: bool) {
+        self.fault = if fail {
+            files::WriteFault::BeforeReplace
+        } else {
+            files::WriteFault::None
+        };
     }
     fn create_guarded(
         &mut self,
