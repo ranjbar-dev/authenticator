@@ -22,9 +22,9 @@ Status of every row at plan generation: **planned, not implemented or verified**
 | FR-2A.3 memory-only QR, masked editable review, multiple codes | 06, 08 | Multi-candidate/parameter review tests | planned |
 | FR-2A.4 explicit import, duplicates, current code on success | 08 | Atomic save and independent TOTP comparison | planned |
 | FR-2A.5 every capture/QR failure with retry/image/manual options | 06–08 | Failure matrix and UI evidence | planned |
-| FR-2A.6 no pixel/payload persistence, cleanup and lock gating | 03, 05–08, 20 | Artifact/log inspection and lock-race tests | planned |
+| FR-2A.6 no pixel/payload persistence, cleanup and lock gating | 03, 05–08, 20 | Artifact/log inspection and lock-race tests | task03 storage verified; UI/platform/remaining owners pending |
 | FR-3.1 sets, account selection, line/file entry and review | 14, 15 | Empty/populated/select/file/text paths | planned |
-| FR-3.2 encrypted concealed codes, reveal/copy/used/undo | 03, 16 | Used-state persistence, intentional reveal, copy does not mark used | planned |
+| FR-3.2 encrypted concealed codes, reveal/copy/used/undo | 03, 16 | Used-state persistence, intentional reveal, copy does not mark used | task03 storage verified; UI/platform/remaining owners pending |
 | FR-3.3 edit/delete confirmations and recovery guidance | 15, 16, 19 | Destructive/cancel paths and help copy | planned |
 | FR-3.4 blanks/duplicates/large/encoding/source/deletion handling | 15, 16, 18 | Normalization/limits and association tests | planned |
 | FR-4 folder name/color/search/membership/navigation/unfiled | 17 | Many-to-many, six colors and keyboard checks | planned |
@@ -35,17 +35,17 @@ Status of every row at plan generation: **planned, not implemented or verified**
 | FR-6.2 version/integrity/passphrase/preview/conflict/merge/replace | 11, 13, 20 | Negative, transactional and UI tests | planned |
 | FR-6.3 atomic export, destination, explicit overwrite, safe errors | 11, 12, 20 | Interrupted write/overwrite/file-picker checks | planned |
 | FR-6.4 reference .vault discovery, no unsupported claim | 22 | Evidence-based compatibility report | planned |
-| FR-7.1 user/idle lock, unlock/recovery, optional OS protection | 03, 05, 19, 20 | Key design, lifecycle and lock-race checks | planned |
+| FR-7.1 user/idle lock, unlock/recovery, optional OS protection | 03, 05, 19, 20 | Key design, lifecycle and lock-race checks | task03 storage verified; UI/platform/remaining owners pending |
 | FR-7.2 counts/status/version/startup/preferences/English UI | 19, 21 | Settings/restart/failure screenshots | planned |
 | FR-7.3 system time/resume, local guidance, no remote clock mutation | 02, 10, 19 | Injected clock and OS behavior evidence | planned |
 | FR-7.4 explicit optional startup and failures | 19, 23 | Registration toggle, denial, package smoke test | planned |
 | FR-8 no Google/app accounts/cloud/sync/multilingual/translation | 01, 04, 19–21 | Source/UI and offline network audit | planned |
-| FR-8 all persisted user data encrypted, no uploads | 03, 11, 20 | Ciphertext/artifact/traffic evidence | planned |
+| FR-8 all persisted user data encrypted, no uploads | 03, 11, 20 | Ciphertext/artifact/traffic evidence | task03 storage verified; UI/platform/remaining owners pending |
 | PRD §7 compact reference design across all pages/states | 04–05, 07–10, 12–19, 21 | Per-task checklist and independent comparison | planned |
 | PRD §7 resize/scale/contrast/focus/labels/keyboard/Narrator | 04, 21 | Multi-size/DPI and accessibility report | planned |
 | PRD §8 threat model, crypto/KDF/versioning and key lifetime | 01, 03, 11, 20 | Security design and separate-agent review | task01 foundation verified; remaining owning tasks pending |
-| PRD §8 no secrets/PII in diagnostics, no telemetry or raw captures | 03, 06–08, 20 | Sentinel file/log/crash/network audit | planned |
-| PRD §8 untrusted parsing bounds, schema checks, transactions | 02, 03, 06, 11, 20 | Adversarial/fault-injection test results | planned |
+| PRD §8 no secrets/PII in diagnostics, no telemetry or raw captures | 03, 06–08, 20 | Sentinel file/log/crash/network audit | task03 storage verified; UI/platform/remaining owners pending |
+| PRD §8 untrusted parsing bounds, schema checks, transactions | 02, 03, 06, 11, 20 | Adversarial/fault-injection test results | task03 storage verified; UI/platform/remaining owners pending |
 | PRD §8 locked UI/accessibility, clipboard and endpoint limits | 05, 10, 16, 20 | Lock checks and accurate limitations docs | planned |
 | PRD §9 entities/relations/migrations/rollback/no secret filenames | 02, 03, 11, 18, 20 | Migration/referential integrity/filename tests | task02 domain verified; integration/remaining owners pending |
 | PRD §10 deterministic clock, separate layers/adapters, offline | 01–03, 06–07, 19–20 | Architecture and adapter tests | task01 foundation verified; remaining owning tasks pending |
@@ -59,3 +59,5 @@ Task01 accepted: implementation 7502fa4, independent review_01 re-review approve
 
 
 Task02: separate review_02 approved;20 tests incl published vectors/all24settings, strict bounded parser, redacted aggregates and validated relations pass. See docs/qa/task02/implementation-evidence.md. Full multi-owner UI/persistence rows remain pending.
+
+Task03: review_03 focused security/data-loss review approved after native error-path cleanup;32 main tests plus actual process interruption/lock probes, ACL/sharing checks pass. See docs/qa/task03/implementation-evidence.md and docs/storage-format.md. UI lifecycle, backup and full runtime audits pending.

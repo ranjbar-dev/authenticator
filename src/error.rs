@@ -20,6 +20,11 @@ pub enum AppError {
     InvalidDigits,
     InvalidPeriod,
     InvalidRecord,
+    InvalidVault,
+    UnsupportedVault,
+    VaultLocked,
+    VaultBusy,
+    InvalidPassphrase,
 }
 
 impl fmt::Display for AppError {
@@ -46,6 +51,11 @@ impl fmt::Display for AppError {
             Self::InvalidDigits => "Choose 6 or 8 digits.",
             Self::InvalidPeriod => "Choose a period of 15, 30, 60 or 120 seconds.",
             Self::InvalidRecord => "The record is inconsistent. Your existing data is unchanged.",
+            Self::InvalidVault => "The passphrase is incorrect or the vault is damaged. Your existing file is unchanged.",
+            Self::UnsupportedVault => "This vault version is unsupported. Use a compatible app version.",
+            Self::VaultLocked => "Unlock the vault to continue.",
+            Self::VaultBusy => "The vault is open in another instance. Close it and try again.",
+            Self::InvalidPassphrase => "Use a passphrase between 12 and 1024 UTF-8 bytes.",
         })
     }
 }

@@ -10,7 +10,7 @@ No app implementation has been started by generating this plan. Every initial st
 |---|---|---|
 | 01 | [Rust foundation, reference evidence and architecture](01-foundation-and-decisions.md) | done |
 | 02 | [TOTP engine, data model and credential validation](02-totp-domain-and-uri-parser.md) | done |
-| 03 | [Encrypted local persistence and key management](03-encrypted-local-vault.md) | todo |
+| 03 | [Encrypted local persistence and key management](03-encrypted-local-vault.md) | done |
 | 04 | [Reference-based Rust shell and shared controls](04-shared-ui-shell.md) | todo |
 | 05 | [Local vault setup, unlock and lock lifecycle](05-vault-setup-and-lock-screen.md) | todo |
 | 06 | [Bounded local image and QR decoding](06-local-qr-decoding.md) | todo |
@@ -72,4 +72,4 @@ Codex orchestration was checked against the installed CLI help/features and [off
 
 ## Checkpoint
 
-2026-11-12: Last accepted task02, distinct review_02 approved without material findings. Exact paths/20tests/fmt/clippy/parser/vector/redaction evidence in docs/qa/task02/implementation-evidence.md and task02 Evidence. Task01 implementation7502fa4 + acceptancea727516 pushed; Task02 implementation/acceptance c764bcd pushed to main. Active task03 encrypted local vault (next implementation child): read dependency sources and task03, spawn one implementer then focused independent security/data-loss review. No app vault, QR/capture or usable credential UI yet. Physical DPI/Narrator/reference fidelity and native accessible capture overlay remain later obligations. Children complete before next child; runtime has no close-thread API. Resume: Read tasks/CODEX_PROMPT.md and execute its instructions.
+2026-11-12: Last accepted task03 after focused review_03 + cleanup correction re-review;32 main tests and explicit subprocess checks pass, fmt/Clippy/diff clean. Exact format/KDF/ACL/atomicity/security limits and commands: docs/storage-format.md and docs/qa/task03/implementation-evidence.md. Task02 c764bcd and checkpoint ed64b86 pushed; hosted CI succeeded on both (runs43231107946/43231173188). Task03 implementation SHA belongs in following update to avoid circular reference. Next task04: shared Rust UI shell, full supplied checklist, independent planted-copy calibration and separate review; at most one child active. Existing framework spike stopped by parent after verifying its test-only path. No real user vault/reference contents accessed. UI lifecycle/capture/offline recovery/full hardware QA remain later tasks; secondary egui viewport UIA limit requires native accessible task07 overlay. Runtime has no close-thread API; completed children inactive before next. Resume: Read tasks/CODEX_PROMPT.md and execute its instructions.

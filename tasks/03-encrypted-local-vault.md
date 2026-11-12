@@ -1,6 +1,6 @@
 # Task 03: Encrypted local persistence and key management
 
-Status: todo
+Status: done
 Priority: P0 foundation / screenshot-first
 Dependencies: 01, 02
 Requirements: FR-7.1, FR-8.2; PRD §§8–10
@@ -11,19 +11,19 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Implementation
 
-- [ ] Implement a versioned authenticated-encrypted local vault containing all user data: metadata, seeds, recovery codes, organization, trash and preferences. Only public cryptographic envelope/version information may sit outside ciphertext.
-- [ ] Generate keys/salts/nonces with the OS CSPRNG. Use maintained cryptographic libraries, an Argon2id passphrase KDF with stored calibrated parameters, and authenticated encryption such as XChaCha20-Poly1305; verify current library guidance during implementation. Bound untrusted KDF parameters before allocation.
-- [ ] Use a random data-encryption key with passphrase-based wrapping so passphrase changes can rewrap keys. Keep backup encryption independent of device keys. No forgotten-passphrase reset/backdoor.
-- [ ] Store files under the per-user Windows application-data directory with appropriate ACLs. No plaintext database journal, cache or temporary serialization. Use atomic encrypted writes, integrity checks, schema migrations and rollback-safe error handling.
-- [ ] Implement serialized transactions and concurrent-instance protection. On failure/cancellation preserve the last valid vault; never silently initialize over a corrupt vault.
-- [ ] Keep decrypted state scoped to unlock sessions, redact Debug/error output and zeroize owned secret buffers where feasible. Expose explicit lock/unlock operations and a safe persistence API.
+- [x] Implement a versioned authenticated-encrypted local vault containing all user data: metadata, seeds, recovery codes, organization, trash and preferences. Only public cryptographic envelope/version information may sit outside ciphertext.
+- [x] Generate keys/salts/nonces with the OS CSPRNG. Use maintained cryptographic libraries, an Argon2id passphrase KDF with stored calibrated parameters, and authenticated encryption such as XChaCha20-Poly1305; verify current library guidance during implementation. Bound untrusted KDF parameters before allocation.
+- [x] Use a random data-encryption key with passphrase-based wrapping so passphrase changes can rewrap keys. Keep backup encryption independent of device keys. No forgotten-passphrase reset/backdoor.
+- [x] Store files under the per-user Windows application-data directory with appropriate ACLs. No plaintext database journal, cache or temporary serialization. Use atomic encrypted writes, integrity checks, schema migrations and rollback-safe error handling.
+- [x] Implement serialized transactions and concurrent-instance protection. On failure/cancellation preserve the last valid vault; never silently initialize over a corrupt vault.
+- [x] Keep decrypted state scoped to unlock sessions, redact Debug/error output and zeroize owned secret buffers where feasible. Expose explicit lock/unlock operations and a safe persistence API.
 
 ## Acceptance and verification
 
-- [ ] Restart preserves all entities/settings, while recognizable disposable metadata and seeds are absent from on-disk vault/temp/journal files.
-- [ ] Wrong passphrase, tampering, truncation, oversized envelope/KDF settings and future schema versions fail safely without changing the vault.
-- [ ] Inject interrupted/failed writes, migration failure and concurrent access; the last committed vault remains readable.
-- [ ] Verify passphrase change, key wrapping and lock cleanup; record limitations of memory clearing and OS protection.
+- [x] Restart preserves all entities/settings, while recognizable disposable metadata and seeds are absent from on-disk vault/temp/journal files.
+- [x] Wrong passphrase, tampering, truncation, oversized envelope/KDF settings and future schema versions fail safely without changing the vault.
+- [x] Inject interrupted/failed writes, migration failure and concurrent access; the last committed vault remains readable.
+- [x] Verify passphrase change, key wrapping and lock cleanup; record limitations of memory clearing and OS protection.
 
 ## Handoff and completion
 
@@ -35,5 +35,5 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Evidence
 
-Not started. On execution record changed files, test commands/results, sanitized UI evidence paths where applicable, independent reviewer result and commit reference. If blocked, retain incomplete status and record exact cause, attempted remedies and resumption steps.
+Accepted 2026-11-12 after focused independent security/data-loss review_03 and correction re-review. No material finding; sole low-priority SHGetKnownFolderPath failure allocation leak corrected and rechecked. Exact files/format/AAD/bounds/calibration/fault tests: docs/storage-format.md and docs/qa/task03/implementation-evidence.md. Independent locked all-targets test run passed32 main tests; both subprocess helpers exercised (lock probe passes, interrupted writer exits73 as expected); fmt/Clippy/diff checks pass. Full native ACL/currentSID, actual sharing violation, ciphertext-only orphan and transactional failure coverage. Debug KDF probe1990ms at64MiB/3/1; release performance and UI lifecycle remain later tasks, no absolute power-loss/memory-erasure claim. Commit SHA recorded in following checkpoint.
 

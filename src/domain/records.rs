@@ -7,7 +7,7 @@ use super::{
 use crate::error::AppError;
 use std::{collections::BTreeSet, fmt};
 use uuid::Uuid;
-use zeroize::Zeroizing;
+use zeroize::{Zeroize, Zeroizing};
 
 macro_rules! ids {
     ($($name:ident),+ $(,)?) => {$(
@@ -149,6 +149,13 @@ impl AccountDraft {
         Ok(())
     }
 }
+impl Drop for AccountDraft {
+    fn drop(&mut self) {
+        self.service.zeroize();
+        self.website.zeroize();
+        self.account_identifier.zeroize();
+    }
+}
 
 #[derive(Clone)]
 pub struct Account {
@@ -240,6 +247,11 @@ impl Folder {
             return Err(AppError::InvalidRecord);
         }
         Ok(())
+    }
+}
+impl Drop for Folder {
+    fn drop(&mut self) {
+        self.name.zeroize();
     }
 }
 
