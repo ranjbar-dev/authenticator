@@ -1,5 +1,24 @@
 # Security design and limits
 
+Task08 connects the existing capture/decoder to ephemeral masked review and
+explicit separate-entry batch import. Form strings zeroize; capture pixels/raw
+payloads never enter persistence. Lock/cancel/exit drop review and image jobs and
+clear editor histories; native picker cancellation closes its own dialog and
+generation/watch checks discard late results. Native/allocator/driver/OS copies
+remain outside guaranteed erasure. Decode is bounded cooperative work.
+
+The sole repository moves to one save worker. Every approved draft is revalidated
+before the complete detached transaction is encrypted and atomically renamed.
+Recoverable write failures retain edits and the unchanged committed session.
+Cancellation checks and lifecycle/idle guard run at the actual rename gate; a
+cancel that loses that gate can leave the **complete encrypted batch**, then a
+locked session. No partial batch or claimed rollback after success is allowed.
+There is no overwrite import mode: duplicates require an explicit Save-as-new
+action and preserve all existing records. Errors contain fixed safe text only.
+Current codes derive from real committed records and remain ordinary non-live
+accessibility text. Task08's source/transaction/UI evidence and independent-code
+comparison do not replace task20's wider security audit or hardware lock tests.
+
 Task07 adds explicit selected-region-only native capture and local decoding.
 Preparing ROOT publishes a nonsensitive visual/AccessKit frame before hiding;
 busy ROOT omits query/count/account/review widgets. The independent native timer

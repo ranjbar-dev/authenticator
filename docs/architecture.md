@@ -1,5 +1,73 @@
 # Architecture and concrete decisions
 
+## Task08 editable review and atomic import
+
+The existing ROOT shell now completes capture → bounded QR decode → explicit
+candidate selection → editable review → encrypted batch save → committed account
+and current code. `ui/import_review.rs` owns only ephemeral zeroizing form strings,
+selection and safe errors. Multiple supported candidates start unselected; one
+supported candidate still requires review and explicit Save. Unsupported results
+never carry raw payloads into the editor. Service, optional website/identifier,
+Base32 secret, algorithm/digits/period are revalidated for every selected editor
+at Save, including editors not currently visible. Supported URI settings survive.
+Secret fields are masked by default, reveal is explicit, and form exits/lock drop
+owned buffers and native editor/undo state. Framework/allocator/OS copies remain
+outside complete erasure guarantees.
+
+Save creates **separate new entries only**. Existing records, including trash,
+are never overwritten. `AccountDraft::duplicate_criteria` shares the same seed+
+settings and Unicode-lowercased service+identifier warning policy between the
+vault and approved batch. Warnings are nonblocking and disclose no secret.
+The Save label and explanatory text make creating separate records explicit.
+Future account editing/backup merge must implement their own deliberate policies.
+
+`AppState::begin_import` rejects locked, capture/image/worker overlap, empty or
+oversized batches and invalid drafts before handing its sole repository to one
+worker. No store/key clone is created. `transaction_cancellable` applies the whole
+batch to a detached candidate and uses the existing authenticated codec and atomic
+ciphertext writer. Its cancellation mutex and additional lifecycle/idle guard are
+checked at the rename gate. Before that gate, cancellation/failure leaves committed
+memory/disk unchanged. Once rename has won, lock/cancel can leave the **whole**
+encrypted batch committed; no false rollback promise or postcommit deletion exists.
+Generations/cancellation reject late results and lock the worker-owned repository.
+Recoverable write conflicts/failures return the unlocked repository and retain the
+editable form for correction/retry. Panic fails closed. Busy UI removes editor
+widgets and repeat Save, keeps Lock/Cancel available, and describes atomic timing.
+Error feedback and the successful imported account/code scroll into view.
+
+`platform/image_picker.rs` uses legacy `GetOpenFileNameW` on its own worker, with
+no owner that would disable ROOT. No COM apartment is needed for this API. Its
+native hook timer closes this dialog on cancellation/lifecycle change; paths are
+consumed by `qr::decode_file`, never logged or retained in application state.
+OFN_DONTADDTORECENT avoids adding the image to Recent Documents. Native OS dialog
+history and dependency/OS allocations are not guaranteed erased. Reading/decoding
+also stays off the event thread. Generation/watch/cancel checks discard stale
+results; PNG/JPEG use task06's unchanged bounds. Manual entry starts the same blank
+editor as a basic fallback; task09 extends account editing and recovery-code input.
+
+Code cards read committed repository identities, metadata and TOTP settings; no
+business fixture exists in production. Imported IDs order the actual new entries
+first. The code uses the domain clock/engine and ordinary, non-live accessibility
+text rather than repeatedly announcing OTP changes. Task10 still owns the full
+search/sort/views/copy/list feature set. Argument-free `import_flow` and
+`qr_batch_fixture` examples create only owned disposable fixtures. The former's
+original PNG image input is separately generated in an owned temporary directory;
+it is **not a screenshot** and is removed on example exit. Its F4 conflict hook
+is diagnostic only and never touches the default vault.
+
+See `docs/qa/task08/implementation-evidence.md` and `independent-review.md` for exact
+checks, sanitized evidence and the distinct functional approval. Offline-with-network-disabled,
+physical mixed-DPI, real OS lock/suspend and reference pixel fidelity remain open.
+
+The parent checked Microsoft's current [GetOpenFileNameW contract](https://learn.microsoft.com/en-us/windows/win32/api/commdlg/nf-commdlg-getopenfilenamew),
+[OPENFILENAMEW members/flags](https://learn.microsoft.com/en-us/windows/win32/api/commdlg/ns-commdlg-openfilenamew)
+and [hook callback](https://learn.microsoft.com/en-us/windows/win32/api/commdlg/nc-commdlg-lpofnhookproc).
+The owner may be null and the Explorer hook is supported. This legacy API remains
+supported, while Microsoft recommends Common Item Dialog for new applications.
+`OFN_NOCHANGEDIR` is not a guarantee for this Open API; production vault/image
+operations use absolute paths and must not rely on the process working directory.
+The Recent Documents flag is not a promise to erase every OS dialog history/cache.
+
 ## Task07 selected-region Windows adapter
 
 `platform/capture.rs` now extends the virtual-desktop foundation with checked

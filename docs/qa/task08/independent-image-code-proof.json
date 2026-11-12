@@ -1,0 +1,13 @@
+{
+  "unix_seconds": 1794505681,
+  "observation_end": 1794505681,
+  "counter": 59816856,
+  "algorithm": "SHA1",
+  "digits": 6,
+  "period": 30,
+  "fixture": "RFC6238 published SHA1 seed",
+  "source": "Native PNG picker, shared review and encrypted save",
+  "independent": "Node.js stdlib crypto HMAC and RFC truncation",
+  "match": true,
+  "same_counter": true
+}

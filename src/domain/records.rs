@@ -135,6 +135,29 @@ impl AccountDraft {
     pub fn settings(&self) -> OtpSettings {
         self.settings
     }
+    /// Same policy for existing-vault and reviewed-batch warnings. No provider
+    /// alias guessing and no secret text is returned.
+    pub fn duplicate_criteria(&self, other: &Self) -> (bool, bool) {
+        let service = Zeroizing::new(self.service.to_lowercase());
+        let other_service = Zeroizing::new(other.service.to_lowercase());
+        let identifier = Zeroizing::new(
+            self.account_identifier
+                .as_deref()
+                .unwrap_or_default()
+                .to_lowercase(),
+        );
+        let other_identifier = Zeroizing::new(
+            other
+                .account_identifier
+                .as_deref()
+                .unwrap_or_default()
+                .to_lowercase(),
+        );
+        (
+            self.secret.same_seed(&other.secret) && self.settings == other.settings,
+            service == other_service && identifier == other_identifier,
+        )
+    }
     pub fn validate(&self) -> Result<(), AppError> {
         if validation::text(&self.service, 256, AppError::MissingService)? != self.service
             || validation::website(self.website.as_deref())? != self.website
@@ -522,16 +545,8 @@ impl Vault {
             .filter(|a| Some(a.id) != editing)
             .filter_map(|a| {
                 let c = &a.credential;
-                let same_seed_and_settings =
-                    c.secret.same_seed(&draft.secret) && c.settings == draft.settings;
-                let same_service_and_identifier = c.service.to_lowercase()
-                    == draft.service.to_lowercase()
-                    && c.account_identifier.as_deref().unwrap_or("").to_lowercase()
-                        == draft
-                            .account_identifier
-                            .as_deref()
-                            .unwrap_or("")
-                            .to_lowercase();
+                let (same_seed_and_settings, same_service_and_identifier) =
+                    c.duplicate_criteria(draft);
                 (same_seed_and_settings || same_service_and_identifier).then_some(DuplicateMatch {
                     account_id: a.id,
                     same_seed_and_settings,
@@ -734,6 +749,31 @@ redacted_debug!(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn unicode_duplicate_identity_policy_matches_batch_and_vault() -> Result<(), AppError> {
+        let a = AccountDraft::new(
+            "ÉCOLE",
+            None,
+            Some("ÜSER"),
+            Secret::from_base32("MY")?,
+            OtpSettings::default(),
+        )?;
+        let b = AccountDraft::new(
+            "école",
+            None,
+            Some("üser"),
+            Secret::from_base32("M4")?,
+            OtpSettings::default(),
+        )?;
+        assert_eq!(a.duplicate_criteria(&b), (false, true));
+        let mut vault = Vault::new(Timestamp(1));
+        vault.add_account(a, Timestamp(2))?;
+        let matches = vault.duplicates(&b, None);
+        assert_eq!(matches.len(), 1);
+        assert!(!matches[0].same_seed_and_settings);
+        assert!(matches[0].same_service_and_identifier);
+        Ok(())
+    }
 
     fn sample() -> Result<Vault, AppError> {
         let mut vault = Vault::new(Timestamp(1));

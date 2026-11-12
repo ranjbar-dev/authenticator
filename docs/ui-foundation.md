@@ -1,5 +1,26 @@
 # Shared Rust UI foundation
 
+Task08 extends the same ROOT codes screen and scroll holder with explicit
+candidate choice, labeled editable review and committed account/code cards.
+Screenshot to Scan remains primary, with local image and manual entry directly
+beside the add flow. All visible form/button/card/status roles use the existing
+components and complete theme typography; no private stylesheet or theme is added.
+Secret reveal is deliberate; default fields have native password semantics and
+masked layout. Selection is explicit for multiple candidates, Save-as-new states
+the duplicate policy, busy removes repeat submit/editor widgets, and errors retain
+input. New review focus starts at the chooser/service field; error and imported
+code cards scroll into view. Escape in contextual help preserves the underlying
+review, while Cancel/Escape outside the dialog discards it and returns Screenshot
+focus. Lock removes all credential nodes and focuses the passphrase field.
+
+Actual task08 pointer/key screenshots cover chooser/review/settings/save at
+340/600/960 logical widths, duplicate/invalid/write-error/unsupported states,
+native image selection/cancel/lock and the new committed code. OTP values are
+redacted from persisted result components. Distinct review_08 subsequently approved
+the functional scope with independent live layouts/interactions and privacy checks;
+see task08/independent-review.md. The native task07 19px GDI row
+exception below is unchanged; physical DPI/Narrator/reference-pixel gates remain.
+
 Task07 reuses the shared heading/button/status/progress roles for the prominent
 Screenshot to Scan action, preparation/busy, result and retry/image/manual paths.
 The native selector is an explicit task01 accessibility exception to ROOT egui

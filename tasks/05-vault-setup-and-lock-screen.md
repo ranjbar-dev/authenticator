@@ -33,7 +33,7 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 
 ## Acceptance and verification
 
-- [x] Create/unlock/relock/relaunch a disposable vault without internet; wrong passphrase cannot disclose state.
+- [ ] Create/unlock/relock/relaunch a disposable vault without internet; wrong passphrase cannot disclose state.
 - [ ] Idle, OS lock, suspend and lock during capture/review/import conceal and discard sensitive state.
 - [x] Screenshots and accessibility inspection of locked UI contain no credential/account details.
 - [x] Passphrase confirmation, keyboard operation and failure/retry/cancel paths work.
@@ -49,4 +49,6 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 ## Evidence
 
 Implementation reviewed 2026-11-12 by distinct review_04 with focused security/data-loss assessment; no material findings. Optional technical-copy issue corrected and independently rechecked. Full commands/files/screenshots/AX/manual limits: docs/qa/task05/implementation-evidence.md. Full45 tests pass with subprocess probes exercised; independentstate5/nativeprivateHWND1/cancellation3/editor3/fmt/Clippy pass. Realpointer/key create/mismatch/busy/wrongpass/retry/Lock/CtrlL/KDF cancellation/relaunch/persistedtimeout/3secidle verified; sevenwindow/appzoom combinations. Exact12..1024-byte policy unchanged, productguidance nowplainlanguage. ActualOSsessionlock/hardwaresuspend delivery is UNVERIFIED: tests invoke actualprivateHWND messagepath, not hardware. Futurecapture/import/revealed-code lock integration remains tasks07–10/13/16/21. That acceptance checkbox stays open; do not label task fullydone. Nextindependent06 dependsaccepted02/03 and canproceed; task05implementation/API prerequisite is reviewed. No realvault or disruptiveOSlock/settings operation. Commitreference in followingcheckpoint.
+
+Task08 integration update: author and distinct review_08 verified lock clearing of editable QR/manual review, image picker/queued results and committed account/code nodes, plus worker stale/cancellation boundaries. Task07 supplied native capture/private-WTS cancellation. Actual OS notification delivery remains unverified, as do later clipboard/recovery-code integrations. The first acceptance checkbox was corrected to open: create/unlock/relaunch and wrong-passphrase behavior were observed, but ordinary machine connectivity was not disabled. Source-local operation is not proof of the disconnected-machine gate.
 

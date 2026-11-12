@@ -1,5 +1,6 @@
 //! Shared product shell. The original feasibility spike remains diagnostic-only.
 pub mod components;
+pub mod import_review;
 pub mod shell;
 pub mod state;
 pub mod theme;

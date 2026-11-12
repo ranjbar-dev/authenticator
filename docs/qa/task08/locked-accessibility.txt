@@ -1,0 +1,31 @@
+Window: "Authenticator import preview", App: import_flow.exe.
+	0 window (region) Authenticator import preview Secondary Actions: Raise
+		1 title bar (settable, string) Value: Authenticator import preview
+			2 menu bar System ID: MenuBar
+				3 menu item System
+			4 button Minimize
+			5 button Maximize
+			6 button Close
+		7 pane (region)
+			8 text DISPOSABLE TASK08 · isolated encrypted test vault
+			9 text F4: simulate external write conflict (owned fixture only)
+			10 button Arm private WTS lock for next scan
+			11 text F6: 340 · F7: 600 · F8: 960 wide (window sizes, not physical DPI)
+		12 pane (region)
+			13 text AUTHENTICATOR · LOCAL VAULT
+			14 text (heading) Unlock vault Value: Unlock vault
+			15 button Help for this screen
+			17 text Vault locked · credentials hidden
+			199 tab item 2FA Codes
+			200 tab item Backup Codes
+			201 tab item Settings
+			147 text (heading) Your local vault Value: Your local vault
+			197 text Unlock to see account names, verification codes and recovery codes.
+			202 text Vault passphrase
+			203 text field (edit) (settable, string) Vault passphrase
+			204 text Use a long, unique passphrase. Spaces are kept exactly.
+			205 text A lost passphrase cannot be reset. Recovery needs a separate encrypted backup and its passphrase. Keep it independently; creating a vault does not create a backup.
+			206 button Unlock vault
+			207 button Clear fields
+
+The focused UI element is 203 text field (edit) (settable, string) Vault passphrase.

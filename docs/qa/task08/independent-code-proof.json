@@ -1,0 +1,12 @@
+{
+  "unix_seconds": 1794504799,
+  "observation_end": 1794504800,
+  "counter": 59816826,
+  "algorithm": "SHA1",
+  "digits": 6,
+  "period": 30,
+  "fixture": "RFC6238 published SHA1 seed",
+  "independent": "Node.js stdlib crypto HMAC and RFC truncation",
+  "match": true,
+  "remaining": "10"
+}

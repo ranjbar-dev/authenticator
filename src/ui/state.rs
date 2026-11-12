@@ -2,7 +2,7 @@
 use crate::{
     domain::{
         clock::{Clock, SystemClock},
-        records::{Timestamp, Vault},
+        records::{AccountDraft, AccountId, Timestamp, Vault},
     },
     error::AppError,
     platform::{
@@ -61,15 +61,20 @@ pub struct AppState {
     review: Option<ScanReview>,
     capture_region: Option<crate::platform::capture::Region>,
     scan_alternative: Option<ScanAlternative>,
+    imported: Option<Vec<AccountId>>,
+    image_busy: bool,
 }
 struct Completion {
     repository: VaultStore,
     outcome: Result<(), AppError>,
+    imported: Vec<AccountId>,
 }
 struct Worker {
     generation: u64,
     cancel: OperationCancellation,
     result: Arc<Mutex<Option<Completion>>>,
+    importing: bool,
+    deadline: Option<Instant>,
 }
 impl Worker {
     fn cancel(&self) {
@@ -121,12 +126,25 @@ impl AppState {
             review: None,
             capture_region: None,
             scan_alternative: None,
+            imported: None,
+            image_busy: false,
         }
     }
     pub fn is_unlocked(&self) -> bool {
         self.repository
             .as_ref()
             .is_some_and(|r| r.as_ref().is_ok_and(VaultStore::is_unlocked))
+    }
+    pub fn importing(&self) -> bool {
+        self.worker.as_ref().is_some_and(|w| {
+            w.importing && w.generation == self.generation && !w.cancel.is_cancelled()
+        })
+    }
+    pub fn session_active(&self) -> bool {
+        self.is_unlocked() || self.importing()
+    }
+    pub fn take_imported(&mut self) -> Option<Vec<AccountId>> {
+        self.imported.take()
     }
     pub fn vault(&self) -> Result<&Vault, AppError> {
         self.repository
@@ -175,6 +193,8 @@ impl AppState {
             capture.cancel();
         }
         self.review = None;
+        self.imported = None;
+        self.image_busy = false;
         self.capture_region = None;
         self.scan_alternative = None;
         if let Some(Ok(store)) = &mut self.repository {
@@ -213,7 +233,7 @@ impl AppState {
         if !self.is_unlocked() {
             return Err(AppError::VaultLocked);
         }
-        if self.capture_busy() || self.busy() {
+        if self.capture_busy() || self.busy() || self.image_busy {
             return Err(AppError::VaultBusy);
         }
         self.review = None;
@@ -235,6 +255,19 @@ impl AppState {
         self.scan_alternative = None;
         self.capture_region = None;
     }
+    pub fn begin_image(&mut self) -> Result<(), AppError> {
+        if !self.is_unlocked() {
+            return Err(AppError::VaultLocked);
+        }
+        if self.busy() || self.capture_busy() || self.image_busy {
+            return Err(AppError::VaultBusy);
+        }
+        self.image_busy = true;
+        Ok(())
+    }
+    pub fn finish_image(&mut self) {
+        self.image_busy = false;
+    }
     pub fn poll_capture(&mut self) -> Option<CaptureEvent> {
         let (generation, capture) = self.capture.as_ref()?;
         let mut outcome = capture.poll()?;
@@ -255,7 +288,7 @@ impl AppState {
             CaptureOutcome::DecodeFailure(e) => CaptureEvent::DecodeFailure(e),
         })
     }
-    /// Task08 moves these validated drafts into editable review; task07 never saves.
+    /// Validated decoder drafts waiting to move into the ephemeral editor.
     pub fn scan_review(&self) -> Option<&ScanReview> {
         self.review.as_ref()
     }
@@ -269,13 +302,13 @@ impl AppState {
         if !self.is_unlocked() {
             return Err(AppError::VaultLocked);
         }
-        if self.capture_busy() {
+        if self.capture_busy() || self.busy() || self.image_busy {
             return Err(AppError::VaultBusy);
         }
         self.scan_alternative = Some(alternative);
         Ok(())
     }
-    /// Typed handoff only; image/manual editors are owned by later tasks.
+    /// Optional typed workflow handoff; the shell also handles its own actions.
     pub fn take_scan_alternative(&mut self) -> Option<ScanAlternative> {
         if self.is_unlocked() {
             self.scan_alternative.take()
@@ -296,7 +329,7 @@ impl AppState {
         passphrase: Zeroizing<String>,
         repaint: impl Fn() + Send + 'static,
     ) -> Result<(), AppError> {
-        if self.busy() {
+        if self.busy() || self.capture_busy() || self.image_busy {
             return Err(AppError::VaultBusy);
         }
         let mut repository = self
@@ -312,6 +345,8 @@ impl AppState {
             generation: self.generation,
             cancel: cancel.clone(),
             result: result.clone(),
+            importing: false,
+            deadline: None,
         };
         // No decrypted repository/key clone. Ownership travels to one worker.
         // The bounded KDF is cooperative: cannot interrupt Argon2 mid-call.
@@ -337,11 +372,77 @@ impl AppState {
             *slot = Some(Completion {
                 repository,
                 outcome,
+                imported: Vec::new(),
             });
             drop(slot);
             repaint();
         });
         self.worker = Some(worker);
+        Ok(())
+    }
+    /// Validated approved drafts only; a single worker owns the repository.
+    /// Recoverable write errors keep the session unlocked and the editor intact.
+    pub fn begin_import(
+        &mut self,
+        drafts: Vec<AccountDraft>,
+        watch: LifecycleWatch,
+        repaint: impl Fn() + Send + 'static,
+    ) -> Result<(), AppError> {
+        if self.busy() || self.capture_busy() || self.image_busy {
+            return Err(AppError::VaultBusy);
+        }
+        if !self.is_unlocked() {
+            return Err(AppError::VaultLocked);
+        }
+        if drafts.is_empty() || drafts.len() > crate::qr::MAX_CANDIDATES {
+            return Err(AppError::InvalidRecord);
+        }
+        for draft in &drafts {
+            draft.validate()?;
+        }
+        let timeout = self.vault()?.preferences().lock_timeout_seconds();
+        let deadline = self.last_activity + Duration::from_secs(timeout.into());
+        let cancel =
+            OperationCancellation::guarded(move || !watch.changed() && Instant::now() < deadline);
+        let mut repository = self.repository.take().ok_or(AppError::VaultBusy)??;
+        let result = Arc::new(Mutex::new(None));
+        self.worker = Some(Worker {
+            generation: self.generation,
+            cancel: cancel.clone(),
+            result: result.clone(),
+            importing: true,
+            deadline: Some(deadline),
+        });
+        std::thread::spawn(move || {
+            let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                let at = Timestamp(SystemClock.unix_seconds()?);
+                repository.transaction_cancellable(&cancel, |vault| {
+                    drafts
+                        .into_iter()
+                        .map(|draft| vault.add_account(draft, at))
+                        .collect::<Result<Vec<_>, _>>()
+                })
+            }));
+            let (outcome, imported) = match outcome {
+                Ok(Ok(ids)) => (Ok(()), ids),
+                Ok(Err(error)) => (Err(error), Vec::new()),
+                Err(_) => {
+                    repository.lock();
+                    (Err(AppError::StorageUnavailable), Vec::new())
+                }
+            };
+            let mut slot = result.lock().unwrap_or_else(|e| e.into_inner());
+            if cancel.is_cancelled() {
+                repository.lock();
+            }
+            *slot = Some(Completion {
+                repository,
+                outcome,
+                imported,
+            });
+            drop(slot);
+            repaint();
+        });
         Ok(())
     }
     pub fn poll(&mut self, now: Instant) -> Option<Result<(), AppError>> {
@@ -355,12 +456,20 @@ impl AppState {
         if !current {
             done.repository.lock();
         }
+        if current && done.outcome.is_ok() && !done.imported.is_empty() {
+            self.imported = Some(done.imported);
+        }
         self.repository = Some(Ok(done.repository));
         self.worker = None;
         self.last_activity = now;
         current.then_some(done.outcome)
     }
     pub fn idle_due(&self, now: Instant) -> bool {
+        if self.worker.as_ref().is_some_and(|w| {
+            w.generation == self.generation && w.deadline.is_some_and(|d| now >= d)
+        }) {
+            return true;
+        }
         self.vault().is_ok_and(|v| {
             now.saturating_duration_since(self.last_activity)
                 >= Duration::from_secs(v.preferences().lock_timeout_seconds().into())
@@ -386,6 +495,92 @@ mod tests {
     use super::*;
     use crate::domain::records::Timestamp;
     use zeroize::Zeroizing;
+    #[test]
+    fn import_worker_overlap_write_error_retry_and_stale_completion()
+    -> Result<(), Box<dyn std::error::Error>> {
+        use crate::domain::{otp::OtpSettings, uri::parse_totp_uri};
+        let directory = tempfile::tempdir()?;
+        let mut store = VaultStore::open_directory(directory.path())?;
+        store.create(
+            Zeroizing::new("disposable-import-worker".into()),
+            Vault::new(Timestamp(1)),
+        )?;
+        let mut state = AppState::new(Ok(store));
+        state
+            .repository_mut()?
+            .unlock(Zeroizing::new("disposable-import-worker".into()))?;
+        let lifecycle = crate::platform::lifecycle::Lifecycle::start(|| {})?;
+        let draft = parse_totp_uri(
+            "otpauth://totp/Public:Fixture?secret=GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ&issuer=Public",
+        )?;
+        assert_eq!(draft.settings(), OtpSettings::default());
+        state.begin_image()?;
+        assert_eq!(
+            state.begin_import(vec![draft.clone()], lifecycle.watch(), || {}),
+            Err(AppError::VaultBusy)
+        );
+        assert_eq!(
+            state.begin_capture(0, lifecycle.watch(), || {}),
+            Err(AppError::VaultBusy)
+        );
+        state.finish_image();
+        state.capture = Some((state.generation, CaptureTask::queued(None)));
+        assert_eq!(
+            state.begin_import(vec![draft.clone()], lifecycle.watch(), || {}),
+            Err(AppError::VaultBusy)
+        );
+        state.capture = None;
+        let original = std::fs::read(directory.path().join("vault.bin"))?;
+        // External replacement must fail closed without losing the unlocked
+        // review session. Restore fixture bytes, then retry the approved batch.
+        std::fs::write(
+            directory.path().join("vault.bin"),
+            b"disposable-write-conflict",
+        )?;
+        state.begin_import(vec![draft.clone(), draft.clone()], lifecycle.watch(), || {})?;
+        assert_eq!(
+            state.begin_import(vec![draft.clone()], lifecycle.watch(), || {}),
+            Err(AppError::VaultBusy)
+        );
+        assert_eq!(finish(&mut state)?, Some(Err(AppError::StorageUnavailable)));
+        assert!(state.is_unlocked());
+        assert!(state.vault()?.accounts().is_empty());
+        assert_eq!(
+            std::fs::read(directory.path().join("vault.bin"))?,
+            b"disposable-write-conflict"
+        );
+        std::fs::write(directory.path().join("vault.bin"), &original)?;
+        state.begin_import(vec![draft.clone(), draft.clone()], lifecycle.watch(), || {})?;
+        assert_eq!(finish(&mut state)?, Some(Ok(())));
+        let ids = state.take_imported().ok_or("missing imported identities")?;
+        assert_eq!(ids.len(), 2);
+        assert_ne!(ids[0], ids[1]);
+        assert_eq!(state.vault()?.accounts().len(), 2);
+        assert_eq!(state.vault()?.duplicates(&draft, None).len(), 2);
+        // Completed but unpolled imports must never re-open a locked generation.
+        state.begin_import(vec![draft.clone(), draft.clone()], lifecycle.watch(), || {})?;
+        std::thread::sleep(Duration::from_millis(250));
+        state.lock();
+        assert!(!state.session_active());
+        assert_eq!(finish(&mut state)?, None);
+        assert!(!state.is_unlocked());
+        assert!(state.take_imported().is_none());
+        state
+            .repository_mut()?
+            .unlock(Zeroizing::new("disposable-import-worker".into()))?;
+        assert!(matches!(state.vault()?.accounts().len(), 2 | 4));
+        let before_cancel = state.vault()?.accounts().len();
+        state.begin_import(vec![draft.clone(), draft], lifecycle.watch(), || {})?;
+        state.lock(); // cancel a newly started real worker without waiting for it
+        assert_eq!(finish(&mut state)?, None);
+        assert!(!state.session_active());
+        state
+            .repository_mut()?
+            .unlock(Zeroizing::new("disposable-import-worker".into()))?;
+        let after_cancel = state.vault()?.accounts().len();
+        assert!(after_cancel == before_cancel || after_cancel == before_cancel + 2);
+        Ok(())
+    }
     #[test]
     fn capture_lock_gate_duplicate_and_stale_results() -> Result<(), Box<dyn std::error::Error>> {
         let dir = tempfile::tempdir()?;
@@ -525,6 +720,7 @@ mod tests {
         let slot = Arc::new(Mutex::new(Some(Completion {
             repository: store,
             outcome: Ok(()),
+            imported: Vec::new(),
         })));
         let mut state = AppState::new(Err(AppError::VaultLocked));
         state.repository = None;
@@ -532,6 +728,8 @@ mod tests {
             generation: 0,
             cancel: OperationCancellation::default(),
             result: slot.clone(),
+            importing: false,
+            deadline: None,
         });
         state.query = "sensitive search".into();
         state.pending = Some(Workflow::AddAccount);

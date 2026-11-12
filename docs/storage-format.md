@@ -1,5 +1,15 @@
 # Local vault format, version 1
 
+Task08 leaves the envelope/schema unchanged. `transaction_cancellable` extends
+the existing detached transaction with the creation-style cancellation mutex and
+an optional fail-closed lifecycle/idle guard checked at the rename gate. An entire
+approved QR batch commits once. Fault/validation/cancellation before the gate
+preserves disk and committed memory; a cancellation after rename can leave the
+complete ciphertext batch and the UI locks/discards its late result. No fallible
+step follows rename, no false rollback is reported and no committed file is
+deleted on cancel. Ordinary `transaction` delegates with an uncancelled token.
+The import UI retains reviewed edits on recoverable write errors.
+
 Task05 keeps the envelope/schema unchanged and adds a cooperative cancellation
 gate for creation. `create_cancellable` checks cancellation before expensive
 creation and shares the cancellation mutex with the final atomic rename. If

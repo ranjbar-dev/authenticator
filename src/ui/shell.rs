@@ -1,10 +1,34 @@
 //! Inventory-derived shell and local vault lifecycle.
+use super::import_review::ImportReview;
 use super::{
     components as c,
     state::{AppState, CaptureEvent, Route, ScanAlternative, VaultAction, Workflow},
     theme,
 };
-use crate::{domain::records::DeletionState, storage::VaultStore};
+use crate::{
+    domain::{
+        clock::SystemClock,
+        otp,
+        records::{AccountId, DeletionState},
+    },
+    storage::VaultStore,
+};
+use std::sync::{
+    Arc, Mutex,
+    atomic::{AtomicBool, Ordering},
+};
+type ImageResult = Result<Option<crate::qr::ScanReview>, crate::qr::QrError>;
+struct ImageJob {
+    generation: u64,
+    cancelled: Arc<AtomicBool>,
+    result: Arc<Mutex<Option<ImageResult>>>,
+}
+impl Drop for ImageJob {
+    fn drop(&mut self) {
+        self.cancelled.store(true, Ordering::SeqCst);
+        self.result.lock().unwrap_or_else(|e| e.into_inner()).take();
+    }
+}
 use eframe::egui;
 use raw_window_handle::{HasWindowHandle, RawWindowHandle};
 use std::time::{Duration, Instant};
@@ -28,6 +52,10 @@ pub struct AuthenticatorApp {
     capture_failed: bool,
     capture_focus: bool,
     capture_preparing: Option<(u64, bool)>,
+    review: Option<ImportReview>,
+    image: Option<ImageJob>,
+    imported: Vec<AccountId>,
+    show_imported: bool,
 }
 impl AuthenticatorApp {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
@@ -77,10 +105,19 @@ impl AuthenticatorApp {
             capture_failed: false,
             capture_focus: false,
             capture_preparing: None,
+            review: None,
+            image: None,
+            imported: Vec::new(),
+            show_imported: false,
         }
     }
     pub fn lock(&mut self) {
         self.state.lock();
+        self.review = None;
+        self.image = None;
+        self.state.finish_image();
+        self.imported.clear();
+        self.show_imported = false;
         self.dialog = None;
         self.help_open = false;
         self.status = None;
@@ -104,6 +141,10 @@ impl AuthenticatorApp {
         c::clear_sensitive_widget_memory(&self.context);
     }
     fn open_workflow(&mut self, workflow: Workflow, opener: egui::Id) {
+        if workflow == Workflow::AddAccount {
+            self.start_alternative(ScanAlternative::Manual);
+            return;
+        }
         if self.state.request(workflow).is_ok() {
             self.dialog = Some(c::Dialog::new("Development build", opener));
             self.help_open = false;
@@ -130,11 +171,48 @@ impl AuthenticatorApp {
         {
             self.lock();
         }
+        let was_importing = self.state.importing();
         if let Some(outcome) = self.state.poll(now) {
-            self.clear_form();
-            self.focus_form = true;
-            self.form_error = outcome.err().map(|e| e.to_string());
-            self.operation_cancelled = false;
+            if was_importing {
+                match outcome {
+                    Ok(()) => {
+                        self.imported = self.state.take_imported().unwrap_or_default();
+                        self.review = None;
+                        c::clear_sensitive_widget_memory(&ctx);
+                        self.state.navigate(Route::Codes);
+                        self.capture_message =
+                            Some("Account import saved in your encrypted vault.".into());
+                        self.capture_failed = false;
+                        self.capture_focus = false;
+                        self.show_imported = true;
+                    }
+                    Err(error) => {
+                        if let Some(review) = &mut self.review {
+                            review.error = Some(format!(
+                                "{error} Your reviewed edits are kept. Retry Save or cancel."
+                            ));
+                            review.show_error = true;
+                        }
+                    }
+                }
+            } else {
+                self.clear_form();
+                self.focus_form = true;
+                self.form_error = outcome.err().map(|e| e.to_string());
+                self.operation_cancelled = false;
+            }
+        }
+        if !self.state.session_active() && !self.state.busy() {
+            self.review = None;
+            self.image = None;
+        }
+        self.poll_image();
+        if ctx.input(|i| i.key_pressed(egui::Key::Escape))
+            && (self.review.is_some() || self.image.is_some())
+            && !self.state.busy()
+            && ctx.memory(|m| m.top_modal_layer().is_none())
+        {
+            self.cancel_review();
         }
         if let Some(event) = self.state.poll_capture() {
             if event == CaptureEvent::Locked {
@@ -145,17 +223,18 @@ impl AuthenticatorApp {
                     CaptureEvent::CaptureFailure(_) | CaptureEvent::DecodeFailure(_)
                 );
                 self.capture_message = Some(match event {
-                    CaptureEvent::ReviewReady => format!(
-                        "Scan complete: {} supported credential(s) among {} QR result(s). Nothing was added. Editable review and saving are the next development stage.",
-                        self.state.scan_review().map_or(0, |r| r.supported_count()),
-                        self.state.scan_review().map_or(0, |r| r.candidates().len())
-                    ),
+                    CaptureEvent::ReviewReady => "QR scanned locally. Review before saving.".into(),
                     CaptureEvent::Cancelled => "Selection cancelled. Nothing was added.".into(),
                     CaptureEvent::CaptureFailure(e) => e.to_string(),
                     CaptureEvent::DecodeFailure(e) => e.to_string(),
                     CaptureEvent::Locked => unreachable!(),
                 });
                 self.capture_focus = true;
+                if event == CaptureEvent::ReviewReady
+                    && let Some(scan) = self.state.take_scan_review()
+                {
+                    self.review = Some(ImportReview::from_scan(scan));
+                }
             }
             ctx.send_viewport_cmd(egui::ViewportCommand::Visible(true));
             ctx.send_viewport_cmd(egui::ViewportCommand::Focus);
@@ -198,22 +277,25 @@ impl AuthenticatorApp {
         c::restore_dialog_focus(&ctx);
         // This single scroll holder keeps all controls reachable at high app zoom.
         egui::CentralPanel::default().frame(egui::Frame::new().fill(theme::BACKGROUND).inner_margin(theme::PADDING)).show(root,|ui| {
-            egui::ScrollArea::vertical().id_salt("screen-holder").show(ui,|ui| {
+            let holder = egui::ScrollArea::vertical().id_salt("screen-holder");
+            let holder = if self.review.as_ref().is_some_and(|r|r.focus) { holder.vertical_scroll_offset(0.) } else { holder };
+            holder.show(ui,|ui| {
                     ui.set_max_width(theme::CONTENT_MAX_WIDTH.min(ui.available_width()));
                 c::secondary(ui,"AUTHENTICATOR · LOCAL VAULT");
                 c::toolbar(ui,|ui| {
-                    c::heading(ui,if self.state.is_unlocked() && (self.capture_preparing.is_some() || self.state.capture_busy()) {"Screenshot to Scan"} else if self.state.is_unlocked() {self.state.route.title()} else if self.exists {"Unlock vault"} else {"Create vault"},1);
+                    c::heading(ui,if self.state.importing() {"Saving accounts"} else if self.state.is_unlocked() && (self.capture_preparing.is_some() || self.state.capture_busy()) {"Screenshot to Scan"} else if self.state.session_active() {self.state.route.title()} else if self.exists {"Unlock vault"} else {"Create vault"},1);
                     let help=c::icon_button(ui,c::Icon::Help,"Help for this screen");
                     if help.clicked() {self.dialog=Some(c::Dialog::new("Offline help",help.id)); self.help_open=true;}
-                    if self.state.is_unlocked() && c::icon_button(ui,c::Icon::Lock,"Lock vault").clicked() {self.lock();}
+                    if self.state.session_active() && c::icon_button(ui,c::Icon::Lock,"Lock vault").clicked() {self.lock();}
                 });
-                c::secondary(ui,if self.state.is_unlocked() {"Vault unlocked on this device"} else {"Vault locked · credentials hidden"});
+                c::secondary(ui,if self.state.session_active() {"Vault unlocked on this device"} else {"Vault locked · credentials hidden"});
                 ui.add_space(theme::SMALL_GAP);
-                if self.capture_preparing.is_none() && !self.state.capture_busy() && let Some(route)=c::tabs(ui,self.state.route) { self.state.navigate(route); self.status=None; }
+                if self.review.is_none() && self.image.is_none() && self.capture_preparing.is_none() && !self.state.capture_busy() && let Some(route)=c::tabs(ui,self.state.route) { self.state.navigate(route); self.status=None; }
                 ui.add_space(theme::SMALL_GAP);
                 if let Some(error)=self.state.storage_error() {
                     c::status(ui,"storage-error",&error.to_string(),c::StatusKind::Error);
                     c::secondary(ui,"Close other Authenticator instances and restart. No replacement vault is created here.");
+                } else if self.state.importing() { self.review_content(ui);
                 } else if !self.state.is_unlocked() {
                     self.locked_content(ui);
                 } else { self.unlocked_content(ui); }
@@ -365,6 +447,17 @@ impl AuthenticatorApp {
         }
     }
     fn unlocked_content(&mut self, ui: &mut egui::Ui) {
+        if self.review.is_some() {
+            self.review_content(ui);
+            return;
+        }
+        if self.image.is_some() {
+            c::progress(ui, "Choose or scan a local QR image…", None);
+            if c::button(ui, "Cancel image import", c::ButtonStyle::Secondary).clicked() {
+                self.cancel_review();
+            }
+            return;
+        }
         if self.capture_preparing.is_some() || self.state.capture_busy() {
             self.capture_controls(ui);
             return;
@@ -428,26 +521,23 @@ impl AuthenticatorApp {
                         if backups {
                             "Keep recovery codes with the account they belong to. Adding backup codes is a later development stage."
                         } else {
-                            "Scan a QR code from another window. Review and account saving are the next development stage."
+                            "Scan a QR code from another window, review the account, then save it securely."
                         },
                     );
+                } else if backups {
+                    c::secondary(ui, "Backup-code management is the next development stage.");
                 } else {
-                    c::card(ui, |ui| {
-                        c::heading(ui, "Vault records available", 2);
-                        c::body(
-                            ui,
-                            &format!(
-                                "{count} records in this section. The full list workflow is not implemented in this build."
-                            ),
-                        );
-                    });
+                    self.code_cards(ui);
+                }
+                if !backups {
+                    return;
                 }
                 let action = c::button(
                     ui,
                     if backups {
                         "Add Backup Codes"
                     } else {
-                        "Add account"
+                        "Manually Input"
                     },
                     c::ButtonStyle::Primary,
                 );
@@ -557,34 +647,472 @@ impl AuthenticatorApp {
                 },
             );
         }
-        if self.capture_failed {
-            for (label, message, alternative) in [
-                (
-                    "Import from Photos",
-                    "Image import is the next development stage. No image was opened and nothing was added.",
-                    ScanAlternative::Image,
-                ),
-                (
-                    "Manually Input",
-                    "Manual entry is the next development stage. Nothing was added.",
-                    ScanAlternative::Manual,
-                ),
-            ] {
-                if c::button(ui, label, c::ButtonStyle::Secondary).clicked()
-                    && self.state.request_scan_alternative(alternative).is_ok()
-                {
-                    self.capture_message = Some(message.into());
+        if c::button(ui, "Import from Photos", c::ButtonStyle::Secondary).clicked() {
+            self.start_alternative(ScanAlternative::Image);
+        }
+        if c::button(ui, "Manually Input", c::ButtonStyle::Secondary).clicked() {
+            self.start_alternative(ScanAlternative::Manual);
+        }
+        ui.add_space(theme::SMALL_GAP);
+    }
+    fn cancel_review(&mut self) {
+        self.review = None;
+        self.image = None;
+        self.state.finish_image();
+        self.state.cancel_capture();
+        self.capture_message = Some("Import cancelled. Nothing was added.".into());
+        self.capture_failed = false;
+        self.capture_focus = true;
+        c::clear_sensitive_widget_memory(&self.context);
+    }
+    fn start_alternative(&mut self, alternative: ScanAlternative) {
+        if !self.state.is_unlocked()
+            || self.state.busy()
+            || self.state.capture_busy()
+            || self.image.is_some()
+        {
+            return;
+        }
+        self.review = None;
+        self.dialog = None;
+        self.capture_failed = false;
+        self.capture_message = None;
+        c::clear_sensitive_widget_memory(&self.context);
+        if alternative == ScanAlternative::Manual {
+            self.review = Some(ImportReview::manual());
+            return;
+        }
+        let Ok(lifecycle) = &self.lifecycle else {
+            return;
+        };
+        let watch = lifecycle.watch();
+        if self.state.begin_image().is_err() {
+            return;
+        }
+        let cancelled = Arc::new(AtomicBool::new(false));
+        let result = Arc::new(Mutex::new(None));
+        self.image = Some(ImageJob {
+            generation: self.state.generation(),
+            cancelled: cancelled.clone(),
+            result: result.clone(),
+        });
+        let repaint = self.context.clone();
+        std::thread::spawn(move || {
+            let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                let path = crate::platform::image_picker::choose(&|| {
+                    cancelled.load(Ordering::SeqCst) || watch.changed()
+                })?;
+                if cancelled.load(Ordering::SeqCst) || watch.changed() {
+                    return Ok(None);
+                }
+                path.map(|p| crate::qr::decode_file(&p)).transpose()
+            }))
+            .unwrap_or(Err(crate::qr::QrError::DecodeFailure));
+            let mut slot = result.lock().unwrap_or_else(|e| e.into_inner());
+            if !cancelled.load(Ordering::SeqCst) && !watch.changed() {
+                *slot = Some(outcome);
+            }
+            drop(slot);
+            repaint.request_repaint();
+        });
+    }
+    fn poll_image(&mut self) {
+        let Some(job) = &self.image else {
+            return;
+        };
+        if job.generation != self.state.generation() || !self.state.is_unlocked() {
+            self.image = None;
+            return;
+        }
+        let outcome = job.result.lock().unwrap_or_else(|e| e.into_inner()).take();
+        if let Some(outcome) = outcome {
+            self.image = None;
+            self.state.finish_image();
+            match outcome {
+                Ok(Some(scan)) => self.review = Some(ImportReview::from_scan(scan)),
+                Ok(None) => {
+                    self.capture_message =
+                        Some("Image selection cancelled. Nothing was added.".into());
+                    self.capture_failed = false;
+                    self.capture_focus = true;
+                }
+                Err(error) => {
+                    self.capture_message = Some(error.to_string());
+                    self.capture_failed = true;
+                    self.capture_focus = true;
                 }
             }
         }
-        if self.state.scan_review().is_some()
-            && c::button(ui, "Discard scan results", c::ButtonStyle::Secondary).clicked()
-        {
-            self.state.cancel_capture();
-            self.capture_message = None;
-            c::clear_sensitive_widget_memory(&self.context);
+    }
+    fn review_content(&mut self, ui: &mut egui::Ui) {
+        if self.state.importing() {
+            c::heading(ui, "Saving reviewed accounts", 2);
+            c::progress(ui, "Encrypting and saving the whole selected batch…", None);
+            c::secondary(
+                ui,
+                "Lock or Escape cancels pending work. If the atomic save has already completed, the whole batch remains encrypted; unlock to check it.",
+            );
+            if c::button(ui, "Cancel and lock", c::ButtonStyle::Secondary).clicked() {
+                self.lock();
+            }
+            return;
         }
-        ui.add_space(theme::SMALL_GAP);
+        let Some(review) = &mut self.review else {
+            return;
+        };
+        c::heading(
+            ui,
+            if review.choosing {
+                "Choose accounts to import"
+            } else {
+                "Review account"
+            },
+            2,
+        );
+        if review.rejected > 0 && !review.editors.is_empty() {
+            c::status(
+                ui,
+                "unsupported-candidates",
+                &format!(
+                    "{} QR result(s) are unsupported or invalid and cannot be imported. Retry a clearer capture, image or manual entry if an account is missing.",
+                    review.rejected
+                ),
+                c::StatusKind::Info,
+            );
+        }
+        if review.editors.is_empty() {
+            c::status(
+                ui,
+                "no-supported",
+                "No supported TOTP credentials were found. Use Screenshot to Scan, a PNG/JPEG image or manual entry.",
+                c::StatusKind::Error,
+            );
+            let back = c::button(ui, "Back to import options", c::ButtonStyle::Primary);
+            if review.focus {
+                back.request_focus();
+                review.focus = false;
+            }
+            if back.clicked() {
+                self.cancel_review();
+                self.capture_failed = true;
+                self.capture_message = Some("No supported account was imported. Retry Screenshot to Scan, choose an image or use manual entry.".into());
+            }
+            return;
+        }
+        if review.choosing {
+            c::secondary(
+                ui,
+                "Select each account you want. You can edit every selected account before the whole batch is saved.",
+            );
+            for (index, editor) in review.editors.iter_mut().enumerate() {
+                let label = Zeroizing::new(format!(
+                    "{} · {} · {}",
+                    if editor.selected {
+                        "Selected"
+                    } else {
+                        "Select"
+                    },
+                    *editor.service,
+                    if editor.account.is_empty() {
+                        "No account identifier"
+                    } else {
+                        &editor.account
+                    }
+                ));
+                let button = c::button(ui, &label, c::ButtonStyle::Secondary);
+                if review.focus && index == 0 {
+                    button.request_focus();
+                    review.focus = false;
+                }
+                if button.clicked() {
+                    editor.selected = !editor.selected;
+                }
+            }
+            let selected = review.editors.iter().position(|e| e.selected);
+            ui.add_enabled_ui(selected.is_some(), |ui| {
+                if c::button(ui, "Review selected accounts", c::ButtonStyle::Primary).clicked()
+                    && let Some(index) = selected
+                {
+                    review.current = index;
+                    review.choosing = false;
+                    review.focus = true;
+                    c::clear_sensitive_widget_memory(&self.context);
+                }
+            });
+        } else {
+            let selected_count = review.editors.iter().filter(|e| e.selected).count();
+            c::secondary(
+                ui,
+                &format!(
+                    "{selected_count} account(s) selected. Save always creates separate new entries; existing accounts are never replaced."
+                ),
+            );
+            if review.editors.len() > 1 {
+                for (index, editor) in review
+                    .editors
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, e)| e.selected)
+                {
+                    if c::button(
+                        ui,
+                        &Zeroizing::new(format!("Edit {} · {}", index + 1, *editor.service)),
+                        c::ButtonStyle::Secondary,
+                    )
+                    .clicked()
+                    {
+                        review.current = index;
+                        review.focus = true;
+                    }
+                }
+            }
+            let editor = &mut review.editors[review.current];
+            ui.push_id(review.current, |ui| {
+                c::card(ui, |ui| {
+                    let service = c::labeled_field(
+                        ui,
+                        "review-service",
+                        "Service / website name",
+                        &mut editor.service,
+                        "Required. Use a recognizable service name.",
+                        None,
+                    );
+                    if review.focus {
+                        service.request_focus();
+                        review.focus = false;
+                    }
+                    c::labeled_field(
+                        ui,
+                        "review-website",
+                        "Website address (optional)",
+                        &mut editor.website,
+                        "An http or https address. It is stored locally and never opened here.",
+                        None,
+                    );
+                    c::labeled_field(
+                        ui,
+                        "review-account",
+                        "Account identifier (optional)",
+                        &mut editor.account,
+                        "The service username or email used to identify this entry.",
+                        None,
+                    );
+                    if editor.reveal {
+                        c::labeled_field(
+                            ui,
+                            "review-secret",
+                            "Secret key · visible",
+                            &mut editor.secret,
+                            "Keep this key private.",
+                            None,
+                        );
+                        c::clear_sensitive_widget_memory(&self.context);
+                    } else {
+                        c::labeled_secret_field(
+                            ui,
+                            "review-secret",
+                            "Secret key",
+                            &mut editor.secret,
+                            "Base32 secret from the service. Concealed by default.",
+                            None,
+                        );
+                    }
+                    if c::button(
+                        ui,
+                        if editor.reveal {
+                            "Conceal secret"
+                        } else {
+                            "Reveal secret"
+                        },
+                        c::ButtonStyle::Secondary,
+                    )
+                    .clicked()
+                    {
+                        editor.reveal = !editor.reveal;
+                        c::clear_sensitive_widget_memory(&self.context);
+                    }
+                    c::labeled_field(
+                        ui,
+                        "review-algorithm",
+                        "Algorithm",
+                        &mut editor.algorithm,
+                        "SHA1, SHA256 or SHA512. Scanned settings are preserved.",
+                        None,
+                    );
+                    c::labeled_field(
+                        ui,
+                        "review-digits",
+                        "Code digits",
+                        &mut editor.digits,
+                        "6 or 8 digits.",
+                        None,
+                    );
+                    c::labeled_field(
+                        ui,
+                        "review-period",
+                        "Period (seconds)",
+                        &mut editor.period,
+                        "15, 30, 60 or 120 seconds.",
+                        None,
+                    );
+                });
+            });
+            if let Ok(drafts) = review.approved() {
+                let mut duplicates = 0;
+                if let Ok(vault) = self.state.vault() {
+                    for (index, draft) in drafts.iter().enumerate() {
+                        if !vault.duplicates(draft, None).is_empty()
+                            || drafts[..index].iter().any(|previous| {
+                                let (same_seed, same_identity) = previous.duplicate_criteria(draft);
+                                same_seed || same_identity
+                            })
+                        {
+                            duplicates += 1;
+                        }
+                    }
+                }
+                if duplicates > 0 {
+                    c::status(
+                        ui,
+                        "duplicate-warning",
+                        "Possible duplicates exist in this vault, trash or selected batch. Save creates separate new entries and keeps every existing account. Cancel or change the selection if these are unwanted.",
+                        c::StatusKind::Info,
+                    );
+                }
+            }
+            if let Some(error) = &review.error {
+                let status = ui
+                    .scope(|ui| c::status(ui, "review-error", error, c::StatusKind::Error))
+                    .response;
+                if review.show_error {
+                    status.scroll_to_me(Some(egui::Align::Center));
+                    review.show_error = false;
+                }
+            }
+            if c::button(ui, "Save selected as new accounts", c::ButtonStyle::Primary).clicked() {
+                match review.approved() {
+                    Ok(drafts) => {
+                        let repaint = self.context.clone();
+                        let result = match &self.lifecycle {
+                            Ok(lifecycle) => {
+                                self.state.begin_import(drafts, lifecycle.watch(), move || {
+                                    repaint.request_repaint()
+                                })
+                            }
+                            Err(error) => Err(*error),
+                        };
+                        if let Err(error) = result {
+                            review.error = Some(error.to_string());
+                            review.show_error = true;
+                        } else {
+                            for editor in &mut review.editors {
+                                editor.reveal = false;
+                            }
+                            c::clear_sensitive_widget_memory(&self.context);
+                            ui.ctx().request_repaint();
+                        }
+                    }
+                    Err(error) => {
+                        review.error = Some(format!(
+                            "{error} Check every selected account; your edits are kept."
+                        ));
+                        review.show_error = true;
+                    }
+                }
+            }
+            if review.editors.len() > 1
+                && c::button(ui, "Back to account selection", c::ButtonStyle::Secondary).clicked()
+            {
+                review.choosing = true;
+                review.focus = true;
+                for editor in &mut review.editors {
+                    editor.reveal = false;
+                }
+                c::clear_sensitive_widget_memory(&self.context);
+            }
+        }
+        if c::button(ui, "Cancel import", c::ButtonStyle::Secondary).clicked() {
+            self.cancel_review();
+        }
+    }
+    fn code_cards(&mut self, ui: &mut egui::Ui) {
+        let scroll_to = self
+            .show_imported
+            .then(|| self.imported.first().copied())
+            .flatten();
+        self.show_imported = false;
+        let Ok(vault) = self.state.vault() else {
+            return;
+        };
+        let query = Zeroizing::new(self.state.query.to_lowercase());
+        let mut found = false;
+        // Imported identity is ordered first, derived from committed account IDs.
+        let accounts = vault
+            .accounts()
+            .iter()
+            .filter(|a| a.state().deletion == DeletionState::Active);
+        for account in accounts
+            .clone()
+            .filter(|a| self.imported.contains(&a.id()))
+            .chain(accounts.filter(|a| !self.imported.contains(&a.id())))
+        {
+            let draft = account.credential();
+            if !query.is_empty()
+                && !draft.service().to_lowercase().contains(&*query)
+                && !draft
+                    .account_identifier()
+                    .unwrap_or_default()
+                    .to_lowercase()
+                    .contains(&*query)
+            {
+                continue;
+            }
+            found = true;
+            let card = c::card(ui, |ui| {
+                if self.imported.contains(&account.id()) {
+                    c::secondary(ui, "JUST IMPORTED · saved encrypted");
+                }
+                c::heading(ui, draft.service(), 2);
+                if let Some(identifier) = draft.account_identifier() {
+                    c::body(ui, identifier);
+                }
+                match otp::current_code(draft.secret(), draft.settings(), &SystemClock) {
+                    Ok(code) => {
+                        // Ordinary text, not a live region: avoid announcing every
+                        // countdown/code update to assistive technology.
+                        ui.add(egui::Label::new(theme::CODE.text(code.expose_value())));
+                        c::secondary(
+                            ui,
+                            &format!(
+                                "{} seconds remaining · {} digits",
+                                code.remaining_seconds,
+                                draft.settings().digits.count()
+                            ),
+                        );
+                        ui.add(
+                            egui::ProgressBar::new(
+                                code.remaining_seconds as f32
+                                    / draft.settings().period.seconds() as f32,
+                            )
+                            .fill(theme::BLUE),
+                        );
+                    }
+                    Err(error) => {
+                        c::status(ui, "clock-error", &error.to_string(), c::StatusKind::Error);
+                    }
+                }
+            });
+            if scroll_to == Some(account.id()) {
+                card.response.scroll_to_me(Some(egui::Align::Center));
+            }
+            ui.add_space(theme::SMALL_GAP);
+        }
+        if !found {
+            c::secondary(
+                ui,
+                "No matching accounts. Clear the search to see your accounts.",
+            );
+        }
     }
     fn show_dialog(&mut self, ctx: &egui::Context) {
         if let Some(dialog) = &mut self.dialog {
@@ -593,7 +1121,7 @@ impl AuthenticatorApp {
             let close=dialog.show(ctx,|ui,first| {
                 if help {
                     c::body(ui,"Authenticator keeps your vault on this device. Use the three tabs for verification codes, recovery codes and local settings.");
-                    c::secondary(ui,"Your vault passphrase cannot be reset. Keep a separate encrypted backup and its passphrase. Screenshot to Scan works locally; editable review, saving, image/manual entry and backup screens are still being built.");
+                    c::secondary(ui,"Your vault passphrase cannot be reset. Keep a separate encrypted backup and its passphrase. Screenshot to Scan and image/manual entry work locally. Review each account before saving. Backup screens are still being built.");
                     c::secondary(ui,"Keyboard: Tab and Shift+Tab move focus. Enter or Space activates buttons. Ctrl+L locks the vault. Escape cancels passphrase work or closes dialogs.");
                 } else {
                     c::body(ui,match workflow {
@@ -641,6 +1169,85 @@ mod capture_privacy_tests {
                     })
                     .collect()
             })
+    }
+    #[test]
+    fn editable_review_masks_secret_and_lock_removes_all_credential_nodes()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let directory = tempfile::tempdir()?;
+        let mut store = VaultStore::open_directory(directory.path())?;
+        store.create(
+            Zeroizing::new("disposable-review-nodes".into()),
+            Vault::new(Timestamp(1)),
+        )?;
+        let context = egui::Context::default();
+        context.enable_accesskit();
+        let mut app = AuthenticatorApp::with_context(context.clone(), Ok(store), 0);
+        app.state
+            .repository_mut()?
+            .unlock(Zeroizing::new("disposable-review-nodes".into()))?;
+        let mut review = ImportReview::manual();
+        review.editors[0]
+            .service
+            .push_str("private-review-service-sentinel");
+        review.editors[0]
+            .account
+            .push_str("private-review-account-sentinel");
+        review.editors[0]
+            .secret
+            .push_str("GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ");
+        app.review = Some(review);
+        let input = || egui::RawInput {
+            screen_rect: Some(egui::Rect::from_min_size(
+                egui::Pos2::ZERO,
+                egui::vec2(340., 1500.),
+            )),
+            ..Default::default()
+        };
+        let mut frame = context.run_ui(input(), |root| app.show(root));
+        frame.textures_delta.clear();
+        let review_labels = labels(&frame);
+        assert!(
+            review_labels
+                .iter()
+                .any(|l| l.contains("private-review-service-sentinel"))
+        );
+        assert!(review_labels.iter().any(|l| l.contains('•')));
+        assert!(!review_labels.iter().any(|l| l.contains("GEZDGNBV")));
+        assert!(app.review.as_ref().is_some_and(|r| r.approved().is_ok()));
+        app.dialog = Some(c::Dialog::new(
+            "Offline help",
+            egui::Id::unique("review-help-opener"),
+        ));
+        app.help_open = true;
+        let mut modal = context.run_ui(input(), |root| app.show(root));
+        modal.textures_delta.clear();
+        let mut escape = input();
+        escape.events.push(egui::Event::Key {
+            key: egui::Key::Escape,
+            physical_key: Some(egui::Key::Escape),
+            pressed: true,
+            repeat: false,
+            modifiers: egui::Modifiers::NONE,
+        });
+        let mut closed = context.run_ui(escape, |root| app.show(root));
+        closed.textures_delta.clear();
+        assert!(
+            app.review.is_some(),
+            "Escape in help must preserve unsaved review"
+        );
+        assert!(app.dialog.is_none());
+        app.lock();
+        let mut frame = context.run_ui(input(), |root| app.show(root));
+        frame.textures_delta.clear();
+        let locked_labels = labels(&frame);
+        assert!(!locked_labels.iter().any(|l| l.contains("private-review-")
+            || l.contains("Secret key")
+            || l.contains("GEZDGNBV")
+            || l.contains("Save selected")));
+        assert!(app.review.is_none());
+        assert!(app.image.is_none());
+        assert!(app.imported.is_empty());
+        Ok(())
     }
     #[test]
     fn preparing_accessibility_frame_precedes_hide_and_lock_clears_pending_capture()

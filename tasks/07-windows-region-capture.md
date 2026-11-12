@@ -1,6 +1,6 @@
 # Task 07: Windows screen-region capture overlay
 
-Status: in_progress — implementation independently reviewed; hardware and task08/09 integration QA open
+Status: in_progress — implementation independently reviewed; hardware QA open
 Priority: P0 foundation / screenshot-first
 Dependencies: 03–06
 Requirements: FR-2A.1–3/5/6; PRD §§7, 10–11
@@ -26,7 +26,7 @@ Planning snapshot, 12 November 2026: no existing application source, screen fami
 - [x] Selection bounds track real pointer movement at each tested DPI. — PRD/reference structure; shared implementation from task 04.
 - [x] Escape and visible cancellation return to the previous app state. — PRD/reference structure; shared implementation from task 04.
 - [x] Capture has a clear busy state and prevents duplicate invocations. — PRD/reference structure; shared implementation from task 04.
-- [ ] Failure feedback offers retry, image import and manual entry. — PRD/reference structure; shared implementation from task 04.
+- [x] Failure feedback offers retry, image import and manual entry. — PRD/reference structure; shared implementation from task 04.
 - [x] Lock/session changes cancel and conceal capture/review state. — PRD/reference structure; shared implementation from task 04.
 - [x] Overlay focus and pointer capture are released on every exit path; shared theme values apply to app-owned controls. — PRD/reference structure; shared implementation from task 04.
 
@@ -53,5 +53,5 @@ Reviewed implementation and exact checks are recorded in [implementation-evidenc
 
 Real pointer capture of public disposable QR fixtures succeeded on primary and negative-coordinate monitors, including reverse drag. Native Cancel/Escape, empty selection, no-QR, private WTS-message lock and restored focus were exercised. The full pre-final suite passed 69 ordinary tests; later preparing-frame accessibility/privacy and publication-race tests plus focused platform tests passed. See the evidence for exact command boundaries; no full-suite result is invented after the final font-only adjustment.
 
-Physical 150/200% and mixed DPI, right-monitor capture, actual monitor removal/permission denial/OS session lock/hardware suspend, Narrator and reference pixel fidelity remain unverified. Image/manual typed intents are implemented, while working editors and complete review/save integration belong to tasks08/09. Those acceptance boxes remain open until integrated QA. Commit reference is recorded in the following checkpoint.
+Physical 150/200% and mixed DPI, right-monitor capture, actual monitor removal/permission denial/OS session lock/hardware suspend, Narrator and reference pixel fidelity remain unverified. Task08 subsequently supplied working image/manual fallback, editable batch review, encrypted save/current code and independent lock/privacy review. Full manual editing remains task09; the capture hardware acceptance stays open. Commit reference is recorded in the following checkpoint.
 

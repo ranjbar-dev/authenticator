@@ -6,23 +6,23 @@ Status of every row at plan generation: **planned, not implemented or verified**
 |---|---|---|---|
 | App name, Rust UI/core, Windows-first architecture | 01, 04, 23 | Build, framework spike, executable/package identity | task01 foundation verified; remaining owning tasks pending |
 | Reference inventory and honest visual evidence | 01, 04, 21 | docs/reference-ui.md and comparison report | task01 foundation verified; remaining owning tasks pending |
-| Screenshot-first primary workflow and local import | 06–08, 21 | Complete capture/review/save/code-verification journey offline | planned |
-| FR-1.1 real cards, icons, code, time, empty/loading/error/locked | 04, 05, 10, 21 | State screenshots and real-vault UI checks | task04 shared shell verified; later workflows/full QA pending |
+| Screenshot-first primary workflow and local import | 06–08, 21 | Complete capture/review/save/code-verification journey offline | task08 functional flow independently approved with live HMAC matches; disconnected-machine acceptance08/21 open |
+| FR-1.1 real cards, icons, code, time, empty/loading/error/locked | 04, 05, 10, 21 | State screenshots and real-vault UI checks | task04 shell and task08 committed real codes/lock verified; full task10 list and final QA pending |
 | FR-1.2 exact boundaries, sleep/resume, clock problems | 02, 10, 19, 20 | Clock-injected tests and Windows lifecycle checks | task02 domain verified; integration/remaining owners pending |
 | FR-1.3 copy confirmation, near-expiry, safe clipboard cleanup | 10, 16, 20 | Real clipboard ownership/race tests | planned |
 | FR-1.4 search, no results, all six sorts, list/grid persistence | 10, 21 | UI interactions and restart tests | planned |
 | FR-1.5 explicit edit/delete and trash | 09, 18 | Edit/delete/cancel/restore journey | planned |
 | FR-2.1 fields and Base32 validation/normalization | 02, 09 | Parser/unit and editor tests | task02 domain verified; integration/remaining owners pending |
-| FR-2.2 image/region local QR and editable review | 06–09 | PNG/JPEG and screenshot import tests | planned |
+| FR-2.2 image/region local QR and editable review | 06–09 | PNG/JPEG and screenshot import tests | tasks06–08 decode/capture/editable import implemented and reviewed; full manual editing09 pending |
 | FR-2.3 algorithms/digits/periods/defaults/URI preservation | 02, 08, 09 | Standard vectors and all parameter combinations | task02 domain verified; integration/remaining owners pending |
-| FR-2.4 safe invalid-input errors, retained edits, duplicate warning | 02, 06, 08, 09 | Negative/duplicate/failure UI tests | planned |
+| FR-2.4 safe invalid-input errors, retained edits, duplicate warning | 02, 06, 08, 09 | Negative/duplicate/failure UI tests | task08 independent invalid/duplicate/write-retry evidence passed; full manual editor09 pending |
 | FR-2.5 creation with recovery codes and overwrite intent | 09, 15 | Atomic account-plus-codes transaction tests | planned |
-| FR-2A.1 discoverable capture without login/network/file save | 04, 07, 08 | Main-screen action and offline journey | planned |
-| FR-2A.2 region overlay, monitors/DPI, Escape restore | 07, 21 | Pointer and scaling/monitor evidence | planned |
-| FR-2A.3 memory-only QR, masked editable review, multiple codes | 06, 08 | Multi-candidate/parameter review tests | planned |
-| FR-2A.4 explicit import, duplicates, current code on success | 08 | Atomic save and independent TOTP comparison | planned |
-| FR-2A.5 every capture/QR failure with retry/image/manual options | 06–08 | Failure matrix and UI evidence | planned |
-| FR-2A.6 no pixel/payload persistence, cleanup and lock gating | 03, 05–08, 20 | Artifact/log inspection and lock-race tests | task03 storage verified; UI/platform/remaining owners pending |
+| FR-2A.1 discoverable capture without login/network/file save | 04, 07, 08 | Main-screen action and offline journey | task08 real user-initiated capture without secret typing/file save passed; disconnected-machine run open |
+| FR-2A.2 region overlay, monitors/DPI, Escape restore | 07, 21 | Pointer and scaling/monitor evidence | task07 primary/negative monitor pointer and Escape/Cancel evidence; hardware DPI/manual QA pending |
+| FR-2A.3 memory-only QR, masked editable review, multiple codes | 06, 08 | Multi-candidate/parameter review tests | tasks06/08 functional scope verified; explicit mixed selection and masked editable batch passed |
+| FR-2A.4 explicit import, duplicates, current code on success | 08 | Atomic save and independent TOTP comparison | task08 functional requirement verified by independent real batch import/duplicate preservation/HMAC matches; see docs/qa/task08/independent-review.md |
+| FR-2A.5 every capture/QR failure with retry/image/manual options | 06–08 | Failure matrix and UI evidence | tasks06–08 safe failure/retry and working image/manual fallback reviewed; hardware failure delivery QA open |
+| FR-2A.6 no pixel/payload persistence, cleanup and lock gating | 03, 05–08, 20 | Artifact/log inspection and lock-race tests | task03/05/07/08 implementation reviewed, pending/locked cleanup and commit races tested; full hardware/runtime audit20 pending |
 | FR-3.1 sets, account selection, line/file entry and review | 14, 15 | Empty/populated/select/file/text paths | planned |
 | FR-3.2 encrypted concealed codes, reveal/copy/used/undo | 03, 16 | Used-state persistence, intentional reveal, copy does not mark used | task03 storage verified; UI/platform/remaining owners pending |
 | FR-3.3 edit/delete confirmations and recovery guidance | 15, 16, 19 | Destructive/cancel paths and help copy | planned |
@@ -69,3 +69,5 @@ Task05 implementation reviewed (not fullhardwareacceptance): async single-store 
 Task06 accepted: review_06 independentlypassed15QR+15domain/foundation tests, lockedClippy/fmt/diff andinspectedpinnedcodecsource. BoundedPNG/JPEG/pixels,alpha,strictparser/mixedcandidate/saturation/privacy evidence docs/qa/task06/. No actualcapture/UI/save claim; FR2/2A capture/cancel/lock/import remain07/08/21.
 
 Task07 implementation independently reviewed and focused re-review passed (1 actual native font-metric test and 12 platform tests). Actual pointer QR acquisition on primary and negative-coordinate monitors, reverse drag, Cancel/Escape/no-QR/private-WTS lock and restored focus are evidenced in docs/qa/task07/. GDI selected-only memory capture, bounds, cancellation epochs and accessibility preparation are implemented; native measured typography exception is explicit. Task07 remains open for hardware/manual coverage and working image/manual/review/save integration. Screenshot-first and FR2A rows therefore remain partially implemented, not fully verified.
+
+Task08 functional implementation independently approved by review_08 with no findings requiring changes. Full76 author tests plus final focused regressions; independent atomic/stale/AX/contrast/duplicate/domain/build/lint checks passed. Real pointer capture, explicit multiple selection, invalid edit retained, whole-batch conflict/retry, three separate accounts preserved, Help/Cancel/pickerLock and340/600/960 layouts passed. Independent SHA1/6/30 and SHA512/8/120 HMAC matches recorded in docs/qa/task08/independent-review.md. Source/source-only evidence does not close the disconnected-machine/hardware gates; Task08 remains in progress for offline acceptance, Task05 offline checkbox corrected to open, and later09–24 owners remain required. Commit SHA follows in checkpoint.

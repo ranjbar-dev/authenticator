@@ -16,20 +16,31 @@ use zeroize::Zeroizing;
 /// mutex: cancellation before the rename gate prevents a create from committing;
 /// cancellation after the gate may leave a complete encrypted, locked vault.
 #[derive(Clone, Default)]
-pub struct OperationCancellation(std::sync::Arc<std::sync::Mutex<bool>>);
+pub struct OperationCancellation {
+    cancelled: std::sync::Arc<std::sync::Mutex<bool>>,
+    guard: Option<std::sync::Arc<dyn Fn() -> bool + Send + Sync>>,
+}
 impl OperationCancellation {
+    /// Additional fail-closed session/idle check at the actual rename gate.
+    pub fn guarded(guard: impl Fn() -> bool + Send + Sync + 'static) -> Self {
+        Self {
+            cancelled: Default::default(),
+            guard: Some(std::sync::Arc::new(guard)),
+        }
+    }
     pub fn cancel(&self) {
-        *self.0.lock().unwrap_or_else(|e| e.into_inner()) = true;
+        *self.cancelled.lock().unwrap_or_else(|e| e.into_inner()) = true;
     }
     pub fn is_cancelled(&self) -> bool {
-        *self.0.lock().unwrap_or_else(|e| e.into_inner())
+        *self.cancelled.lock().unwrap_or_else(|e| e.into_inner())
+            || self.guard.as_ref().is_some_and(|g| !g())
     }
     pub(super) fn commit<R>(
         &self,
         action: impl FnOnce() -> Result<R, AppError>,
     ) -> Result<R, AppError> {
-        let cancelled = self.0.lock().unwrap_or_else(|e| e.into_inner());
-        if *cancelled {
+        let cancelled = self.cancelled.lock().unwrap_or_else(|e| e.into_inner());
+        if *cancelled || self.guard.as_ref().is_some_and(|g| !g()) {
             return Err(AppError::VaultLocked);
         }
         action()
@@ -191,13 +202,23 @@ impl VaultStore {
         &mut self,
         edit: impl FnOnce(&mut Vault) -> Result<R, AppError>,
     ) -> Result<R, AppError> {
+        self.transaction_cancellable(&OperationCancellation::default(), edit)
+    }
+    pub fn transaction_cancellable<R>(
+        &mut self,
+        cancel: &OperationCancellation,
+        edit: impl FnOnce(&mut Vault) -> Result<R, AppError>,
+    ) -> Result<R, AppError> {
+        if cancel.is_cancelled() {
+            return Err(AppError::VaultLocked);
+        }
         let session = self.session.as_ref().ok_or(AppError::VaultLocked)?;
         let mut candidate = session.vault.clone();
         let result = edit(&mut candidate)?;
         let plain = codec::encode(&candidate)?;
         let bytes = crypto::encrypt(&session.wrapping, &session.dek, plain)?;
         self.check_unchanged()?;
-        files::atomic(&self.directory, &bytes, true, self.fault)?;
+        files::atomic_guarded(&self.directory, &bytes, true, self.fault, cancel)?;
         if let Some(session) = self.session.as_mut() {
             session.vault = candidate;
         }

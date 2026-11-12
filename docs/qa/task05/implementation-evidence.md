@@ -150,3 +150,13 @@ focused lifecycle/security review, before acceptance/status changes.
 ## Parent integration and independent review
 
 Distinct review_04 inspected lifecycle/state/cancellation/nativeunsafe/forms/18saved screenshots and live isolatedwrongpass/unlock/CtrlL. Independentlypassed5state,1native,3cancellation,3editor tests,fmt andalltargetClippy. No materialfindings. IndependentliveEscape arrivedafterKDFcomplete and isnot a cancellationpass; authorlive and real-KDFautomatedtest evidenceabove remain distinct. Parent replacedUTF8-byte-leadingproductguidance withplainlanguage and accurate short/long errors; bytepolicy unchanged incode/docs. Reviewer approved thiscopy-onlysourcecheck; finalfmt/lockedalltargetClippy/diff checks pass. PhysicalOSlock/suspend andlaterworkflow gates stayopen in task05; no fulltaskcompletion/hardwarecertification claim. CommitSHA follows in nextcheckpoint.
+
+Task08 integration update: distinct review_08 subsequently verified real capture,
+editable QR/manual review, atomic save/current codes, picker cancellation and
+locked UI/AX cleanup, with storage/worker stale/cancel regressions passing.
+Capture/private-WTS cancellation is evidenced in task07. Actual OS notification
+delivery remains unverified; later clipboard/backup-code workflows need their
+own integration checks. Parent corrected the task05 disconnected-machine
+acceptance checkbox to open, consistent with this report's explicit statement
+that OS networking was not disabled. Observed local behavior and absence of an
+application network dependency do not prove that requested manual gate.

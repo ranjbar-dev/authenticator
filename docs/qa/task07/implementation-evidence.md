@@ -272,3 +272,11 @@ No additional live render result is inferred from old screenshots after the corr
 600 face. Review approval covers the implementation and observed scenarios; it does
 not close the hardware/manual or task08/09 integration gates listed above. The task
 remains in progress for those gates, while reviewed APIs are ready for task08.
+
+Subsequent task08 integration: working image/manual fallback, candidate choice,
+masked editable review, explicit atomic encrypted batch save and real current
+codes passed author and distinct review_08 checks. Independent HMAC comparisons
+matched real committed SHA1 and SHA512 entries; lock removed review/account/code
+nodes and dismissed the image picker. The earlier handoff statements that these
+editors were pending describe the task07 checkpoint, not current functionality.
+Physical capture/OS hardware gates remain open; see task08/independent-review.md.
