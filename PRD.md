@@ -1,6 +1,6 @@
 # Product Requirements Document: Authenticator
 
-**Status:** Implementation in progress; task01 Rust foundation independently reviewed, tasks02–24 pending  
+**Status:** Implementation in progress; tasks01–02 independently reviewed; tasks03–24 pending
 **Basis:** Direct inspection of the running Windows app “Authenticator App · 2FA” on 12 November 2026.  
 **Purpose:** Define Authenticator, a Rust desktop app matching the inspected reference UI, with screenshot-based 2FA import as its defining feature and encrypted local-only storage.  
 **Repository:** https://github.com/ranjbar-dev/authenticator  
