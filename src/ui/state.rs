@@ -1,6 +1,18 @@
 //! UI state owns the repository, never a second decrypted credential cache.
-use crate::{domain::records::Vault, error::AppError, storage::VaultStore};
+use crate::{
+    domain::{
+        clock::{Clock, SystemClock},
+        records::{Timestamp, Vault},
+    },
+    error::AppError,
+    storage::{OperationCancellation, VaultStore},
+};
+use std::{
+    sync::{Arc, Mutex},
+    time::{Duration, Instant},
+};
 use zeroize::Zeroize;
+use zeroize::Zeroizing;
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum Route {
@@ -28,11 +40,46 @@ pub enum Workflow {
 }
 
 pub struct AppState {
-    repository: Result<VaultStore, AppError>,
+    repository: Option<Result<VaultStore, AppError>>,
     pub route: Route,
     pub query: String,
     pending: Option<Workflow>,
     generation: u64,
+    worker: Option<Worker>,
+    last_activity: Instant,
+}
+struct Completion {
+    repository: VaultStore,
+    outcome: Result<(), AppError>,
+}
+struct Worker {
+    generation: u64,
+    cancel: OperationCancellation,
+    result: Arc<Mutex<Option<Completion>>>,
+}
+impl Worker {
+    fn cancel(&self) {
+        self.cancel.cancel();
+        if let Some(result) = self
+            .result
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .as_mut()
+        {
+            result.repository.lock();
+        }
+    }
+}
+impl Drop for Worker {
+    fn drop(&mut self) {
+        self.cancel();
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum VaultAction {
+    Create,
+    Unlock,
 }
 impl AppState {
     pub fn new(mut repository: Result<VaultStore, AppError>) -> Self {
@@ -41,25 +88,40 @@ impl AppState {
             store.lock();
         }
         Self {
-            repository,
+            repository: Some(repository),
             route: Route::Codes,
             query: String::new(),
             pending: None,
             generation: 0,
+            worker: None,
+            last_activity: Instant::now(),
         }
     }
     pub fn is_unlocked(&self) -> bool {
-        self.repository.as_ref().is_ok_and(VaultStore::is_unlocked)
+        self.repository
+            .as_ref()
+            .is_some_and(|r| r.as_ref().is_ok_and(VaultStore::is_unlocked))
     }
     pub fn vault(&self) -> Result<&Vault, AppError> {
-        self.repository.as_ref().map_err(|e| *e)?.vault()
+        self.repository
+            .as_ref()
+            .ok_or(AppError::VaultLocked)?
+            .as_ref()
+            .map_err(|e| *e)?
+            .vault()
     }
     /// Task 05 setup/unlock integration uses the same repository owner.
     pub fn repository_mut(&mut self) -> Result<&mut VaultStore, AppError> {
-        self.repository.as_mut().map_err(|e| *e)
+        self.repository
+            .as_mut()
+            .ok_or(AppError::VaultBusy)?
+            .as_mut()
+            .map_err(|e| *e)
     }
     pub fn storage_error(&self) -> Option<AppError> {
-        self.repository.as_ref().err().copied()
+        self.repository
+            .as_ref()
+            .and_then(|r| r.as_ref().err().copied())
     }
     pub fn navigate(&mut self, route: Route) {
         self.route = route;
@@ -83,12 +145,110 @@ impl AppState {
         self.generation
     }
     pub fn lock(&mut self) {
-        if let Ok(store) = &mut self.repository {
+        if let Some(Ok(store)) = &mut self.repository {
             store.lock();
+        }
+        if let Some(worker) = &self.worker {
+            worker.cancel();
         }
         self.query.zeroize();
         self.pending = None;
         self.generation = self.generation.wrapping_add(1);
+    }
+    pub fn vault_exists(&self) -> Result<bool, AppError> {
+        self.repository
+            .as_ref()
+            .ok_or(AppError::VaultBusy)?
+            .as_ref()
+            .map_err(|e| *e)?
+            .exists()
+    }
+    pub fn busy(&self) -> bool {
+        self.worker.is_some()
+    }
+    pub fn begin(
+        &mut self,
+        action: VaultAction,
+        passphrase: Zeroizing<String>,
+        repaint: impl Fn() + Send + 'static,
+    ) -> Result<(), AppError> {
+        if self.busy() {
+            return Err(AppError::VaultBusy);
+        }
+        let mut repository = self
+            .repository
+            .take()
+            .ok_or(AppError::VaultBusy)?
+            .inspect_err(|&e| {
+                self.repository = Some(Err(e));
+            })?;
+        let cancel = OperationCancellation::default();
+        let result = Arc::new(Mutex::new(None));
+        let worker = Worker {
+            generation: self.generation,
+            cancel: cancel.clone(),
+            result: result.clone(),
+        };
+        // No decrypted repository/key clone. Ownership travels to one worker.
+        // The bounded KDF is cooperative: cannot interrupt Argon2 mid-call.
+        std::thread::spawn(move || {
+            let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                if cancel.is_cancelled() {
+                    return Err(AppError::VaultLocked);
+                }
+                match action {
+                    VaultAction::Create => repository.create_cancellable(
+                        passphrase,
+                        Vault::new(Timestamp(SystemClock.unix_seconds()?)),
+                        &cancel,
+                    ),
+                    VaultAction::Unlock => repository.unlock(passphrase),
+                }
+            }))
+            .unwrap_or(Err(AppError::StorageUnavailable));
+            let mut slot = result.lock().unwrap_or_else(|e| e.into_inner());
+            if cancel.is_cancelled() || outcome.is_err() {
+                repository.lock();
+            }
+            *slot = Some(Completion {
+                repository,
+                outcome,
+            });
+            drop(slot);
+            repaint();
+        });
+        self.worker = Some(worker);
+        Ok(())
+    }
+    pub fn poll(&mut self, now: Instant) -> Option<Result<(), AppError>> {
+        let worker = self.worker.as_ref()?;
+        let mut done = worker
+            .result
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .take()?;
+        let current = worker.generation == self.generation && !worker.cancel.is_cancelled();
+        if !current {
+            done.repository.lock();
+        }
+        self.repository = Some(Ok(done.repository));
+        self.worker = None;
+        self.last_activity = now;
+        current.then_some(done.outcome)
+    }
+    pub fn idle_due(&self, now: Instant) -> bool {
+        self.vault().is_ok_and(|v| {
+            now.saturating_duration_since(self.last_activity)
+                >= Duration::from_secs(v.preferences().lock_timeout_seconds().into())
+        })
+    }
+    pub fn activity(&mut self, now: Instant) {
+        self.last_activity = now;
+    }
+    pub fn set_idle_timeout(&mut self, seconds: u32) -> Result<(), AppError> {
+        let at = Timestamp(SystemClock.unix_seconds()?);
+        self.repository_mut()?
+            .transaction(|v| v.set_lock_timeout(seconds, at))
     }
 }
 impl Drop for AppState {
@@ -102,6 +262,143 @@ mod tests {
     use super::*;
     use crate::domain::records::Timestamp;
     use zeroize::Zeroizing;
+    fn finish(
+        state: &mut AppState,
+    ) -> Result<Option<Result<(), AppError>>, Box<dyn std::error::Error>> {
+        let deadline = Instant::now() + Duration::from_secs(45);
+        let mut outcome = None;
+        while state.busy() {
+            if Instant::now() > deadline {
+                return Err("worker did not complete".into());
+            }
+            outcome = state.poll(Instant::now()).or(outcome);
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        Ok(outcome)
+    }
+    #[test]
+    fn worker_create_unlock_wrong_pass_cancel_idle_and_relaunch()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let dir = tempfile::tempdir()?;
+        let pass = || Zeroizing::new("disposable-worker-only".into());
+        let mut state = AppState::new(Ok(VaultStore::open_directory(dir.path())?));
+        state.begin(VaultAction::Create, pass(), || {})?;
+        assert!(state.busy());
+        assert!(!state.is_unlocked());
+        assert_eq!(
+            state.begin(VaultAction::Create, pass(), || {}),
+            Err(AppError::VaultBusy)
+        );
+        assert_eq!(
+            state.request(Workflow::AddAccount),
+            Err(AppError::VaultLocked)
+        );
+        assert_eq!(finish(&mut state)?, Some(Ok(())));
+        assert_eq!(state.vault()?.preferences().lock_timeout_seconds(), 300);
+        let now = Instant::now();
+        state.activity(now);
+        assert!(!state.idle_due(now + Duration::from_secs(299)));
+        assert!(state.idle_due(now + Duration::from_secs(300)));
+        assert!(!state.idle_due(now.checked_sub(Duration::from_secs(1)).ok_or("instant")?));
+        state.set_idle_timeout(3)?;
+        assert!(!state.idle_due(now + Duration::from_secs(2)));
+        assert!(state.idle_due(now + Duration::from_secs(3)));
+        let before = std::fs::read(dir.path().join("vault.bin"))?;
+        state.lock();
+        state.begin(
+            VaultAction::Unlock,
+            Zeroizing::new("wrong-worker-only".into()),
+            || {},
+        )?;
+        assert_eq!(finish(&mut state)?, Some(Err(AppError::InvalidVault)));
+        assert!(!state.is_unlocked());
+        assert_eq!(std::fs::read(dir.path().join("vault.bin"))?, before);
+        state.begin(VaultAction::Unlock, pass(), || {})?;
+        // Cancel a real in-flight KDF. UI state never owns an unlocked store.
+        std::thread::sleep(Duration::from_millis(100));
+        state.lock();
+        assert_eq!(finish(&mut state)?, None);
+        assert!(!state.is_unlocked());
+        state.begin(VaultAction::Unlock, pass(), || {})?;
+        assert_eq!(finish(&mut state)?, Some(Ok(())));
+        assert_eq!(state.vault()?.preferences().lock_timeout_seconds(), 3);
+        drop(state);
+        let reopened = AppState::new(Ok(VaultStore::open_directory(dir.path())?));
+        assert!(!reopened.is_unlocked());
+        assert!(reopened.vault_exists()?);
+        Ok(())
+    }
+    #[test]
+    fn cancellation_before_create_preserves_absence_and_corrupt_file_cannot_be_initialized()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let dir = tempfile::tempdir()?;
+        let mut state = AppState::new(Ok(VaultStore::open_directory(dir.path())?));
+        state.begin(
+            VaultAction::Create,
+            Zeroizing::new("disposable-cancel-only".into()),
+            || {},
+        )?;
+        state.lock();
+        assert_eq!(finish(&mut state)?, None);
+        assert!(!state.is_unlocked());
+        assert!(!state.vault_exists()?);
+        std::fs::write(dir.path().join("vault.bin"), b"inert corrupt test file")?;
+        state.begin(
+            VaultAction::Unlock,
+            Zeroizing::new("disposable-cancel-only".into()),
+            || {},
+        )?;
+        assert_eq!(finish(&mut state)?, Some(Err(AppError::InvalidVault)));
+        state.begin(
+            VaultAction::Create,
+            Zeroizing::new("disposable-cancel-only".into()),
+            || {},
+        )?;
+        assert_eq!(finish(&mut state)?, Some(Err(AppError::StorageUnavailable)));
+        assert_eq!(
+            std::fs::read(dir.path().join("vault.bin"))?,
+            b"inert corrupt test file"
+        );
+        Ok(())
+    }
+    #[test]
+    fn lock_clears_completed_but_unpolled_result_and_stale_generation()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let dir = tempfile::tempdir()?;
+        let mut store = VaultStore::open_directory(dir.path())?;
+        store.create(
+            Zeroizing::new("disposable-completion-only".into()),
+            Vault::new(Timestamp(1)),
+        )?;
+        let slot = Arc::new(Mutex::new(Some(Completion {
+            repository: store,
+            outcome: Ok(()),
+        })));
+        let mut state = AppState::new(Err(AppError::VaultLocked));
+        state.repository = None;
+        state.worker = Some(Worker {
+            generation: 0,
+            cancel: OperationCancellation::default(),
+            result: slot.clone(),
+        });
+        state.query = "sensitive search".into();
+        state.pending = Some(Workflow::AddAccount);
+        state.lock();
+        assert!(
+            !slot
+                .lock()
+                .map_err(|_| "poison")?
+                .as_ref()
+                .ok_or("missing")?
+                .repository
+                .is_unlocked()
+        );
+        assert_eq!(state.poll(Instant::now()), None);
+        assert!(!state.is_unlocked());
+        assert!(state.query.is_empty());
+        assert_eq!(state.pending(), None);
+        Ok(())
+    }
     #[test]
     fn routes_do_not_bypass_lock_or_install_workflows() -> Result<(), Box<dyn std::error::Error>> {
         let dir = tempfile::tempdir()?;
@@ -134,12 +431,35 @@ mod tests {
             Zeroizing::new("disposable-shell-only".into()),
             Vault::new(Timestamp(1)),
         )?;
+        store.transaction(|vault| {
+            use crate::domain::{
+                otp::{OtpSettings, Secret},
+                records::{AccountDraft, BackupCode},
+            };
+            let id = vault.add_account(
+                AccountDraft::new(
+                    "Disposable lock sentinel",
+                    None,
+                    Some("local-test"),
+                    Secret::from_base32("MY")?,
+                    OtpSettings::default(),
+                )?,
+                Timestamp(2),
+            )?;
+            vault.add_backup_set(
+                id,
+                vec![BackupCode::new("disposable-lock-only", Timestamp(3))?],
+                Timestamp(3),
+            )?;
+            Ok(())
+        })?;
         let mut state = AppState::new(Ok(store));
         assert!(!state.is_unlocked());
         state
             .repository_mut()?
             .unlock(Zeroizing::new("disposable-shell-only".into()))?;
-        assert!(state.vault()?.accounts().is_empty());
+        assert_eq!(state.vault()?.accounts().len(), 1);
+        assert_eq!(state.vault()?.backup_sets().len(), 1);
         state.query = "private query".into();
         state.request(Workflow::AddAccount)?;
         let generation = state.generation();

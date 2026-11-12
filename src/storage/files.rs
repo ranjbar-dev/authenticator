@@ -83,6 +83,21 @@ pub(super) fn atomic(
     replace: bool,
     fault: WriteFault,
 ) -> Result<(), AppError> {
+    atomic_guarded(
+        dir,
+        bytes,
+        replace,
+        fault,
+        &super::OperationCancellation::default(),
+    )
+}
+pub(super) fn atomic_guarded(
+    dir: &Path,
+    bytes: &[u8],
+    replace: bool,
+    fault: WriteFault,
+    cancel: &super::OperationCancellation,
+) -> Result<(), AppError> {
     let destination = dir.join("vault.bin");
     reject_links(&destination)?;
     let temp = Temporary(dir.join(format!(
@@ -115,7 +130,7 @@ pub(super) fn atomic(
         std::process::exit(73);
     }
     // The temp and destination are same-volume. No delete-original/rename pair.
-    replace_file(&temp.0, &destination, replace)?;
+    cancel.commit(|| replace_file(&temp.0, &destination, replace))?;
     // No fallible operation after the commit point: memory can now adopt candidate.
     Ok(())
 }
@@ -257,4 +272,72 @@ pub(super) fn protect(path: &Path) -> Result<(), AppError> {
 #[cfg(not(any(unix, windows)))]
 pub(super) fn protect(_: &Path) -> Result<(), AppError> {
     Err(AppError::StorageUnavailable)
+}
+
+#[cfg(test)]
+mod cancellation_tests {
+    use super::*;
+    use crate::storage::OperationCancellation;
+    #[test]
+    fn cancelled_precommit_removes_pending_and_preserves_destination()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let dir = tempfile::tempdir()?;
+        fs::write(dir.path().join("vault.bin"), b"inert prior ciphertext")?;
+        let cancel = OperationCancellation::default();
+        cancel.cancel();
+        assert_eq!(
+            atomic_guarded(
+                dir.path(),
+                b"inert candidate ciphertext",
+                true,
+                WriteFault::None,
+                &cancel
+            ),
+            Err(AppError::VaultLocked)
+        );
+        assert_eq!(
+            fs::read(dir.path().join("vault.bin"))?,
+            b"inert prior ciphertext"
+        );
+        assert_eq!(fs::read_dir(dir.path())?.count(), 1);
+        Ok(())
+    }
+    #[test]
+    fn cancellation_and_rename_gate_have_one_linearization_order()
+    -> Result<(), Box<dyn std::error::Error>> {
+        use std::sync::{
+            Arc,
+            atomic::{AtomicBool, Ordering},
+            mpsc,
+        };
+        let token = OperationCancellation::default();
+        let commit_token = token.clone();
+        let (entered_tx, entered_rx) = mpsc::sync_channel(1);
+        let (release_tx, release_rx) = mpsc::sync_channel(1);
+        let commit = std::thread::spawn(move || {
+            commit_token.commit(|| {
+                let _ = entered_tx.send(());
+                let _ = release_rx.recv();
+                Ok(())
+            })
+        });
+        entered_rx.recv()?;
+        let done = Arc::new(AtomicBool::new(false));
+        let cancellation_done = done.clone();
+        let cancel_token = token.clone();
+        let (attempt_tx, attempt_rx) = mpsc::sync_channel(1);
+        let cancellation = std::thread::spawn(move || {
+            let _ = attempt_tx.send(());
+            cancel_token.cancel();
+            cancellation_done.store(true, Ordering::SeqCst);
+        });
+        attempt_rx.recv()?;
+        assert!(!done.load(Ordering::SeqCst));
+        release_tx.send(())?;
+        assert_eq!(commit.join().map_err(|_| "commit panic")?, Ok(()));
+        cancellation.join().map_err(|_| "cancel panic")?;
+        assert!(token.is_cancelled());
+        assert_eq!(token.commit(|| Ok(())), Err(AppError::VaultLocked));
+        Ok(())
+    }
 }

@@ -1,5 +1,18 @@
 # Security design and limits
 
+Task05 adds local create/unlock/Lock, encrypted idle settings and passive Windows
+session-lock/suspend/resume notifications. The single-owner worker, generation
+and cooperative cancellation boundary are described in architecture.md. A stale
+result is locked before UI adoption, including completed-but-unpolled results;
+no duplicate store/key cache exists. KDF scratch and its borrowed passphrase
+cannot be interrupted mid-call and are released when bounded Argon2 returns.
+Lock immediately hides all current UI state, clears owned form/query/pending
+state and drops native editor histories. Egui undo storage is released rather
+than zeroized internally; allocator/framework/OS copies remain outside complete
+erasure claims. Listener registration failure blocks unlock instead of silently
+running without OS locking. Actual OS lock/suspend and fully populated future
+capture/recovery screens still require their later end-to-end checks.
+
 Task 03 implements the storage boundary described below; the original task 01 framework spike remains inert and has no usable credential flow. Independent task 03 review is pending, and task 20 owns the wider audit. The agent review required by the task plan is not external cryptographic certification.
 
 ## Threats

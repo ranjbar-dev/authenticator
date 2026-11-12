@@ -1,5 +1,15 @@
 # Local vault format, version 1
 
+Task05 keeps the envelope/schema unchanged and adds a cooperative cancellation
+gate for creation. `create_cancellable` checks cancellation before expensive
+creation and shares the cancellation mutex with the final atomic rename. If
+cancellation wins the gate, pending ciphertext is removed best effort and no
+vault is created; if rename wins, a complete ciphertext file can remain and the
+UI discards/locks the late session. No cancellation path deletes a committed
+vault. Existing `create` uses an uncancelled token, preserving its API semantics;
+transactions/rewrap keep their existing commit boundary. Passphrase work remains
+bounded and off the UI thread, not forcibly interruptible inside Argon2.
+
 Implemented by task 03 on 12 November 2026. This is the local format only. Task 11 must use a distinct discriminator and independently generated DEK/salt/nonces and backup passphrase; copying the local file is not the portable backup workflow. No device key or recovery backdoor is involved.
 
 ## Envelope

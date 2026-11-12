@@ -1,5 +1,53 @@
 # Architecture and concrete decisions
 
+## Task 05 local vault lifecycle
+
+The ROOT shell now creates and unlocks the real local repository with exact
+12..1024 UTF-8 byte passphrases and setup confirmation. No app registration,
+optional device protection, network service or reset key was added. Existing
+unreadable ciphertext always selects Unlock, never initialization.
+
+`AppState` transfers its sole `VaultStore` into one worker during passphrase
+work. It does not clone the repository or retain another decrypted view model.
+A mutex-protected completion slot, cooperative cancellation token and session
+generation prevent a cancelled/old completion from unlocking the UI. Lock clears
+query/pending intent, dialogs/status, form strings and native widget memory.
+Secret editors clear their undo history after every pass; the shared focus helper
+scrolls newly focused controls into view. Form failure/clear/completion/close also
+release form buffers. History allocations are dropped, not claimed securely
+erased by egui.
+
+Argon2 runs off the paint/event thread. It cannot be safely interrupted mid-call;
+its bounded scratch/passphrase/temporary keys drop when that call returns. The
+UI remains cancellable and never adopts a cancelled unlocked result. A completed
+but unpolled result is locked synchronously when cancelled. Closing cancels
+without waiting for the KDF thread. Storage's create cancellation gate shares a
+mutex with the final same-volume rename: cancellation before that gate prevents
+commit, cancellation after rename may leave a complete encrypted vault requiring
+unlock. Cancellation waits only for an already-entered native rename, not KDF or
+temporary-file construction. Original transaction semantics and format are intact.
+
+Idle expiry uses `Instant`, checks before recording new input and requests a
+200ms repaint tick. Default remains 300 seconds; Settings saves 60/300/900/1800
+seconds inside the authenticated encrypted preferences. The diagnostic example
+can explicitly save 3 seconds to its isolated vault for a real expiry check.
+UTC wall time remains only a domain record timestamp, never the idle clock.
+
+`platform/lifecycle.rs` owns a dedicated message thread and unshown **top-level**
+HWND, current-session WTS registration and suspend/resume registration. It handles
+WTS_SESSION_LOCK and WM_POWERBROADCAST suspend/resume notifications, requests a
+repaint and makes the next UI pass lock before processing worker results. A
+message-only HWND is deliberately not used. Registration failure or unexpected
+notification-window destruction keeps the UI locked and asks for restart. Drop
+closes/joins the listener and unregisters native resources. The tests send only
+to that private HWND; actual desktop lock and hardware sleep were not performed.
+
+`examples/vault_lifecycle.rs` is an argument-free, explicit isolated preview under
+the OS temporary directory. Its ciphertext survives relaunch, no existing vault
+is silently removed and it never resolves the default user vault. Its size tools
+compensate for app zoom; they are not physical DPI tests. Task05 evidence and
+remaining manual/hardware limits are in `docs/qa/task05/implementation-evidence.md`.
+
 Task 01, 12 November 2026. Baseline `f7ea0cc` contained only PRD.md, tasks/ and Git metadata. There were no source screens, components, theme, DESIGN.md or reference images. No reuse counts or measured reference tokens are asserted.
 
 ## Framework decision and feasibility boundary

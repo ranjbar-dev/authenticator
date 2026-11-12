@@ -12,6 +12,30 @@ use std::{
 };
 use zeroize::Zeroizing;
 
+/// Cooperative operation cancellation. The guard and atomic rename share a
+/// mutex: cancellation before the rename gate prevents a create from committing;
+/// cancellation after the gate may leave a complete encrypted, locked vault.
+#[derive(Clone, Default)]
+pub struct OperationCancellation(std::sync::Arc<std::sync::Mutex<bool>>);
+impl OperationCancellation {
+    pub fn cancel(&self) {
+        *self.0.lock().unwrap_or_else(|e| e.into_inner()) = true;
+    }
+    pub fn is_cancelled(&self) -> bool {
+        *self.0.lock().unwrap_or_else(|e| e.into_inner())
+    }
+    pub(super) fn commit<R>(
+        &self,
+        action: impl FnOnce() -> Result<R, AppError>,
+    ) -> Result<R, AppError> {
+        let cancelled = self.0.lock().unwrap_or_else(|e| e.into_inner());
+        if *cancelled {
+            return Err(AppError::VaultLocked);
+        }
+        action()
+    }
+}
+
 struct Session {
     vault: Vault,
     dek: crypto::Key,
@@ -78,19 +102,43 @@ impl VaultStore {
     }
     /// Takes ownership of passphrase storage so it clears on every return path.
     pub fn create(&mut self, passphrase: Zeroizing<String>, vault: Vault) -> Result<(), AppError> {
+        self.create_cancellable(passphrase, vault, &OperationCancellation::default())
+    }
+    pub fn create_cancellable(
+        &mut self,
+        passphrase: Zeroizing<String>,
+        vault: Vault,
+        cancel: &OperationCancellation,
+    ) -> Result<(), AppError> {
+        if cancel.is_cancelled() {
+            return Err(AppError::VaultLocked);
+        }
         crypto::check_passphrase(passphrase.as_bytes())?;
         if self.exists()? {
             return Err(AppError::StorageUnavailable);
         }
         let parameters = KdfParameters::calibrate()?;
-        self.create_with_parameters(passphrase, vault, parameters)
+        self.create_guarded(passphrase, vault, parameters, cancel)
     }
+    #[cfg(test)]
     fn create_with_parameters(
         &mut self,
         passphrase: Zeroizing<String>,
         vault: Vault,
         p: KdfParameters,
     ) -> Result<(), AppError> {
+        self.create_guarded(passphrase, vault, p, &OperationCancellation::default())
+    }
+    fn create_guarded(
+        &mut self,
+        passphrase: Zeroizing<String>,
+        vault: Vault,
+        p: KdfParameters,
+        cancel: &OperationCancellation,
+    ) -> Result<(), AppError> {
+        if cancel.is_cancelled() {
+            return Err(AppError::VaultLocked);
+        }
         if self.exists()? {
             return Err(AppError::StorageUnavailable);
         }
@@ -98,7 +146,7 @@ impl VaultStore {
         let dek = Zeroizing::new(crypto::random::<32>()?);
         let wrapping = crypto::new_wrapping(passphrase.as_bytes(), &dek, p)?;
         let bytes = crypto::encrypt(&wrapping, &dek, plain)?;
-        files::atomic(&self.directory, &bytes, false, self.fault)?;
+        files::atomic_guarded(&self.directory, &bytes, false, self.fault, cancel)?;
         self.session = Some(Session {
             vault,
             dek,

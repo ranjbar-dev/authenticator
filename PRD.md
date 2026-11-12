@@ -1,6 +1,6 @@
 # Product Requirements Document: Authenticator
 
-**Status:** Implementation in progress; tasks01–04 independently reviewed; tasks05–24 pending
+**Status:** Implementation in progress; tasks01–04 accepted; task05 implementation reviewed with hardware/integration QA open; tasks06–24 pending
 **Basis:** Direct inspection of the running Windows app “Authenticator App · 2FA” on 12 November 2026.  
 **Purpose:** Define Authenticator, a Rust desktop app matching the inspected reference UI, with screenshot-based 2FA import as its defining feature and encrypted local-only storage.  
 **Repository:** https://github.com/ranjbar-dev/authenticator  
@@ -263,3 +263,5 @@ Task02 now implements the validated in-memory schema, deterministic OTP engine a
 Task03 implements the encrypted local storage API with Argon2id-wrapped random DEK and XChaCha20Poly1305, full schema/metadata encryption, bounded64MiB plaintext format, current-user Windows ACLs and atomic ciphertext transactions. Storage opens locked; UI/OS lock lifecycle remains task05. Exact format, calibrated KDF policy and limitations: docs/storage-format.md.32 main tests plus process interruption/concurrency probes and a distinct focused source/test review passed; no complete memory-erasure or physical power-loss guarantee is claimed. Native backup remains task11.
 
 Task04 now supplies the shared native Rust shell, three tabs, central theme with bundled OFL NotoSans400/600, whole typography roles, labeled plain/masked fields, root dialogs, status/cards and real repository lock gating. UI screenshots and native pointer/keyboard/accessibility checks cover shared controls, empty disposable vault and appzoom size matrix. This is not a full account/capture workflow. Exact reference pixels and physicalDPI/Narrator remain unverified; see docs/ui-foundation.md and docs/qa/task04/. Separate checker calibration detected a source-level planted typography defect; copied-executable launch failed, so no live visual-calibration sensitivity is claimed.
+
+Task05 implements localpassphrase create/unlock forms, asyncKDF work, explicitCtrlL/Lock, encryptedidlepreference default300seconds, nativeWTS/powernotification listener andgeneration/cancellation/secretwidget cleanup. Full45tests and distinctUI/securityreview passed; observedrelaunchlocked, persistedtimeout andactual3secondisolatedidleexpiry. ActualOSsessionlock/hardwaresuspend delivery andfuturecapture/import/revealedcode integration remainunverified; task05 remainsopen for thosegates. See docs/qa/task05/implementation-evidence.md. No complete hardware ormemory-erasure assurance is claimed.

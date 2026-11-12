@@ -37,6 +37,11 @@ pub fn card<R>(ui: &mut Ui, content: impl FnOnce(&mut Ui) -> R) -> egui::InnerRe
 }
 
 pub fn focus(ui: &Ui, response: &Response) {
+    // Keyboard navigation must bring an off-screen control into the shared
+    // scroll holder, including compact lock forms and enlarged app text.
+    if response.gained_focus() {
+        response.scroll_to_me(Some(egui::Align::Center));
+    }
     if response.has_focus() {
         // Outside the filled button, against its holder; no bright halo.
         ui.painter().rect_stroke(
@@ -233,6 +238,13 @@ pub fn labeled_secret_field(
     labeled_field_impl(ui, id, label, value, helper, error, FieldMode::Secret)
 }
 
+/// Release all native text-editor histories at the session/form boundary.
+/// Egui does not offer zeroizing undo allocations; dropping history is best
+/// effort lifetime minimization, not a guarantee about allocator/OS copies.
+pub fn clear_sensitive_widget_memory(ctx: &egui::Context) {
+    ctx.memory_mut(|m| m.data.clear());
+}
+
 #[derive(Clone, Copy)]
 enum FieldMode {
     Plain,
@@ -263,19 +275,27 @@ fn field_editor(
         ui.fonts_mut(|fonts| fonts.layout_job(typography.singleline_job(display, theme::TEXT)))
     };
     let layout = egui::Layout::centered_and_justified(ui.layout().main_dir());
-    ui.allocate_ui_with_layout(
-        egui::vec2(ui.available_width(), theme::CONTROL_HEIGHT),
-        layout,
-        |ui| {
-            egui::TextEdit::singleline(value)
-                .font(typography.font())
-                .password(secret)
-                .layouter(&mut layouter)
-                .id(id)
-                .show(ui)
-        },
-    )
-    .inner
+    let mut output = ui
+        .allocate_ui_with_layout(
+            egui::vec2(ui.available_width(), theme::CONTROL_HEIGHT),
+            layout,
+            |ui| {
+                egui::TextEdit::singleline(value)
+                    .font(typography.font())
+                    .password(secret)
+                    .layouter(&mut layouter)
+                    .id(id)
+                    .show(ui)
+            },
+        )
+        .inner;
+    if secret {
+        // Native password rendering does not disable egui's plaintext undo
+        // history. Never retain that history between secret-editor passes.
+        output.state.clear_undoer();
+        output.state.clone().store(ui.ctx(), id);
+    }
+    output
 }
 
 fn labeled_field_impl(
@@ -529,5 +549,37 @@ impl Dialog {
             ctx.request_repaint();
         }
         close
+    }
+}
+
+#[cfg(test)]
+mod secret_history_tests {
+    use super::*;
+    #[test]
+    fn secret_editor_clears_old_undo_and_boundary_removes_widget_state() {
+        let ctx = egui::Context::default();
+        theme::apply(&ctx);
+        let id = Id::unique("secret-history-probe");
+        let current = (
+            egui::text::CCursorRange::default(),
+            "disposable previous text".to_owned(),
+        );
+        let mut old = egui::text_edit::TextEditState::default();
+        let mut undo = old.undoer();
+        undo.add_undo(&current);
+        old.set_undoer(undo);
+        old.store(&ctx, id);
+        let mut output = ctx.run_ui(egui::RawInput::default(), |root| {
+            egui::CentralPanel::default().show(root, |ui| {
+                let mut value = "disposable current text".to_owned();
+                let output = field_editor(ui, id, &mut value, FieldMode::Secret, theme::BODY);
+                assert!(!output.state.undoer().has_undo(&current));
+                assert!(!output.state.undoer().is_in_flux());
+            });
+        });
+        output.textures_delta.clear();
+        assert!(egui::text_edit::TextEditState::load(&ctx, id).is_some());
+        clear_sensitive_widget_memory(&ctx);
+        assert!(egui::text_edit::TextEditState::load(&ctx, id).is_none());
     }
 }

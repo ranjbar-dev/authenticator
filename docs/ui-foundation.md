@@ -1,5 +1,17 @@
 # Shared Rust UI foundation
 
+Task05 connects the ROOT locked forms to real local create/unlock and reuses
+shared card, field, button, heading, feedback and typography roles. Setup has
+masked confirmation and adjacent passphrase-loss/independent-backup guidance;
+unlock errors retain retry without offering replacement. Busy renders one
+cancellable action and removes submit fields. New focus scrolls into the shared
+holder; Cancel/search/form receive initial focus at their lifecycle transitions.
+Ctrl+L locks, Escape cancels passphrase work, and help documents these shortcuts.
+Secret editors now discard undo history after every pass; form exit/lock clears
+the complete widget data map as well as zeroizing the owned strings. ROOT native
+password semantics and pre-layout bullets from task04 remain in force. Actual
+task05 UI evidence and current limitations are in `docs/qa/task05/`.
+
 Task 04 uses PRD section 5's inventory fallback: compact dark holders, blue
 actions, cards, local help and exactly **2FA Codes / Backup Codes / Settings**.
 The installed reference vault was not opened. Colors, dimensions and fonts below

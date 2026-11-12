@@ -485,6 +485,17 @@ impl Vault {
     pub fn preferences(&self) -> &Preferences {
         &self.preferences
     }
+    pub fn set_lock_timeout(&mut self, seconds: u32, at: Timestamp) -> Result<(), AppError> {
+        if !(1..=86_400).contains(&seconds)
+            || at < self.state.updated_at
+            || at < self.preferences.state.updated_at
+        {
+            return Err(AppError::InvalidRecord);
+        }
+        self.preferences.lock_timeout_seconds = seconds;
+        self.preferences.state.touch(at)?;
+        self.state.touch(at)
+    }
     pub fn accounts(&self) -> &[Account] {
         &self.accounts
     }

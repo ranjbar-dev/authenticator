@@ -1,0 +1,32 @@
+Window: "Authenticator vault preview", App: vault_lifecycle.exe.
+	0 window (region) Authenticator vault preview Secondary Actions: Raise
+		1 title bar (settable, string) Value: Authenticator vault preview
+			2 menu bar System ID: MenuBar
+				3 menu item System
+			4 button Minimize
+			5 button Maximize
+			6 button Close
+		7 pane (region)
+			8 text DISPOSABLE VAULT · task 05 preview
+			9 button Preview tools
+		10 pane (region)
+			11 text AUTHENTICATOR · LOCAL VAULT
+			12 text (heading) Create vault Value: Create vault
+			13 button Help for this screen
+			14 text Vault locked · credentials hidden
+			15 tab item 2FA Codes
+			16 tab item Backup Codes
+			17 tab item Settings
+			18 text (heading) Protect your local vault Value: Protect your local vault
+			19 text Encrypt this device’s vault with a passphrase. No account or internet connection needed.
+			20 text Vault passphrase
+			21 text field (edit) (settable, string) Vault passphrase
+			22 text 12–1024 UTF-8 bytes. Spaces count; your input is never trimmed.
+			23 text Confirm passphrase
+			24 text field (edit) (settable, string) Confirm passphrase
+			25 text Enter exactly the same passphrase.
+			26 text A lost passphrase cannot be reset. Recovery needs a separate encrypted backup and its passphrase. Keep it independently; creating a vault does not create a backup.
+			27 button Create vault
+			28 button Clear fields
+
+The focused UI element is 21 text field (edit) (settable, string) Vault passphrase.
