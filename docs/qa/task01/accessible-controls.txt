@@ -1,0 +1,31 @@
+Window: "Authenticator framework spike", App: framework_spike.exe.
+	0 window (region) Authenticator framework spike Secondary Actions: Raise
+		1 title bar (settable, string) Value: Authenticator framework spike
+			2 menu bar System ID: MenuBar
+				3 menu item System
+			4 button Minimize
+			5 button Maximize
+			6 button Close
+		7 pane (region)
+			8 text Authenticator
+			9 text Local. Offline. Under your control.
+			10 text Framework feasibility
+			11 text Inert controls for keyboard, accessibility and window checks.
+			12 text Test label (no credentials)
+			13 text field (edit) (settable, string) Test label (no credentials) Value: a
+			14 button Check keyboard action
+			15 text Keyboard or pointer action received.
+			16 button Open region viewport test
+			17 text Windows desktop geometry: 6400 × 1440 physical pixels
+			18 text Resize test
+			19 button Narrow
+			20 button Intermediate
+			21 button Desktop
+			22 text UI scale test (does not change Windows settings)
+			23 button 100%
+			24 button 150%
+			25 button 200%
+
+Document text: ```
+a
+```

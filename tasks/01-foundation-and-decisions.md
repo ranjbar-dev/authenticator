@@ -1,6 +1,6 @@
 # Task 01: Rust foundation, reference evidence and architecture
 
-Status: todo
+Status: in_progress
 Priority: P0 foundation / screenshot-first
 Dependencies: None
 Requirements: PRD §§1–5, 7–10, 12–14
@@ -35,5 +35,5 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Evidence
 
-Not started. On execution record changed files, test commands/results, sanitized UI evidence paths where applicable, independent reviewer result and commit reference. If blocked, retain incomplete status and record exact cause, attempted remedies and resumption steps.
+Implementation and independent re-review approved 2026-11-12; hosted CI pending. Full commands and sanitized evidence: docs/qa/task01/implementation-evidence.md. Implementer implement_01; distinct reviewer review_01 initially found per-frame drag origin and missing packaging choice, both fixed and independently rechecked. Six tests, fmt, clippy and Windows build pass; real pointer/key/AccessKit, drag/Escape/Cancel/resize/app-zoom checked. Root input failure traced to elevated launch; use helper normal launch. Secondary viewport accessibility remains a documented task07 native-adapter obligation. Physical DPI, Narrator, actual capture and reference pixel fidelity are not task01 passes. Parent is pushing reviewed foundation for initial Windows CI; final acceptance/status awaits that result. Commit reference follows in next checkpoint.
 

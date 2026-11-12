@@ -8,7 +8,7 @@ No app implementation has been started by generating this plan. Every initial st
 
 | Task | Work | Status |
 |---|---|---|
-| 01 | [Rust foundation, reference evidence and architecture](01-foundation-and-decisions.md) | todo |
+| 01 | [Rust foundation, reference evidence and architecture](01-foundation-and-decisions.md) | in_progress |
 | 02 | [TOTP engine, data model and credential validation](02-totp-domain-and-uri-parser.md) | todo |
 | 03 | [Encrypted local persistence and key management](03-encrypted-local-vault.md) | todo |
 | 04 | [Reference-based Rust shell and shared controls](04-shared-ui-shell.md) | todo |
@@ -72,5 +72,4 @@ Codex orchestration was checked against the installed CLI help/features and [off
 
 ## Checkpoint
 
-Not started. The executor records current task, last accepted task, remaining failures, last commit/push, next action and exact resume command here after each task or before any forced exit. Retain historical evidence in the task files.
-
+2026-11-12: Task01 implementation independently approved by review_01 after material fixes. Six tests/build/fmt/clippy pass; real main AccessKit, pointer/key/overlay/resize/app-zoom checked. Initial hosted CI remains pending: next action commit/push foundation, inspect GitHub Actions, then mark task01 accepted and start task02. Last accepted task: none yet. Baseline SHA f7ea0ccf61051d0aa46359fdcd53cdd809131732; upcoming foundation SHA recorded in following checkpoint. See docs/qa/task01/implementation-evidence.md and task01 Evidence for exact limits. No close-thread API is exposed; children completed before any next child. Resume: Read tasks/CODEX_PROMPT.md and execute its instructions.

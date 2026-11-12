@@ -1,0 +1,36 @@
+[workspace]
+members = ["."]
+resolver = "3"
+
+[package]
+name = "authenticator"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+description = "Offline Windows authenticator with an encrypted local vault"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[[bin]]
+name = "Authenticator"
+path = "src/main.rs"
+
+[dependencies]
+eframe = { version = "=0.37.0", default-features = false, features = ["accesskit", "default_fonts", "glow"] }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_UI_WindowsAndMessaging"] }
+
+[dev-dependencies]
+tempfile = "3.27"
+
+[lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+
+[profile.release]
+lto = "thin"
+strip = true

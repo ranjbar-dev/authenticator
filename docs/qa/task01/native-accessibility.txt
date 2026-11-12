@@ -1,0 +1,5 @@
+Window: "Authenticator", App: Authenticator.exe.
+	0 window Authenticator Secondary Actions: Raise
+		1 title bar (settable, string) Value: Authenticator
+
+The focused UI element is 0 window Authenticator Secondary Actions: Raise.

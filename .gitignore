@@ -1,0 +1,17 @@
+/target/
+/dist/
+/.test-data/
+*.vault
+*.authbackup
+*.backup
+*.key
+*.pem
+*.pfx
+.env
+.env.*
+/captures/
+/screenshots/
+*.dmp
+*.log
+*.tmp
+*.lockfile
