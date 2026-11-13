@@ -134,7 +134,7 @@ impl Session {
         self.back_opener = Some(back.id);
         if self.focus {
             back.request_focus();
-            back.scroll_to_me(Some(egui::Align::Min));
+            back.scroll_to_me(None);
             self.focus = false;
         }
         if back.clicked() {

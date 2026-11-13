@@ -40,7 +40,9 @@ pub fn focus(ui: &Ui, response: &Response) {
     // Keyboard navigation must bring an off-screen control into the shared
     // scroll holder, including compact lock forms and enlarged app text.
     if response.gained_focus() {
-        response.scroll_to_me(Some(egui::Align::Center));
+        // Keep already-visible content steady. Centering every new focus can
+        // scroll a page's heading/summary away even when the control fits.
+        response.scroll_to_me(None);
     }
     if response.has_focus() {
         // Outside the filled button, against its holder; no bright halo.

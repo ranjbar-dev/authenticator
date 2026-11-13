@@ -1,0 +1,78 @@
+{
+  "baseline96": {
+    "escapeOverlayClosed": true,
+    "escapeCipherUnchanged": true,
+    "escapeFocusRestored": true,
+    "physicalQrRegion": [
+      96,
+      342,
+      528,
+      774
+    ],
+    "editableReview": true,
+    "previewCipherUnchanged": true,
+    "explicitSave": true,
+    "hmac": {
+      "sampledAt": "2026-11-13T19:03:17.159Z",
+      "counterStable": true,
+      "importedLabelPresent": true,
+      "independentHmacMatch": true
+    }
+  },
+  "physical144": {
+    "dpi": 144,
+    "appZoom": 1,
+    "uniqueLabel": "Public DPI150 unique fixture",
+    "oneMatchingAccount": true,
+    "counterStable": true,
+    "independentHmacMatch": true,
+    "sampledAt": "2026-11-13T19:34:15.510Z",
+    "qrRegion": [
+      12,
+      135,
+      660,
+      783
+    ],
+    "overlay": [
+      1707,
+      960
+    ],
+    "previewCipherUnchanged": true,
+    "explicitSave": true
+  },
+  "physical192Preview": {
+    "editableReview": true,
+    "noQr": false,
+    "cipherUnchanged": true
+  },
+  "temporary_os_state": {
+    "monitor1_scale": 100,
+    "monitor2_scale": 100,
+    "monitor3_scale": 100,
+    "contrast": "None",
+    "narrator": "Off",
+    "restoredVerified": true
+  },
+  "physical192": {
+    "dpi": 192,
+    "appZoom": 1,
+    "uniqueLabel": "Public DPI200 unique fixture",
+    "oneMatchingAccount": true,
+    "counterStable": true,
+    "independentHmacMatch": true,
+    "explicitSave": true,
+    "cipherChanged": true,
+    "sampledAt": "2026-11-13T20:07:22.324Z",
+    "qrRegion": [
+      16,
+      181,
+      880,
+      1045
+    ],
+    "overlay": [
+      1280,
+      720
+    ],
+    "previewCipherUnchanged": true
+  }
+}

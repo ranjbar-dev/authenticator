@@ -64,7 +64,7 @@ def license_files(package: dict) -> list[Path]:
         for item in provenance["files"]:
             notice = vendored / item["file"]
             if not notice.resolve().is_relative_to(vendored.resolve()) or sha(notice) != item["sha256"]:
-                raise RuntimeError("Vendored upstream notice failed verification")
+                raise RuntimeError(f"Vendored upstream notice failed verification: {package['name']}-{package['version']}/{item['file']}")
             files.append(notice)
     return sorted(set(files))
 
@@ -375,7 +375,7 @@ def validate(path: Path) -> None:
             if relative.is_absolute() or ".." in relative.parts or ":" in name or "\\" in name or not name.startswith(root+"/"):
                 raise RuntimeError("Unsafe ZIP path")
             for part in name.split("/"):
-                if not part or part in (".","..") or part.endswith(("."," ")) or any(ord(c)<32 or c in '<>"|?*' for c in part) or re.fullmatch(r"(?i)(CON|PRN|AUX|NUL|CONIN\$|CONOUT\$|COM[1-9¹²³]|LPT[1-9¹²³])(?:\..*)?",part):
+                if not part or part in (".","..") or part.endswith(("."," ")) or any(ord(c)<32 or c in '<>"|?*' for c in part) or re.fullmatch(r"(?i)(CON|PRN|AUX|NUL|CONIN\$|CONOUT\$|COM[1-9¹²³]|LPT[1-9¹²³])",part.partition(".")[0].rstrip(" ")):
                     raise RuntimeError("Unsafe Windows ZIP path")
             if name.lower().endswith((".vault",".authpbk","vault.bin",".pdb",".log")) or "/qa/" in name.lower() or "/examples/" in name.lower():
                 raise RuntimeError("Unexpected development/user-data file")

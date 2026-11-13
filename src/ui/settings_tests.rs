@@ -8,6 +8,49 @@ use crate::platform::startup::{self, Status};
 type TestResult = Result<(), Box<dyn std::error::Error>>;
 
 #[test]
+fn settings_navigation_keeps_visible_heading_counts_and_first_action() -> TestResult {
+    fn visible_text(shape: &egui::epaint::Shape, clip: egui::Rect, wanted: &str) -> bool {
+        match shape {
+            egui::epaint::Shape::Vec(shapes) => {
+                shapes.iter().any(|s| visible_text(s, clip, wanted))
+            }
+            egui::epaint::Shape::Text(text) if text.galley.job.text == wanted => {
+                clip.contains_rect(egui::Rect::from_min_size(text.pos, text.galley.size()))
+            }
+            _ => false,
+        }
+    }
+    let dir = tempfile::tempdir()?;
+    for (index, size) in [[340., 780.], [600., 800.], [960., 900.]]
+        .into_iter()
+        .enumerate()
+    {
+        let mut app = app(fixture(2)?, &dir.path().join(index.to_string()))?;
+        click(&mut app, size, "Settings")?;
+        let out = settle(&mut app, size);
+        for wanted in [
+            "Settings",
+            "2FA Codes · 2 active account(s)",
+            "Backup Codes · 2 active set(s) · 2 available · 2 used",
+        ] {
+            assert!(
+                out.shapes
+                    .iter()
+                    .any(|s| visible_text(&s.shape, s.clip_rect, wanted)),
+                "initial Settings navigation must keep visible summary text: {wanted}, width {}",
+                size[0]
+            );
+        }
+        let (_, export) = control(&out, "Export & Import").ok_or("missing export action")?;
+        assert!(export.min.y >= 0. && export.max.y <= size[1] && painted_visible(&out, export));
+        tab_to(&mut app, size, "Export & Import")?;
+        let out = settle(&mut app, size);
+        focused(&app, &out, "Export & Import", size)?;
+    }
+    Ok(())
+}
+
+#[test]
 fn settings_each_lock_action_conceals_the_triggering_frame_without_an_extra_pass() -> TestResult {
     fn lock_controls(out: &egui::FullOutput) -> Vec<egui::Rect> {
         out.platform_output
@@ -1087,5 +1130,77 @@ fn finish_close(app: &mut AuthenticatorApp, size: [f32; 2]) -> TestResult {
         std::thread::sleep(Duration::from_millis(5));
     }
     assert!(!app.state.is_unlocked());
+    Ok(())
+}
+
+#[test]
+fn initial_subpage_focus_keeps_heading_and_first_control_visible() -> TestResult {
+    fn text_visible(out: &egui::FullOutput, wanted: &str) -> bool {
+        fn find(shape: &egui::epaint::Shape, clip: egui::Rect, wanted: &str) -> bool {
+            match shape {
+                egui::epaint::Shape::Vec(shapes) => shapes.iter().any(|s| find(s, clip, wanted)),
+                egui::epaint::Shape::Text(t) if t.galley.job.text == wanted => {
+                    clip.contains_rect(egui::Rect::from_min_size(t.pos, t.galley.size()))
+                }
+                _ => false,
+            }
+        }
+        out.shapes
+            .iter()
+            .any(|s| find(&s.shape, s.clip_rect, wanted))
+    }
+    let dir = tempfile::tempdir()?;
+    for (index, width) in [340., 600., 960.].into_iter().enumerate() {
+        let mut app = app(fixture(2)?, &dir.path().join(index.to_string()))?;
+        for height in [780., 666., 500.] {
+            for screen in 0..5 {
+                // Fresh Context gives each initial page the same unscrolled viewport.
+                // The assertion concerns visible paint, not AX nodes outside a clip.
+                app.context = egui::Context::default();
+                app.context.enable_accesskit();
+                app.folders = None;
+                app.trash = None;
+                app.backup_codes.reset();
+                app.state.navigate(Route::Codes);
+                let (heading, first) = match screen {
+                    0 => {
+                        click(&mut app, [width, height], "Manage folders")?;
+                        ("Folders", "Back to 2FA Codes")
+                    }
+                    1 | 2 => {
+                        click(&mut app, [width, height], "Manage folders")?;
+                        let (action, title) = if screen == 1 {
+                            ("Create folder", "Create folder")
+                        } else {
+                            ("Edit folder", "Edit folder")
+                        };
+                        click(&mut app, [width, height], action)?;
+                        (title, "Folder name")
+                    }
+                    3 => {
+                        app.state.navigate(Route::BackupCodes);
+                        settle(&mut app, [width, height]);
+                        // Reach detail through its real scrolled list.
+                        click(&mut app, [width, height], "View set")?;
+                        ("Backup Codes", "Back")
+                    }
+                    _ => {
+                        click(&mut app, [width, height], "Settings")?;
+                        click(&mut app, [width, height], "Trash · 0 item(s)")?;
+                        ("Trash", "Back to Settings")
+                    }
+                };
+                let out = settle(&mut app, [width, height]);
+                assert!(
+                    text_visible(&out, heading),
+                    "initial {heading} heading clipped at {width}x{height}"
+                );
+                assert!(
+                    text_visible(&out, first),
+                    "initial {heading} first control label clipped at {width}x{height}"
+                );
+            }
+        }
+    }
     Ok(())
 }

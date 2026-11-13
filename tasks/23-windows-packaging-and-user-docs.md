@@ -1,6 +1,6 @@
 # Task 23: Windows packaging, clean-install recovery and documentation
 
-Status: in_progress; package/native recovery reviewed, clean-machine/offline gates open
+Status: in_progress; scoped package/native recovery reviewed; reproducibility and environment gates open
 Priority: Required for complete v1
 Dependencies: 01–22
 Requirements: PRD §§1–3, 7–11, 13–14
@@ -11,7 +11,7 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Implementation
 
-- [x] Produce a repeatable Windows release build and distributable portable ZIP without requiring paid signing credentials. Use app name Authenticator, correct version, local icon/assets and user-scoped data paths. Bit-identical builds are not claimed.
+- [ ] Produce a reproducible Windows release build and distributable package/installer without requiring paid signing credentials. Use app name Authenticator, correct version, local icon/assets and user-scoped data paths.
 - [x] Document install/run/update/uninstall, Rust development, screenshot scan, manual/image entry, supported TOTP parameters, lock/recovery, backup codes, folders/trash and easy encrypted export/import in English.
 - [x] Document that uninstall preserves user vaults unless separately deliberately removed; packaging/startup changes must not delete data or weaken ACLs. Do not ship test records or hardcoded business data.
 - [ ] Smoke-test the packaged binary on a clean local profile/VM if available and restore an encrypted backup independently of original profile keys. Confirm offline runtime and startup toggle behavior.
@@ -33,6 +33,8 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 5. Keep at most one child agent active; children must not spawn children, commit, push, change PRD scope or silently skip requirements. Return changed paths, checks, findings and remaining risks to the parent.
 
 ## Evidence
+
+Task24 independent review approved the scoped UI/package repairs and required restoring this original reproducibility requirement. The parent restored its wording and unchecked state; deterministic EXE/ZIP engineering and measurements remain feasible work. A repeatable command alone does not satisfy this checkbox. See [scoped review](../docs/qa/task24/independent-review.md) and [incomplete audit](../docs/completion-report.md). The earlier clean ebd artifact is identified in [clean-build.md](../docs/qa/task23/clean-build.md); current source still requires reviewed integration and fresh hosted package proof.
 
 Implementation and actual packaged pointer/keyboard evidence: [implementation report](../docs/qa/task23/implementation-evidence.md). Distinct package/security/UI review and re-review: [review](../docs/qa/task23/independent-review.md). Parent repaired three archive-validator findings (reserved Windows device aliases, case-insensitive file/ancestor collisions, raw NUL filename normalization); independent 13 regressions, existing ZIP validation and diff check pass. Build/resource/dependency changes and public notices are reviewed. Source commit and clean-HEAD artifact follow in the next checkpoint to avoid circular attribution.
 

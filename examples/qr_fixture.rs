@@ -29,8 +29,8 @@ impl eframe::App for Fixture {
                 .send_viewport_cmd(egui::ViewportCommand::Fullscreen(false));
             root.ctx()
                 .send_viewport_cmd(egui::ViewportCommand::OuterPosition(egui::pos2(
-                    (left.left + 80) as f32,
-                    (left.top + 80) as f32,
+                    (left.left + 80) as f32 / root.ctx().pixels_per_point(),
+                    (left.top + 80) as f32 / root.ctx().pixels_per_point(),
                 )));
         }
         egui::CentralPanel::default().show(root,|ui| {

@@ -1,6 +1,6 @@
 # Product Requirements Document: Authenticator
 
-**Status:** Implementation in progress; tasks01–04,06,09,11 accepted; other source through20 independently reviewed with explicit native/manual gates open;21–24 pending
+**Status:** Implementation and scoped independent reviews through23 evidenced; Task24 audit/repairs in progress. Mandatory final acceptance remains incomplete; see [current report](docs/completion-report.md).
 **Basis:** Direct inspection of the running Windows app “Authenticator App · 2FA” on 12 November 2026.  
 **Purpose:** Define Authenticator, a Rust desktop app matching the inspected reference UI, with screenshot-based 2FA import as its defining feature and encrypted local-only storage.  
 **Repository:** https://github.com/ranjbar-dev/authenticator  
@@ -238,6 +238,16 @@ The user authorizes reasonable implementation decisions without follow-up questi
 9. **Settings and help:** English only, no translations or language preference. Offline contextual help covers capture, clock issues, recovery codes, backups, passphrase loss and irreversible deletion. Auto Start is explicit opt-in. Imported preferences must not silently enable startup or weaken local lock policy.
 10. **Execution:** Make remaining reversible technical choices autonomously and record material decisions. Never weaken mandatory scope to finish. Record genuine policy/tool/authentication/environment blockers and unperformed checks honestly; no requirement may be marked complete without evidence.
 
+### Concrete implementation record (Task24 author checkpoint)
+
+This records actual choices without changing the requirements above. Rust/eframe/egui supplies the Windows native UI, AccessKit labels and local icons. The unsigned x64 portable ZIP uses an asInvoker/PerMonitorV2 executable and static CRT. No app login, cloud, remote clock sync, translation infrastructure, telemetry or runtime networking client is enabled.
+
+Local AUTHLOC1 and portable AUTHPBK1 are distinct authenticated-encrypted formats. Both use established Argon2id/XChaCha20-Poly1305 primitives; native backups require their own passphrase and independent key material. Current local plaintext schema2 includes encrypted search/filter/display/security/startup preferences. Passphrase bytes are exact12–1024UTF8; bounded calibration and accepted KDF limits, field limits, cancellation/rename admission and memory/endpoint limitations are normative in [storage format](docs/storage-format.md) and [portable backup format](docs/portable-backup-format.md). No OS-backed unlock is enabled. Default idle/clipboard timeouts are300/30seconds. Trash never automatically expires; associated recovery used state and surviving relationships follow atomic restore. Startup remains explicit opt-in and imports retain local security/startup unless the reviewed supported choice explicitly adopts allowed preferences.
+
+Image input supports PNG/JPEG up to8MiB,4096px per dimension,4,194,304pixels,32MiB decoded allocation; QR payload up to2048bytes and at most7detected candidates, rejecting detector saturation. Capture geometry has separate adapter bounds. Recovery text is UTF8 with optional BOM, CRLF/LF, up to1MiB/10,000nonblank lines/4096bytes per code; exact duplicates require review. See src/qr.rs, docs/architecture.md and source-backed format documents for exact limits, not permissive dependency defaults.
+
+Private reference .vault remains unsupported after Task22 discovery; AUTHPBK1 normally uses .authpbk and is recognized by content. Public phone reference pages do not prove exact installed Windows-version parity. Current native21/23 journeys, Task24 primary96/144/192DPI screenshot→review→Save→independentHMAC, limited Narrator labels and actual Aquatic contrast observations supersede older blanket native-unavailable statements for those scoped paths only. Mixed-DPI negative capture, complete page/state matrices, deterministic package reproducibility, actual OS lock/suspend/logon and effective offline clean-profile recovery remain open. [Exact evidence and next work](docs/completion-report.md) distinguishes feasible software work from environment constraints. No mandatory requirement is removed and no full release completion is claimed.
+
 ## 13. Suggested delivery sequence
 
 1. Set up the Rust project at https://github.com/ranjbar-dev/authenticator on `main`, select the Rust UI framework and unlock/recovery design, and establish reference screenshots and deterministic TOTP tests.
@@ -254,7 +264,9 @@ Tasks 01–07 establish the Rust/security/UI/capture foundation; task 08 complet
 
 Plan generation does not constitute implementation. Initial task status is todo, and coverage is planned rather than verified. Completion requires actual acceptance evidence, independent review, a usable Windows package, accurate final documentation and main pushed to the designated repository. Preserve the task files and update PRD.md to the actual final behavior after implementation; do not remove mandatory requirements or fabricate successful checks to declare completion.
 
-### Current implementation checkpoint (13 November 2026)
+### Historical implementation checkpoints (13 November 2026)
+
+The following chronology retains original evidence/source context. The current scoped outcome is [completion-report.md](docs/completion-report.md); its precise observations supersede earlier native/DPI/Narrator-unavailable wording. Historical pending statements are not current blanket blockers.
 
 Task23 now implements the unsigned Windows x64 portable ZIP, original local icon,
 English version resources, asInvoker/PerMonitorV2 manifest, static CRT, allowlisted

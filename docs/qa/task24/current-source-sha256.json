@@ -1,0 +1,17 @@
+{
+  "base_commit": "ebd80e25794dccd699c9b3316914fe4af1b0c11b",
+  "note": "Current author source snapshot for review; native binary attribution remains per-frame manifest. Latest F12/helper lint-only changes are not claimed launched.",
+  "sha256": {
+    ".gitattributes": "a91e0237c23b043b0deda37bc7c7aabbd8314374c7903e968c08fd12a8dbd1d4",
+    "src/ui/components.rs": "793354098f311f82d9241019f98e9d3ce141bb68671bbe8020fa80514a6c39fb",
+    "src/ui/shell.rs": "a2d2148bb1fe42719f2b31b38e25d9451eba38dae5a41a46576602968ef8b34d",
+    "src/ui/folders.rs": "7346ffa5d02da02b631611d975373cc18af418eea560abc4e7cf4d84d190087c",
+    "src/ui/backup_codes.rs": "9f2ac30f2bc67200362fa741437734fdfac889d0af10ca39687a70b1bd9392ff",
+    "src/ui/trash.rs": "f7db2b89c48248030020e2982c3df720ee5e8d7a8012d600615777df1eb8e6f0",
+    "src/ui/settings_tests.rs": "68442625e8f247d78a5d1a3c6abf4c4152e2122bc78a16c2bb8489f2232f8bb0",
+    "scripts/package_windows.py": "7741afe46d7d3a5acf0a30a5a72e4d2eb899f7d6584a6423bc307d6cf72a953a",
+    "scripts/test_package_windows.py": "125792f4cbede7b83d563983d8f228a6ffd64fcc79a5310a1f547e905b017560",
+    "examples/final_matrix.rs": "5c3df928d7965b11a48145b53650c8dda1ab6277d98556040d675c3c16cd1a0e",
+    "examples/qr_fixture.rs": "fdb500624541f977dc406bae0b693f9def89b261c2a6ac0de69b124aabe05b57"
+  }
+}

@@ -1,0 +1,3 @@
+# Vendored upstream notices are verified against their exact recorded bytes.
+# Windows checkout line-ending conversion must not rewrite those public inputs.
+assets/notices/** -text

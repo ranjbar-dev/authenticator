@@ -56,6 +56,25 @@ use raw_window_handle::{HasWindowHandle, RawWindowHandle};
 use std::time::{Duration, Instant};
 use zeroize::{Zeroize, Zeroizing};
 
+// The outer scroll belongs to a page, not to whichever page preceded it.
+#[derive(Clone, Copy, Eq, PartialEq)]
+enum ScreenKind {
+    Locked,
+    Codes,
+    Settings,
+    Backup(backup_codes::Screen),
+    Folders,
+    FolderEditor,
+    Trash,
+    RecoveryEditor,
+    ExportHub,
+    Export,
+    Import,
+    Review,
+    Capture,
+    Image,
+}
+
 pub struct AuthenticatorApp {
     pub state: AppState,
     dialog: Option<c::Dialog>,
@@ -70,6 +89,7 @@ pub struct AuthenticatorApp {
     form_error: Option<String>,
     exists: bool,
     focus_form: bool,
+    scroll_screen: Option<ScreenKind>,
     operation_cancelled: bool,
     owner: usize,
     capture_message: Option<String>,
@@ -158,6 +178,7 @@ impl AuthenticatorApp {
             form_error: None,
             exists,
             focus_form: true,
+            scroll_screen: None,
             operation_cancelled: false,
             owner,
             capture_message: None,
@@ -278,6 +299,47 @@ impl AuthenticatorApp {
         // Includes native TextEdit undo/cursor memory for search and dialogs.
         // Secret editors additionally drop undo history after every edit pass.
         c::clear_sensitive_widget_memory(&self.context);
+    }
+    fn screen_kind(&self) -> ScreenKind {
+        if !self.state.session_active() {
+            return ScreenKind::Locked;
+        }
+        if self.backup_import.is_some() {
+            return ScreenKind::Import;
+        }
+        if self.export_form.is_some() {
+            return ScreenKind::Export;
+        }
+        if let Some(manager) = &self.folders {
+            return if manager.editor.is_some() {
+                ScreenKind::FolderEditor
+            } else {
+                ScreenKind::Folders
+            };
+        }
+        if self.trash.is_some() {
+            return ScreenKind::Trash;
+        }
+        if self.recovery_editor.is_some() {
+            return ScreenKind::RecoveryEditor;
+        }
+        if self.export_hub {
+            return ScreenKind::ExportHub;
+        }
+        if self.review.is_some() || self.state.importing() {
+            return ScreenKind::Review;
+        }
+        if self.capture_preparing.is_some() || self.state.capture_busy() {
+            return ScreenKind::Capture;
+        }
+        if self.image.is_some() {
+            return ScreenKind::Image;
+        }
+        match self.state.route {
+            Route::Codes => ScreenKind::Codes,
+            Route::BackupCodes => ScreenKind::Backup(self.backup_codes.screen),
+            Route::Settings => ScreenKind::Settings,
+        }
     }
     pub fn show(&mut self, root: &mut egui::Ui) {
         self.backup_codes.detail.sensitive_rects.clear();
@@ -822,7 +884,12 @@ impl AuthenticatorApp {
         // This single scroll holder keeps all controls reachable at high app zoom.
         egui::CentralPanel::default().frame(egui::Frame::new().fill(theme::BACKGROUND).inner_margin(theme::PADDING)).show(root,|ui| {
             let holder = egui::ScrollArea::vertical().id_salt("screen-holder").scroll_source(egui::scroll_area::ScrollSource { drag: egui::scroll_area::DragScroll::Never, ..Default::default() });
-            let holder = if self.review.as_ref().is_some_and(|r|r.focus) { holder.vertical_scroll_offset(0.) } else { holder };
+            let screen = self.screen_kind();
+            let entered = self.scroll_screen != Some(screen);
+            self.scroll_screen = Some(screen);
+            // Reset once on actual page entry. Explicit deep-row/Undo/dialog
+            // focus still scrolls its target; ordinary frames retain wheel position.
+            let holder = if entered || self.review.as_ref().is_some_and(|r|r.focus) { holder.vertical_scroll_offset(0.) } else { holder };
             holder.show(ui,|ui| {
                     ui.set_max_width(theme::CONTENT_MAX_WIDTH.min(ui.available_width()));
                 let codes_home=self.state.session_active() && self.state.route==Route::Codes && self.folders.is_none() && self.review.is_none() && self.backup_import.is_none() && self.capture_preparing.is_none() && !self.state.capture_busy();
@@ -1139,7 +1206,7 @@ impl AuthenticatorApp {
         let export = c::button(ui, "Export & Import", c::ButtonStyle::Primary);
         if self.export_focus || self.focus_form {
             export.request_focus();
-            export.scroll_to_me(Some(egui::Align::Min));
+            export.scroll_to_me(None);
             self.export_focus = false;
             self.focus_form = false;
         }

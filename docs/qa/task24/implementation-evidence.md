@@ -1,0 +1,46 @@
+# Task 24 scoped implementation evidence
+
+Author checkpoint,13 November 2026 UTC/14 November local, followed by [distinct scoped review](independent-review.md). The reviewer approved the source fixes, repeated meaningful checks, opened all 68 current and 17 historical frames, and verified all 195 integrity records. The other 110 historical pixels were not independently inspected. Parent corrected the original reproducibility checkbox and stale task evidence; mandatory feasible gaps and current CI remain open. This is not Task24 acceptance. Read [completion report](../../completion-report.md), [48 reconciled coverage rows](../../../tasks/coverage.md), [exact native matrix](native-matrix.md) and [frame manifest](frame-manifest.json). Historical working/coordinator checkpoints retain their prior chronology.
+
+## Findings and repairs
+
+1. Settings initial request aligned Export & Import to the top, clipping the page heading/count summary. Changed initial visible focus to minimal scroll. Meaningful real Context navigation/paint clipping test failed before the fix, then passed at340/600/960. New native Settings nine-cell observations retained.
+2. Folders/create/detail/Trash initial focus had the same alignment problem. Native scrolled recovery-list→ViewSet also exposed a shared outer screen-holder scroll offset inherited across pages. Minimal focus scrolling alone did not fix this. Added one-shot ScreenKind identity reset for all actual route owners (locked/Codes/Settings, backup subpages, folder manager/editor, recovery editor, export/import/review/capture/image). Normal frames retain wheel position and intentional deep-row/Undo/dialog focus may still reveal its target. Account/manual editing shares Review identity. New test navigates actual scrolled ViewSet/Edit controls before asserting fully clipped heading/first-action paint;45 cases=3widths×3heights×5destinations. Current native folder list/create/edit/detail/Trash grids confirm the repaired product; deep keyboard checkbox and existing deep-row regression remain valid.
+3. Hosted ebd80e2 check job passed but clean Windows package job failed the exact vendored notice hash guard. Working/index LF bytes match pinned upstream hashes; a local real Git core.autocrlf=true checkout control converts LF to CRLF and changes SHA. New narrow .gitattributes assets/notices/** -text preserves all pinned notice hashes under the same checkout operation; guard now names public package/file on failure. Runner bytes were not captured, so conversion is a reproduced likely boundary, not a directly captured runner diagnosis. New hosted package required; hashes were not weakened.
+4. Parent independently found Windows spaced device aliases (CON .txt, COM1 .txt, CONIN$ .txt) accepted in a manifest-consistent hostile ZIP. Validator now strips spaces from the base before first dot and rejects reserved aliases; six spaced variants fail before repair and pass rejection afterward. Existing path/ZIP security checks retained.
+5. QA-only native movement originally treated physical coordinates as logical at mixed DPI. Corrected final_matrix and qr_fixture movement by actual pixels_per_point, then measured real96→144→96 on-monitor transition. This was a fixture defect, not evidence of a product capture defect. Added F12 selected-region integer diagnostics only; compiled but not executed. Two mixed crops remain unresolved NoQR/nonmutation outcomes.
+
+Changed product source: src/ui/components.rs, shell.rs, folders.rs, backup_codes.rs, trash.rs, settings_tests.rs. Packaging: .gitattributes, scripts/package_windows.py, scripts/test_package_windows.py. QA helpers: new examples/final_matrix.rs and examples/qr_fixture.rs. Docs/coverage/PRD reconciliation and195 unchanged safe PNGs accompany them. Parent-owned Task 23 reports, Task 24 advisory/coordinator checkpoint and task/index statuses were preserved.
+
+## Meaningful checks
+
+Every Cargo invocation used a fresh owned target scratch TEMP/TMP and jobs2; no C-drive cache cleanup or unrelated process termination.
+
+| Check | Outcome |
+|---|---|
+|Settings initial paint regression|Original red0/1,4.05s (RTK1794589098_cargo_test.log); fixed1pass12.44s. Actual heading/count text wholly inside paint clip, visible export action and keyboard focus at3widths.|
+|Initial subpage regression|Original folder Create red3.69s (1794592537); strengthened actual scrolled detail red3.96s (1794593109) after minimal-only patch; central identity reset green36cases13.13s then expanded45cases1pass17.48s. Test navigates previous page in the same Context before target; fresh Context only starts each scenario.|
+|cargo test --offline --locked widths -- --nocapture|4passed15.23s after central reset; prior minimal-only4pass16.47s is historical.|
+|detail_later_code_and_scrolled_list_focus_are_visible_after_save_undo_and_trash|1passed11.04s after central reset, preserving intentional offscreen target reveal.|
+|Earlier scoped tests during minimal-focus phase|Settings width/help/keyboard/startup/locked privacy1pass8.31s; Trash Context1pass12.19s; shared components7pass0.13s. Not new full-suite evidence. One mistyped ui::components::tests filter matched0 and is not counted.|
+|python scripts/test_package_windows.py|14passed0.811s; includes actual core.autocrlf checkout/pinned hashes and hostile manifest-consistent spaced aliases. Six spaced-alias cases first failed before repair. Existing actual ZIP validation passed.|
+|cargo build --offline --locked --example final_matrix|Latest F12 helper4.23s pass; prior both final_matrix/qr_fixture12.68s pass. Latest helper not launched.|
+|cargo clippy --offline --locked --all-targets -- -D warnings|Current final pass. First final attempt found unnecessary String.to_string in new helper metadata; replaced with borrowed String and reran successfully.|
+|Formatting/diff/package final checks|See final-checks.json (recorded after document curation); parent still needs new hosted full suite/release package for integrated source.|
+|Native|Actual real pointer/keyboard+dialogs and195 safe images, exact bounded results in native-matrix.md. Primary96/144/192 fresh exact-record HMAC comparisons all true, counter stable. Mixed crop does not pass.|
+
+No duplicate full local suite was run: parent already obtained ebd80e2 hosted check success226ordinary cases plus5 direct helper subprocesses exercised separately. That run does not cover this uncommitted UI/attribute/QA repair. [Exact hosted outcome](../task23/hosted-package-follow-up.md) records package guard failure/upload skipped, not workflow success. Parent must run current integrated suite/build/package after distinct review.
+
+## Current security evidence
+
+Prior Task 20 source/security/data-loss review is [independently recorded](../task20/independent-review.md). Parent performed a fresh full385locked-dependency RustSec check, including new build-only dependencies: [current advisory report](advisory-current.md). Exit0 reported zero vulnerabilities and three unsuppressed unmaintained Unix dependency warnings; none in the reviewed Windows normal/build inventory. This is a dated database result, not a permanent no-vulnerabilities claim. Existing best-effort zeroization, OS/clipboard/history limits and authenticated ciphertext rollback limits remain in security/storage docs.
+
+The debug evidence masks use actual ctx.pixels_per_point before disk write, verified visually on QR secret at144/192 and appzoom150/200 recovery input. No raw QR/payload, OTP, recovery value or filled phrase is in retained PNGs. Some masks intentionally cover neighboring dialog material; those images are not evidence that obscured content is readable. Public fixture source constants are not user credentials. Generated backup key never entered logs/docs/Git; encrypted fixtures/backups remain ignored under uniquely owned target.
+
+## Independent review handoff
+
+Reviewer should read complete PRD/Task 24 and applicable instructions; inspect current product initial page reset versus intended deep-focus/return semantics,45case navigation test (not merely its count), exact byte attribute/provenance guard and hostile Windows extraction cases. Review QA helper own-root/release-mask behavior, every current safe grid and historical attribution, native scale/contrast/Narrator limits. New images are author inspected; independent review fields stay pending until reviewer records actual observations. Do not adopt task statuses or a full-project completion claim from this author.
+
+Current final native state: all three monitors100%Recommended, Contrast None, Narrator Off; all owned matrix/QR/Settings windows closed normally; unrelated old workflow fixture untouched. No guessed handles/PIDs may be reused. See completion-report.md for exact next work, including feasible gaps that are not environment blockers.
+
+PhysicalDPI visibility limitation: at200% the600×800 logical fixture produces1200×1600 pixels, exceeding the1440-pixel screen height. Renderer/WGC captures can include offscreen content; actual keyboard Save and HMAC prove the observed import path, not physical visibility of every control. Separate real-pointer native Maximize and deep focus observations are recorded in the matrix.

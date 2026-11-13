@@ -98,7 +98,7 @@ impl Manager {
             .inner;
         if self.focus {
             back.request_focus();
-            back.scroll_to_me(Some(egui::Align::Min));
+            back.scroll_to_me(None);
             self.focus = false;
         }
         if back.clicked() {
@@ -338,7 +338,7 @@ impl Editor {
         );
         if self.focus {
             name.request_focus();
-            name.scroll_to_me(Some(egui::Align::Min));
+            name.scroll_to_me(None);
             self.focus = false;
         }
         if name.changed() {

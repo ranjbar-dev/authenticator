@@ -314,7 +314,7 @@ pub fn content(
             .inner;
         if session.focus && matches!(session.screen, Screen::Detail { .. }) {
             back.request_focus();
-            back.scroll_to_me(Some(egui::Align::Min));
+            back.scroll_to_me(None);
             session.focus = false;
         }
         if back.clicked() {

@@ -1,0 +1,34 @@
+{
+  "author_checkpoint": true,
+  "acceptance": "independent review/current-source hosted suite/release package still required",
+  "checks": [
+    {
+      "command": "cargo clippy --offline --locked --all-targets -- -D warnings",
+      "result": "pass; final QA redundant to_string corrected then rerun",
+      "fresh_owned_temp": true,
+      "jobs": 2
+    },
+    {
+      "command": "cargo fmt --all -- --check",
+      "result": "pass",
+      "fresh_owned_temp": true
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass"
+    },
+    {
+      "command": "python scripts/test_package_windows.py",
+      "result": "14 passed, 0.854s"
+    },
+    {
+      "command": "python scripts/package_windows.py --validate dist/Authenticator-0.1.0-windows-x86_64.zip",
+      "result": "pass: paths, CRCs, manifest checksums"
+    },
+    {
+      "command": "retained PNG validation",
+      "result": "195 complete images; signature, all chunk CRCs, IEND, IDAT inflate RGBA dimensions, ready marker, SHA256; 51574899 bytes"
+    }
+  ],
+  "link_issues": []
+}

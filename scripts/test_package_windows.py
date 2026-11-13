@@ -2,6 +2,7 @@
 import hashlib
 import json
 from pathlib import Path
+import shutil
 import tempfile
 import unittest
 import zipfile
@@ -58,7 +59,8 @@ class PackageValidation(unittest.TestCase):
             package.validate(self.archive({"licenses/LICENSE.":b"public"}))
 
     def test_windows_device_aliases_rejected(self):
-        for alias in ("COM¹.txt", "com²", "COM³.log", "LPT¹", "LPT².txt", "lpt³", "CONIN$", "conout$.txt"):
+        for alias in ("COM¹.txt", "com²", "COM³.log", "LPT¹", "LPT².txt", "lpt³", "CONIN$", "conout$.txt",
+                      "CON .txt", "COM1 .txt", "CONIN$ .txt", "com¹  .txt", "lpt² .txt", "conout$   .log"):
             with self.subTest(alias=alias), self.assertRaisesRegex(RuntimeError, "Windows ZIP path"):
                 package.validate(self.archive({"licenses/"+alias:b"public"}))
 
@@ -101,6 +103,37 @@ class PackageValidation(unittest.TestCase):
         notice.write_text("Unreviewed different license")
         with self.assertRaisesRegex(RuntimeError,"discrepancy changed"):
             package.packaged_license({"name":"quircs","version":"0.10.3","license":"MIT"},[notice])
+
+    def test_vendored_notices_survive_windows_autocrlf_checkout(self):
+        # Exercise real Git checkout filters; source SHA verification must survive
+        # core.autocrlf=true without changing a recorded upstream digest.
+        repo = self.scratch / "notice-checkout"
+        repo.mkdir()
+        shutil.copytree(package.ROOT / "assets/notices", repo / "assets/notices")
+        shutil.copyfile(package.ROOT / ".gitattributes", repo / ".gitattributes")
+        package.command("git", "init", "--quiet", str(repo))
+        package.command("git", "-C", str(repo), "-c", "core.autocrlf=true", "add", "--", ".gitattributes", "assets/notices")
+        exported = repo / "exported"
+        exported.mkdir()
+        package.command("git", "-C", str(repo), "-c", "core.autocrlf=true", "checkout-index", "--all", "--prefix="+exported.as_posix()+"/")
+        checked = 0
+        for provenance in (exported / "assets/notices").glob("*/provenance.json"):
+            for item in json.loads(provenance.read_text(encoding="utf-8"))["files"]:
+                self.assertEqual(package.sha(provenance.parent / item["file"]),item["sha256"])
+                checked += 1
+        self.assertGreater(checked,0)
+        # The same public LF text without an attribute really is converted.
+        control = self.scratch / "notice-control"
+        control.mkdir()
+        public = package.ROOT / "assets/notices/accesskit-0.25.2/LICENSE-MIT"
+        shutil.copyfile(public,control / "LICENSE")
+        package.command("git", "init", "--quiet", str(control))
+        package.command("git", "-C", str(control), "-c", "core.autocrlf=true", "add", "--", "LICENSE")
+        destination = control / "exported"
+        destination.mkdir()
+        package.command("git", "-C", str(control), "-c", "core.autocrlf=true", "checkout-index", "--all", "--prefix="+destination.as_posix()+"/")
+        self.assertNotEqual(package.sha(public),package.sha(destination / "LICENSE"))
+        self.assertIn(b"\r\n",(destination / "LICENSE").read_bytes())
 
 
 if __name__ == "__main__":

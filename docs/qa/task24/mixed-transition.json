@@ -1,0 +1,45 @@
+{
+  "left": {
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  "primary": {
+    "pixels_per_point": 1.5,
+    "app_zoom": 1,
+    "physical_dpi": 144,
+    "sanitized": true
+  },
+  "backLeft": {
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  "negativeQrRegion": [
+    -1824,
+    411,
+    -1392,
+    843
+  ],
+  "qrDpi": 96,
+  "temporary_os_state": {
+    "monitor1_scale": 100,
+    "monitor2_scale": 100,
+    "monitor3_scale": 100,
+    "contrast": "None",
+    "narrator": "Off",
+    "restoredVerified": true
+  },
+  "capturePreview": {
+    "editableReview": false,
+    "noQr": true,
+    "cipherUnchanged": true
+  },
+  "captureRetryTarget96": {
+    "editableReview": false,
+    "noQr": true,
+    "cipherUnchanged": true
+  }
+}

@@ -1,6 +1,6 @@
 # Task 24: Final completeness audit, PRD reconciliation and main push
 
-Status: todo
+Status: in_progress; scoped repairs reviewed; feasible QA, reproducibility and final gates open
 Priority: Required for complete v1
 Dependencies: 01–23
 Requirements: Entire PRD and tasks/coverage.md
@@ -35,5 +35,5 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Evidence
 
-Not started. On execution record changed files, test commands/results, sanitized UI evidence paths where applicable, independent reviewer result and commit reference. If blocked, retain incomplete status and record exact cause, attempted remedies and resumption steps.
+Scoped source fixes and evidence received [independent review](../docs/qa/task24/independent-review.md): minimal initial focus, page-owned scroll reset, exact-byte Windows checkout and spaced-device path rejection. Independent 14 package regressions, 45 navigation cases, Settings/deep focus/triggering-frame Lock privacy/contrast checks pass. All 195 frame integrity records were checked; 68 current and 17 historical frames were visually inspected, while 110 historical frames received no independent pixel review. Author [implementation evidence](../docs/qa/task24/implementation-evidence.md), [native matrix](../docs/qa/task24/native-matrix.md) and [completion audit](../docs/completion-report.md) retain precise scope and all open gates. Parent corrected the stale evidence and restored Task23's original open reproducibility checkbox. No final acceptance is checked. Current full-suite/release/package CI, remaining feasible QA/deterministic builds and external environment gates remain open. Parent integration commit is recorded in the following checkpoint to avoid circular attribution.
 
