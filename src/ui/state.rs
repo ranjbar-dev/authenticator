@@ -83,6 +83,16 @@ pub enum SaveIntent {
     CodesPreferences(CodesPreferences),
     ClipboardTimeout(u32),
     IdleTimeout(u32),
+    SecuritySettings {
+        lock_seconds: u32,
+        clipboard_seconds: u32,
+        preferences: CodesPreferences,
+    },
+    StartupChange {
+        enabled: bool,
+        preferences: CodesPreferences,
+        startup: crate::platform::startup::Startup,
+    },
     Trash {
         id: AccountId,
         expected: RecordState,
@@ -128,6 +138,18 @@ impl SaveIntent {
             }
             Self::RecoveryTrash(_) | Self::RecoveryCode { .. } => {}
             Self::CodesPreferences(value) => value.validate()?,
+            Self::StartupChange { preferences, .. } => preferences.validate()?,
+            Self::SecuritySettings {
+                lock_seconds,
+                clipboard_seconds,
+                preferences,
+            } => {
+                preferences.validate()?;
+                if !(1..=86_400).contains(lock_seconds) || !(1..=86_400).contains(clipboard_seconds)
+                {
+                    return Err(AppError::InvalidRecord);
+                }
+            }
             Self::ClipboardTimeout(seconds) | Self::IdleTimeout(seconds) => {
                 if !(1..=86_400).contains(seconds) {
                     return Err(AppError::InvalidRecord);
@@ -232,6 +254,25 @@ impl SaveIntent {
                 vault.set_clipboard_timeout(seconds, at)?;
                 Ok(Vec::new())
             }
+            Self::SecuritySettings {
+                lock_seconds,
+                clipboard_seconds,
+                preferences,
+            } => {
+                vault.set_lock_timeout(lock_seconds, at)?;
+                vault.set_clipboard_timeout(clipboard_seconds, at)?;
+                vault.set_codes_preferences(preferences, at)?;
+                Ok(Vec::new())
+            }
+            Self::StartupChange {
+                enabled,
+                preferences,
+                ..
+            } => {
+                vault.set_auto_start(enabled, at)?;
+                vault.set_codes_preferences(preferences, at)?;
+                Ok(Vec::new())
+            }
             Self::IdleTimeout(seconds) => {
                 let at = vault.mutation_time(at);
                 vault.set_lock_timeout(seconds, at)?;
@@ -317,6 +358,8 @@ pub struct AppState {
     exported: Option<Result<(), crate::backup::BackupError>>,
     backup_result: Option<BackupResult>,
     trash_review: Option<Result<crate::domain::trash::Review, AppError>>,
+    startup_result:
+        Option<Result<crate::platform::startup::Status, crate::platform::startup::Error>>,
     image_busy: bool,
     #[cfg(test)]
     next_save_gate: Option<Arc<crate::storage::test_gate::CommitGate>>,
@@ -330,6 +373,8 @@ struct Completion {
     exported: Option<Result<(), crate::backup::BackupError>>,
     backup_result: Option<BackupResult>,
     trash_review: Option<Result<crate::domain::trash::Review, AppError>>,
+    startup_result:
+        Option<Result<crate::platform::startup::Status, crate::platform::startup::Error>>,
 }
 /// Typed native-backup handoff, separate from QR/account import.
 pub enum BackupRequest {
@@ -356,6 +401,7 @@ fn finish_publication(cancel: &OperationCancellation, result: &Mutex<Option<Comp
         completion.repository.lock();
         completion.backup_result = None;
         completion.trash_review = None;
+        completion.startup_result = None;
     }
 }
 struct Worker {
@@ -380,6 +426,7 @@ impl Worker {
             result.repository.lock();
             result.backup_result = None;
             result.trash_review = None;
+            result.startup_result = None;
         }
     }
 }
@@ -425,6 +472,7 @@ impl AppState {
             exported: None,
             backup_result: None,
             trash_review: None,
+            startup_result: None,
             image_busy: false,
             #[cfg(test)]
             next_save_gate: None,
@@ -456,6 +504,11 @@ impl AppState {
     }
     pub fn take_trash_review(&mut self) -> Option<Result<crate::domain::trash::Review, AppError>> {
         self.trash_review.take()
+    }
+    pub fn take_startup_result(
+        &mut self,
+    ) -> Option<Result<crate::platform::startup::Status, crate::platform::startup::Error>> {
+        self.startup_result.take()
     }
     pub fn idle_deadline(&self) -> Result<Instant, AppError> {
         Ok(self.last_activity
@@ -515,6 +568,7 @@ impl AppState {
         self.exported = None;
         self.backup_result = None;
         self.trash_review = None;
+        self.startup_result = None;
         self.image_busy = false;
         self.capture_region = None;
         self.scan_alternative = None;
@@ -694,6 +748,7 @@ impl AppState {
                 exported: None,
                 backup_result: None,
                 trash_review: None,
+                startup_result: None,
             });
             drop(slot);
             finish_publication(&cancel, &result);
@@ -725,6 +780,12 @@ impl AppState {
             return Err(AppError::VaultLocked);
         }
         intent.validate()?;
+        let startup_change = match &intent {
+            SaveIntent::StartupChange {
+                enabled, startup, ..
+            } => Some((*enabled, startup.clone())),
+            _ => None,
+        };
         let timeout = self.vault()?.preferences().lock_timeout_seconds();
         let deadline = self.last_activity + Duration::from_secs(timeout.into());
         let cancel =
@@ -745,6 +806,20 @@ impl AppState {
                 let at = Timestamp(SystemClock.unix_seconds()?);
                 repository.transaction_cancellable(&cancel, |vault| intent.apply(vault, at))
             }));
+            // The vault commit is authoritative for desired intent. OS registration is a
+            // distinct guarded action; a failed OS write cannot roll back ciphertext.
+            let startup_result = if matches!(&outcome, Ok(Ok(_))) {
+                startup_change.map(|(enabled, startup)| {
+                    std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                        cancel.commit(|| Ok(startup.change(enabled)))
+                    }))
+                    .ok()
+                    .and_then(Result::ok)
+                    .unwrap_or(Err(crate::platform::startup::Error::Unavailable))
+                })
+            } else {
+                None
+            };
             let (outcome, imported) = match outcome {
                 Ok(Ok(ids)) => (Ok(()), ids),
                 Ok(Err(error)) => (Err(error), Vec::new()),
@@ -764,6 +839,7 @@ impl AppState {
                 exported: None,
                 backup_result: None,
                 trash_review: None,
+                startup_result,
             });
             drop(slot);
             finish_publication(&cancel, &result);
@@ -832,6 +908,7 @@ impl AppState {
                 exported: None,
                 backup_result: None,
                 trash_review: reviewed,
+                startup_result: None,
             });
             drop(slot);
             finish_publication(&cancel, &result);
@@ -887,6 +964,7 @@ impl AppState {
                 exported: Some(exported),
                 backup_result: None,
                 trash_review: None,
+                startup_result: None,
             });
             drop(slot);
             finish_publication(&cancel, &result);
@@ -963,6 +1041,7 @@ impl AppState {
                 exported: None,
                 backup_result,
                 trash_review: None,
+                startup_result: None,
             });
             drop(slot);
             finish_publication(&cancel, &result);
@@ -1004,6 +1083,7 @@ impl AppState {
             self.exported = done.exported;
             self.backup_result = done.backup_result;
             self.trash_review = done.trash_review;
+            self.startup_result = done.startup_result;
         }
         self.repository = Some(Ok(done.repository));
         self.worker = None;
@@ -1307,6 +1387,7 @@ mod tests {
             exported: None,
             backup_result: None,
             trash_review: None,
+            startup_result: None,
         })));
         let mut state = AppState::new(Err(AppError::VaultLocked));
         state.repository = None;

@@ -1,0 +1,74 @@
+# Task19 implementation evidence
+
+Implementation in progress; no acceptance or independent-review claim.
+
+## Preflight and screen checklist
+
+Sized as one complete Settings screen plus contextual local-help dialogs, in the existing sequential parent process. Task19 and PRD7/FR7/12 define the shape; original reference pixels are unavailable (`docs/reference-ui.md`). The existing Settings region is the only Settings member; no Settings majority convention is claimed. Root `shell.rs` is a dispatcher, not an extra peer page. Existing Root cards/forms/dialogs in `folders.rs`, `backup_codes.rs`, `trash.rs` and the shared `components.rs`/`theme.rs` supply the mechanisms. No DESIGN.md exists. Whole-role theme is Noto Sans400/600, BODY/LABEL14/20, CAPTION13/20, SECTION18/24, TITLE24/32, zero tracking/as-written case; shared base4, padding16, controls36, Root max640. No new palette/font/shared component is proposed.
+
+The authorized task plan is already approved; ending3 joins that process. Parent owns a distinct review using ui-consistency:verifying; no child delegation. Prior Task04 source-only typography calibration does not prove pixel/input sensitivity.
+
+- Shared Root header and three-tab holder, real active account/set/code/Trash summary and unlocked status first — task19 shape, shared Root mechanisms.
+- Export & Import and Trash immediately after summary, using shared full-width buttons; return focus retained — task19/18 shape, existing export/trash mechanisms.
+- Shared header Lock action before private content; Lock card with current auto-lock choice and header/Ctrl+L guidance — task19 shape; shared labeled selection/button/card.
+- Clipboard choice and practical ownership/retention guidance — task19 shape; shared labeled selection/card/body/caption.
+- Auto Start desired preference and actual registration status, read-only checking/retry and explicit enable/disable; mismatch/failure never reports success — task19 shape; shared progress/status/buttons.
+- Version and local Help access with context-specific content — task19 shape; shared dialog with safe close focus.
+- Clock/privacy/recovery help in concise labeled topics; no runtime network/OS clock mutation — PRD and local copy using shared roles.
+- Shared opaque icon tiles, semantic labels/focus and scrolling at340/600/960; no excluded controls — task19 shape; theme/components, no original pixel-fidelity assertion.
+
+Plan: implement platform startup adapter and isolated tests; add encrypted preference/domain and existing sole-worker explicit startup change; build Settings from the checklist and local help topics; test current preferences/faults/Lock/Close/import plus synthetic normal-size input/AX; report actual native limitations without repeating unchanged access denials.
+
+Material choice: inspect startup after unlock without changing it. Explicit change saves encrypted desired preference plus newest Codes preferences before guarded OS registration. A later OS failure can leave a saved desired/actual mismatch; show it and offer explicit retry, never claim cross-resource atomicity. Imports retain the local startup preference and never issue OS registration actions. A different registration command is treated as a conflict and preserved.
+
+## Implemented source and boundaries
+
+Changed source: `src/platform/{mod,startup}.rs`, `src/domain/records.rs`, `src/ui/{mod,settings,shell,state,settings_tests}.rs`, `Cargo.toml` (existing windows-sys Registry feature only; no new package or lockfile change). Settings reuses Root/cards/buttons/whole typography/labeled selectors/status/Dialog. The summary shows active accounts/sets/available/used and own-deleted Trash count; active parents are required. Lock/clipboard choices preserve valid non-preset current values. Settings saves include current Codes preferences and retain newer live intent by submission marker. Native selector IDs regain focus after asynchronous completion. A Settings failure pauses ordinary screen autosave but cannot block explicit Close's private display flush/retry.
+
+Auto Start separates encrypted desired On/Off from actual Windows registration. `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\Authenticator.ranjbar-dev` stores only the quoted current packaged `Authenticator.exe` path, no arguments or vault contents. The command is bounded to260UTF16units excluding NUL; UNC/non-disk device/relative/unsafe/wrong-name/long paths are rejected; drive-letter mappings and path targets are not resolved. Fixed-size registry reads classify malformed/non-REG_SZ/nonterminated/oversized/different commands as conflicts. Only exact own value is changed/deleted; neighboring values and keys are preserved. There is no registry compare-and-swap against concurrent external edits, and Windows policy/Startup Apps may disable execution; no stronger guarantee is claimed. Public OS executable-registration state is required for OS startup; the desired vault preference remains encrypted. No account data or keys are written to that integration point.
+
+Inspection after unlock is read-only in a background enum-only probe. Explicit startup mutation uses the sole repository worker, first encrypted desired+display commit, then separate cancellation admission for the OS action. Failed vault writes cannot touch startup; failed OS calls can leave desired/actual disagreement. Unknown/conflicting OS state still permits an explicit saved Off, with guidance that inaccessible/foreign registration removal is unconfirmed. Check/import/unlock never enables or disables startup. Lock clears probes/typed completion; if cancellation wins the later OS gate, a previously admitted desired-preference commit can finish without late registration. Already admitted OS calls are not promised forcibly cancellable.
+
+Contextual Help covers QR limits and supported parameters, recovery-code selection/edit/used behavior, native encrypted backup portability/passphrase loss/conflicts, locking, Windows time and Trash/cascades/secure-erasure limits. Shared header selects the current topic; Backup Codes Learn more uses its explicit topic. Close is first in the Help modal, keeping initial focus visible before long content. Global unlocked clock observation spans routes; code values still use current UTC per frame/copy. No runtime network adapter, remote time query, website/icon fetch, OS clock change, account/cloud/translation infrastructure was added. Physical/offline acceptance is not inferred from this source property.
+
+## Verification and corrections
+
+All shell commands start RTK. Fresh isolated no-run build: `rtk cargo test --locked --all-features --lib --no-run --target-dir target/task19-isolated`. Final compiled library contains208test entries (including prior helper entries); no full-library or all-target suite was run/claimed locally. Known older retained locked images were not overwritten. Test executable: `target/task19-isolated/debug/deps/authenticator-8fbe62e92022c983.exe`.
+
+Every actual test used `rtk proxy python -X utf8 target/task19-run.py <filter> [--exact] --nocapture --test-threads=1`, fresh known TEMP/TMP beneath target, PID/executable/start/root manifests, and direct-file output. Initial focused runs bounded90seconds; final ten-case serial Settings group bounded120seconds and completed73.82seconds. No test process timed out or needed termination. One initial harness launch used the old executable hash and returned FileNotFound before a child existed; one attempted launch while the linker was still active returned WinError32 before a child existed, then correctly waited for build completion. Neither is a test result or a native app launch.
+
+Final focused results:
+
+| Filter | Result and meaningful oracle |
+| --- | --- |
+| `platform::startup` |2 passed0.00s final; exact quoting/disk-prefix/UNC/control/length bounds; normal test executable refused before actual Run read; real native registry read/write/delete on a fresh UUID key outside Run, idempotence, foreign neighbor preservation and wrong-type/unterminated/oversized conflict refusal. Test key deletion verified. |
+| `ui::shell::settings_tests` |10 passed73.82s final serial group: own-Trash/inherited counts and restore;340x780/600x800/960x900 coordinate press/release, wheel, dropdown choices, Tab/Enter, selector/startup/help focus and painted clip/privacy; failed encrypted settings commit/retry/reopen; read-only desired/actual reconciliation and OS failure/explicit retry/disable; inaccessible/conflicting explicit Off with no false removal; held admitted preference Lock prevents late startup; even-newer Codes intent survives held save; real encrypted Replace adopts deliberately selected security preferences but retains local startup with zero OS writes; cross-route clock/current TOTP; private Close/retry after Settings failure and latest-query encrypted reopen. |
+| `ui::shell::export_tests::export_close_and_idle_clear_forms_before_pending_work` |1 passed7.58s final; actual held admitted display flush, immediate no-form/no-passphrase/no-query/no-account AX, no export file, completed exit+encrypted newest query/Grid; original idle/no-file behavior retained. |
+| `ui::shell::trash_tests::trash_context_widths_pagination_safe_dialog_cancel_focus_keyboard_and_metadata_only` |1 passed12.90s final; deliberately held real read-only preparation, missing submit while held, actual completed review before normal Tab/Enter/pagination/cancel/focus/clip/restore at all three widths. |
+| `ui::shell::backup_codes_tests::backup_root_empty_populated_no_match_selection_back_help_and_lock` |1 passed11.66s; existing selection/list/identity/Help/Lock integration, correct service-issued recovery topic. |
+| `ui::shell::backup_import_tests::backup_import_masked_validation_responsive_bounded_preview_and_help_escape` |1 passed17.40s; existing bounded/masked import/help/escape integration. |
+
+These16 focused cases are not an aggregate full-suite result. Existing Backup Codes and import cases used the final binary; no source changed after final build/tests, only evidence text. All UI events/AX/paint geometry are synthetic Context checks, not native Windows pointer/keyboard/framebuffer evidence.
+
+Corrections were evidence-driven: the new Help Close button initially extended6pixels beyond its painted clip at340width; the normal-size focus test failed, and placing Close before long content passed. Expanded selector assertions found async completion lost focus (None vs actual native selector ID); capturing/restoring the control ID passed. Existing Backup Codes Learn more initially selected Overview because it set only the old help flag; its actual old integration test failed the service-issued explanation, and using explicit BackupCodes topic passed. No test was ignored or viewport enlarged to hide a defect. Temporary clip tracing was replaced by reusable safe geometry-only failure diagnostics.
+
+Two prior Task18 hosted failures were diagnosed and corrected in tests, with no production Trash/Close mutation change: see `task18-regressions.md`. Exact old export assertion reproduced locally before correction. Parent must obtain distinct independent focused re-review and new hosted full-suite evidence; old CI18 remains failed.
+
+Final static/build commands (all passed):
+
+- `rtk cargo fmt --all -- --check`.
+- `rtk cargo clippy --locked --all-targets --all-features -- -D warnings` (no allowances).
+- `rtk cargo build --locked --all-features --bin Authenticator --lib` (6.64seconds final).
+- `rtk proxy git diff --check` (only normal LF/CRLF working-copy notices).
+
+## Native/manual limits and cleanup
+
+Native screenshots captured/inspected for19: **0**. No new native preview launch or unchanged cursor-denial retry was attempted: the immediately preceding author18 normal Sky launch failed GetCursorPos0x80070005 before resources, as did several prior tasks. This is a recorded unavailable gate, not a new attempt or a native pass. Existing argument-free `examples/trash.rs` opens the current Settings page with generated encrypted fixtures if normal native access becomes available; its non-packaged executable is refused by Auto Start before Run registration. No default/reference vault, real credential/backup, user clipboard, unrelated preview, Windows privacy/security/network setting or real startup registration was changed.
+
+Actual pointer/keyboard/raster/physical DPI/Narrator/high-contrast, disconnected-machine/core offline journey, OS lock/suspend delivery, real interactive clipboard success/expiry/Lock/exit, actual logon/startup behavior and package/clean-profile recovery remain OPEN. Source pairs/shared semantics and Context clips do not replace those gates. Review is requested; no task acceptance, source security certification or production-readiness claim.
+
+Cleanup used native PowerShell throughout: each immediate `target/task19-runtime-*` resolved beneath the intended workspace target; known executable/root manifest and fresh PID absence were required before exact `Remove-Item -LiteralPath ... -Recurse`. Removed27 owned runtime directories (25 completed/red-test process roots plus2 empty pre-launch failure roots); retained0. All25 owned test PIDs were absent. Safe process manifests/output logs were archived to ignored `target/task19-evidence/<runtime-UUID>/`; generated encrypted fixtures were not archived. Native UUID registry test keys were deleted by test RAII and absence asserted. No broad Temp scan, unknown path/vault read, repeated kill/resume/elevation or unrelated cleanup occurred. Prior retained30688/32032 images/runtimes and lifecycle preview were untouched. Small reproducible wrapper/build artifacts remain ignored under target.
+
+Official sources checked13November2026: [Run/RunOnce keys](https://learn.microsoft.com/windows/win32/setupapi/run-and-runonce-registry-keys), [RegQueryValueExW termination](https://github.com/MicrosoftDocs/sdk-api/blob/docs/sdk-api-src/content/winreg/nf-winreg-regqueryvalueexw.md), [registry write/delete](https://learn.microsoft.com/en-us/windows/win32/sysinfo/writing-and-deleting-registry-data). Actual desired/OS separation and limits are documented in `docs/architecture.md`; PRD checkpoint describes authored source without declaring acceptance.
+
+Skills applied: finding-patterns, values, decisions, conventions, planning and implementing plus referenced joining/words/checklist/design-reading/family-by-region/reference-only/earlier-plan/plan-file material. Existing task19 checklist was the authorized plan. Approximate cost: one Settings page plus seven local Help topics, ~24project files opened and ~18searches (estimated), required skill/support reads additional. Precise reference pixels and rendered native counterparts were unavailable; no counted Settings-family convention or new visual calibration was invented. Parent's distinct reviewer applies verifying; prior source-only Task04 calibration remains explicitly limited.

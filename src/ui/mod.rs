@@ -10,6 +10,7 @@ pub mod folders;
 pub mod import_review;
 mod recovery_detail;
 mod recovery_editor;
+mod settings;
 pub mod shell;
 pub mod state;
 pub mod theme;

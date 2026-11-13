@@ -1,6 +1,6 @@
 # Task 19: Settings, auto-start and contextual offline help
 
-Status: todo
+Status: in_progress - corrected source independently approved; hosted full/native gates open
 Priority: Required for complete v1
 Dependencies: 05, 10, 12–18
 Requirements: FR-7.2–4, FR-8; PRD §§5.4, 7, 12
@@ -11,11 +11,11 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Implementation
 
-- [ ] Implement Settings with accurate vault/backup-code/trash counts, lock status, app version, export/import access, auto-lock duration, clipboard timeout and optional Auto Start.
-- [ ] Default auto-lock is five minutes and clipboard expiry 30 seconds; retain encrypted preferences. Register/unregister startup only on explicit action and report OS failures. Reconcile OS startup registration with desired preference after unlock; never silently enable it from import.
-- [ ] Provide English offline help for QR acquisition, supported formats, clock errors, backup codes, passphrase loss, portability and permanent deletion. Website addresses/icons must not trigger runtime network requests.
-- [ ] Detect observable clock discontinuities and refresh codes; advise correcting Windows time without changing it or querying a remote time service.
-- [ ] Omit sign-in/profile, sync, language selector, extension/companion upsells, developer mode, rating and sharing.
+- [x] Implement Settings with accurate vault/backup-code/trash counts, lock status, app version, export/import access, auto-lock duration, clipboard timeout and optional Auto Start.
+- [x] Default auto-lock is five minutes and clipboard expiry 30 seconds; retain encrypted preferences. Register/unregister startup only on explicit action and report OS failures. Reconcile OS startup registration with desired preference after unlock; never silently enable it from import.
+- [x] Provide English offline help for QR acquisition, supported formats, clock errors, backup codes, passphrase loss, portability and permanent deletion. Website addresses/icons must not trigger runtime network requests.
+- [x] Detect observable clock discontinuities and refresh codes; advise correcting Windows time without changing it or querying a remote time service.
+- [x] Omit sign-in/profile, sync, language selector, extension/companion upsells, developer mode, rating and sharing.
 
 ## Screen checklist
 
@@ -34,8 +34,8 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 
 ## Acceptance and verification
 
-- [ ] Counts/settings persist correctly after CRUD/import/restore/restart and failures surface safely.
-- [ ] Enable/disable startup updates the app's own registration only; OS denial is recoverable.
+- [x] Counts/settings persist correctly after CRUD/import/restore/restart and failures surface safely.
+- [x] Enable/disable startup updates the app's own registration only; OS denial is recoverable.
 - [ ] All help and core settings function with networking disabled; no excluded control or runtime network call exists.
 - [ ] Keyboard, high-contrast/readability and narrow layouts pass independent review.
 
@@ -49,5 +49,14 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 
 ## Evidence
 
-Not started. On execution record changed files, test commands/results, sanitized UI evidence paths where applicable, independent reviewer result and commit reference. If blocked, retain incomplete status and record exact cause, attempted remedies and resumption steps.
+Corrected source approved after distinct review_19 and focused re-review. The checked implementation/core items describe source, real encrypted store/reopen/import and isolated Windows registry adapter evidence. Screen/native acceptance remains open; no production Run registration or actual logon was tested.
+
+- [Author paths, commands, targeted results and limits](../docs/qa/task19/implementation-evidence.md).
+- [Independent findings, current-source approval and exact checks](../docs/qa/task19/independent-review.md).
+- [Parent red/green privacy correction and cleanup](../docs/qa/task19/parent-fixes.md).
+- [Both corrected Task18 hosted failures](../docs/qa/task19/task18-regressions.md).
+
+Author16 focused cases pass; independent15 original focused cases and two current correction checks pass. P2 Settings Lock triggering-frame metadata was fixed by consolidating Lock in the shared header before private content. The permanent all-present-actions regression checks release-frame AX and paint at340/600/960 with one/two-pass budgets; parent red8.44s, final green28.90s, independent28.92s. P3 startup claims now match UNC/prefix checks and disclose unresolved drive mappings. Both previous CI18 failures independently pass after meaningful test corrections; old hostedCI18 remains failed until a new full run passes.
+
+Current209library entries compile; final fmt/strict all-target/all-feature Clippy/diff and production/bin+lib build pass. No local full-suite result is claimed. Native screenshots/input0; actual offline-machine, pointer/keyboard/raster/DPI/Narrator/high-contrast/logon/OS-lock/suspend/clipboard/package gates stay OPEN. No taskdone, conformance, security certification or production-readiness claim. Commit/run reference follows in the parent checkpoint; continue20–24.
 

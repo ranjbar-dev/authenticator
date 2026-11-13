@@ -676,7 +676,18 @@ fn export_close_and_idle_clear_forms_before_pending_work() -> TestResult {
     let mut app = app(dir.path())?;
     app.export_form = Some(ready(&dir.path().join("close-sentinel.authpbk"))?);
     // Dirty preferences must not defer clearing an open backup passphrase form.
+    // They are nevertheless flushed before final Lock/exit, after presentation
+    // is discarded. Hold that real commit to prove the immediate privacy phase.
+    let mut preferences = app.state.vault()?.preferences().codes();
+    preferences.query = Zeroizing::new("latest export-close display intent".into());
+    preferences.view = ViewMode::Grid;
+    app.state.query = preferences.query.to_string();
+    app.codes_preferences = Some(preferences);
     app.preferences_dirty = Some(Instant::now());
+    let before = std::fs::read(dir.path().join("vault.bin"))?;
+    let gate = Arc::new(CommitGate::default());
+    let release = gate.release_on_drop();
+    app.state.hold_next_save_after_admission(gate.clone());
     let ctx = app.context.clone();
     let mut input = egui::RawInput {
         screen_rect: Some(egui::Rect::from_min_size(
@@ -694,13 +705,43 @@ fn export_close_and_idle_clear_forms_before_pending_work() -> TestResult {
     let mut closed = ctx.run_ui(input, |root| app.show(root));
     closed.textures_delta.clear();
     assert!(app.export_form.is_none());
+    assert!(gate.wait_entered(Duration::from_secs(10)));
+    assert!(app.closing && app.state.busy() && !app.exit_approved);
+    assert_eq!(std::fs::read(dir.path().join("vault.bin"))?, before);
+    assert!(ax(&closed).iter().all(|n| !n.contains("close-sentinel")
+        && !n.contains("Backup passphrase")
+        && !n.contains("latest export-close display intent")
+        && !n.contains("Public export sentinel")));
+    drop(release);
+    let deadline = Instant::now() + Duration::from_secs(45);
+    while !app.exit_approved {
+        assert!(
+            Instant::now() < deadline,
+            "Close must complete its actual preference flush"
+        );
+        let mut out = ctx.run_ui(
+            egui::RawInput {
+                screen_rect: Some(egui::Rect::from_min_size(
+                    egui::Pos2::ZERO,
+                    egui::vec2(340., 780.),
+                )),
+                ..Default::default()
+            },
+            |root| app.show(root),
+        );
+        out.textures_delta.clear();
+        assert!(ax(&out).iter().all(|n| !n.contains("Backup passphrase")
+            && !n.contains("latest export-close display intent")));
+        std::thread::sleep(Duration::from_millis(5));
+    }
     assert!(!app.state.session_active());
-    assert!(
-        ax(&closed)
-            .iter()
-            .all(|n| !n.contains("close-sentinel") && !n.contains("Backup passphrase"))
-    );
+    assert!(!dir.path().join("close-sentinel.authpbk").exists());
     app.state.repository_mut()?.unlock(pass())?;
+    assert_eq!(
+        app.state.vault()?.preferences().codes().query.as_str(),
+        "latest export-close display intent"
+    );
+    assert_eq!(app.state.vault()?.preferences().view(), ViewMode::Grid);
     app.closing = false;
     app.close_locked = false;
     app.exit_approved = false;

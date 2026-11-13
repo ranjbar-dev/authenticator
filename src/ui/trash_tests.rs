@@ -944,7 +944,18 @@ fn trash_context_widths_pagination_safe_dialog_cancel_focus_keyboard_and_metadat
             assert_eq!(std::fs::read(dir.path().join("vault.bin"))?, disk);
         }
         tab_to(&mut app, size, &target)?;
+        let gate = Arc::new(crate::storage::test_gate::CommitGate::default());
+        let release = gate.release_on_drop();
+        app.state.hold_next_trash_review(gate.clone());
         key(&mut app, size, egui::Key::Enter);
+        assert!(gate.wait_entered(Duration::from_secs(10)));
+        assert!(app.trash.as_ref().is_some_and(|s| s.preparing));
+        assert!(
+            control(&settle(&mut app, size), "Restore record").is_none(),
+            "an unprepared review cannot expose its submit target"
+        );
+        drop(release);
+        finish(&mut app, size)?;
         tab_to(&mut app, size, "Restore record")?;
         key(&mut app, size, egui::Key::Enter);
         finish(&mut app, size)?;

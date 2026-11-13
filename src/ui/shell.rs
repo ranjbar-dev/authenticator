@@ -6,6 +6,7 @@ use super::export::{self, ExportForm, Picker};
 use super::folders::{self, Manager as FolderManager};
 use super::import_review::ImportReview;
 use super::recovery_editor::{self, Editor as RecoveryEditor};
+use super::settings::{self, HelpTopic};
 use super::trash::{self, Session as TrashSession};
 use super::{
     components as c,
@@ -59,6 +60,8 @@ pub struct AuthenticatorApp {
     pub state: AppState,
     dialog: Option<c::Dialog>,
     help_open: bool,
+    help_topic: HelpTopic,
+    settings: settings::Session,
     status: Option<&'static str>,
     context: egui::Context,
     lifecycle: Result<crate::platform::lifecycle::Lifecycle, crate::error::AppError>,
@@ -143,6 +146,8 @@ impl AuthenticatorApp {
             state,
             dialog: None,
             help_open: false,
+            help_topic: HelpTopic::Overview,
+            settings: settings::Session::default(),
             status: None,
             lifecycle: crate::platform::lifecycle::Lifecycle::start(move || {
                 repaint.request_repaint()
@@ -200,6 +205,8 @@ impl AuthenticatorApp {
         }
     }
     pub fn lock(&mut self) {
+        self.settings.reset();
+        self.help_topic = HelpTopic::Overview;
         self.folders = None;
         self.folders_focus = false;
         self.trash = None;
@@ -354,7 +361,9 @@ impl AuthenticatorApp {
         if let Some(outcome) = self.state.poll(now) {
             self.ordered_ids = None;
             self.backup_codes.invalidate();
-            if let Some(reviewed) = self.state.take_trash_review() {
+            if self.settings.pending_startup || self.settings.pending_settings {
+                self.complete_settings(outcome);
+            } else if let Some(reviewed) = self.state.take_trash_review() {
                 if let Some(session) = &mut self.trash {
                     session.prepared(reviewed);
                 }
@@ -568,6 +577,12 @@ impl AuthenticatorApp {
             let preferences = vault.preferences().codes();
             self.state.query = preferences.query.to_string();
             self.codes_preferences = Some(preferences);
+        }
+        if self.state.is_unlocked() && !self.closing {
+            let repaint = self.context.clone();
+            self.settings
+                .poll(self.state.generation(), move || repaint.request_repaint());
+            self.clock.observe(self.wall_clock.unix_seconds(), now);
         }
         if self.state.session_active()
             && let Some(result) = self.clipboard.poll()
@@ -814,7 +829,7 @@ impl AuthenticatorApp {
                 c::toolbar(ui,|ui| {
                     c::heading(ui,if self.trash.is_some() {"Trash"} else if let Some(manager) = &self.folders {manager.title()} else if self.backup_import.is_some() {"Import backup"} else if self.export_form.is_some() {"Export encrypted backup"} else if self.export_hub {"Export & Import"} else if self.recovery_editor.is_some() {"Backup Codes"} else if self.pending_mutation {self.state.route.title()} else if self.state.importing() {"Saving accounts"} else if self.review.as_ref().is_some_and(|r| !r.mode.is_import()) {"Account"} else if self.state.is_unlocked() && (self.capture_preparing.is_some() || self.state.capture_busy()) {"Screenshot to Scan"} else if self.state.session_active() {self.state.route.title()} else if self.exists {"Unlock vault"} else {"Create vault"},1);
                     let help=c::icon_button(ui,c::Icon::Help,"Help for this screen");
-                    if help.clicked() {self.dialog=Some(c::Dialog::new("Offline help",help.id)); self.help_open=true;}
+                    if help.clicked() { self.open_help(help.id, self.current_help_topic()); }
                     if self.state.session_active() && c::icon_button(ui,c::Icon::Lock,"Lock vault").clicked() {self.lock();}
                 });
                 if !codes_home { c::secondary(ui,if self.state.session_active() {"Vault unlocked on this device"} else {"Vault locked · credentials hidden"}); }
@@ -1087,99 +1102,396 @@ impl AuthenticatorApp {
                     self.code_cards(ui);
                 }
             }
-            Route::Settings => {
-                let export = c::button(ui, "Export & Import", c::ButtonStyle::Primary);
-                if self.export_focus {
-                    export.request_focus();
-                    self.export_focus = false;
+            Route::Settings => self.settings_content(ui),
+        }
+    }
+    fn settings_content(&mut self, ui: &mut egui::Ui) {
+        let Ok(vault) = self.state.vault() else {
+            c::progress(ui, "Finishing encrypted changes…", None);
+            return;
+        };
+        let counts = settings::Counts::new(vault);
+        let current_lock = vault.preferences().lock_timeout_seconds();
+        let current_clipboard = vault.preferences().clipboard_timeout_seconds();
+        let desired_startup = vault.preferences().auto_start();
+        c::card(ui, |ui| {
+            c::icon_tile(ui, c::Icon::Settings);
+            c::heading(ui, "Your local vault", 2);
+            c::body(ui, "Unlocked · all vault data is encrypted on this device");
+            c::body(
+                ui,
+                &format!("2FA Codes · {} active account(s)", counts.accounts),
+            );
+            c::body(
+                ui,
+                &format!(
+                    "Backup Codes · {} active set(s) · {} available · {} used",
+                    counts.sets, counts.available, counts.used
+                ),
+            );
+            c::secondary(
+                ui,
+                "Counts exclude accounts, sets and codes hidden by Trash. Trash counts records with their own deletion state.",
+            );
+        });
+        ui.add_space(theme::SMALL_GAP);
+        let export = c::button(ui, "Export & Import", c::ButtonStyle::Primary);
+        if self.export_focus || self.focus_form {
+            export.request_focus();
+            export.scroll_to_me(Some(egui::Align::Min));
+            self.export_focus = false;
+            self.focus_form = false;
+        }
+        if export.clicked() {
+            self.export_hub = true;
+            self.export_focus = true;
+            self.status = None;
+        }
+        let trash = ui
+            .push_id("settings-trash", |ui| {
+                c::button(
+                    ui,
+                    &format!("Trash · {} item(s)", counts.trash),
+                    c::ButtonStyle::Secondary,
+                )
+            })
+            .inner;
+        if self.trash_focus {
+            trash.request_focus();
+            trash.scroll_to_me(Some(egui::Align::Center));
+            self.trash_focus = false;
+        }
+        if trash.clicked() {
+            self.trash = Some(TrashSession::default());
+            self.export_focus = false;
+            self.status = None;
+            c::clear_sensitive_widget_memory(&self.context);
+        }
+        // Stable status holder: async feedback never changes control auto-IDs.
+        ui.push_id("settings-feedback", |ui| {
+            if let Some((message, error)) = self.settings.feedback {
+                c::status(
+                    ui,
+                    "result",
+                    message,
+                    if error {
+                        c::StatusKind::Error
+                    } else {
+                        c::StatusKind::Info
+                    },
+                );
+            }
+        });
+        ui.add_space(theme::SMALL_GAP);
+        c::card(ui, |ui| {
+            c::heading(ui, "Locking", 2);
+            c::body(
+                ui,
+                "Use Lock vault in the header or Ctrl+L to lock now. Auto-lock follows inactivity. Windows session lock, sleep and relaunch require unlocking again.",
+            );
+            let mut seconds = current_lock;
+            let mut choices = vec![
+                (60, "1 minute".to_owned()),
+                (300, "5 minutes (default)".into()),
+                (900, "15 minutes".into()),
+                (1800, "30 minutes".into()),
+            ];
+            if !choices.iter().any(|(n, _)| *n == seconds) {
+                choices.push((seconds, format!("{seconds} seconds (current)")));
+            }
+            let choices: Vec<_> = choices.iter().map(|(n, s)| (*n, s.as_str())).collect();
+            if c::labeled_selection(
+                ui,
+                "settings-autolock",
+                "Auto-lock after",
+                &mut seconds,
+                &choices,
+            ) {
+                self.start_security_settings(seconds, current_clipboard);
+            }
+            let help = c::button(ui, "Passphrase and locking help", c::ButtonStyle::Secondary);
+            if help.clicked() {
+                self.open_help(help.id, HelpTopic::Lock);
+            }
+        });
+        ui.add_space(theme::SMALL_GAP);
+        c::card(ui, |ui| {
+            c::heading(ui, "Clipboard expiry", 2);
+            let mut seconds = current_clipboard;
+            let mut choices: Vec<_> = [15, 30, 60, 120]
+                .into_iter()
+                .map(|n| {
+                    (
+                        n,
+                        format!("{n} seconds{}", if n == 30 { " (default)" } else { "" }),
+                    )
+                })
+                .collect();
+            if !choices.iter().any(|(n, _)| *n == seconds) {
+                choices.push((seconds, format!("{seconds} seconds (current)")));
+            }
+            let choices: Vec<_> = choices.iter().map(|(n, s)| (*n, s.as_str())).collect();
+            if c::labeled_selection(
+                ui,
+                "settings-clipboard",
+                "Clear app-owned copy after",
+                &mut seconds,
+                &choices,
+            ) {
+                self.start_security_settings(current_lock, seconds);
+            }
+            c::body(
+                ui,
+                "Clear only the copy still owned by Authenticator. A newer copy from another app is preserved. A new timeout applies to future copies.",
+            );
+            c::secondary(
+                ui,
+                "Lock and exit also request cleanup. Windows clipboard history and other clipboard tools may retain copies.",
+            );
+        });
+        ui.add_space(theme::SMALL_GAP);
+        c::card(ui, |ui| {
+            c::heading(ui, "Auto Start", 2);
+            c::body(
+                ui,
+                if desired_startup {
+                    "Saved choice: On"
+                } else {
+                    "Saved choice: Off (default)"
+                },
+            );
+            match self.settings.actual {
+                None => c::progress(ui, "Checking Windows startup registration…", None),
+                Some(Ok(crate::platform::startup::Status::Registered)) => {
+                    c::body(ui, "Windows registration: this copy is registered");
                 }
-                if export.clicked() {
-                    self.export_hub = true;
-                    self.export_focus = true;
-                    self.status = None;
+                Some(Ok(crate::platform::startup::Status::Missing)) => {
+                    c::body(ui, "Windows registration: not registered");
                 }
-                let trash_count = self
-                    .state
-                    .vault()
-                    .map(|v| crate::domain::trash::items(v).len())
-                    .unwrap_or(0);
-                let trash = ui
-                    .push_id("settings-trash", |ui| {
+                Some(Ok(crate::platform::startup::Status::Conflict)) => {
+                    c::status(
+                        ui,
+                        "startup-conflict",
+                        &crate::platform::startup::Error::Conflict.to_string(),
+                        c::StatusKind::Error,
+                    );
+                }
+                Some(Err(error)) => {
+                    c::status(
+                        ui,
+                        "startup-error",
+                        &error.to_string(),
+                        c::StatusKind::Error,
+                    );
+                }
+            }
+            c::secondary(
+                ui,
+                "Start this local copy when you sign in to Windows; the vault still opens locked. Checking and importing never enable it. Windows policy or Startup Apps may prevent a registered app from running.",
+            );
+            if self.settings.actual.is_some() {
+                let toggle = ui
+                    .push_id("settings-startup-toggle", |ui| {
                         c::button(
                             ui,
-                            &format!("Trash · {trash_count} item(s)"),
+                            if desired_startup {
+                                "Disable Auto Start"
+                            } else {
+                                "Enable Auto Start"
+                            },
                             c::ButtonStyle::Secondary,
                         )
                     })
                     .inner;
-                if self.trash_focus {
-                    trash.request_focus();
-                    trash.scroll_to_me(Some(egui::Align::Center));
-                    self.trash_focus = false;
+                if self.settings.focus {
+                    toggle.request_focus();
+                    toggle.scroll_to_me(Some(egui::Align::Center));
+                    self.settings.focus = false;
                 }
-                if trash.clicked() {
-                    self.trash = Some(TrashSession::default());
-                    self.export_focus = false;
-                    self.status = None;
-                    c::clear_sensitive_widget_memory(&self.context);
+                if toggle.clicked() {
+                    self.start_startup_change(!desired_startup);
                 }
-                c::card(ui, |ui| {
-                    c::icon_tile(ui, c::Icon::Settings);
-                    c::heading(ui, "Local vault", 2);
+                let actual_enabled = match self.settings.actual {
+                    Some(Ok(crate::platform::startup::Status::Registered)) => Some(true),
+                    Some(Ok(crate::platform::startup::Status::Missing)) => Some(false),
+                    _ => None,
+                };
+                if actual_enabled != Some(desired_startup) {
                     c::body(
                         ui,
-                        "Lock after inactivity. Windows session lock, sleep and closing the app also require unlocking again.",
-                    );
-                    let current = self
-                        .state
-                        .vault()
-                        .map(|v| v.preferences().lock_timeout_seconds())
-                        .unwrap_or(300);
-                    for (label, seconds) in [
-                        ("1 minute", 60),
-                        ("5 minutes (default)", 300),
-                        ("15 minutes", 900),
-                        ("30 minutes", 1800),
-                    ] {
-                        let label = if current == seconds {
-                            format!("Selected · {label}")
+                        if actual_enabled.is_some() {
+                            "The saved choice and Windows registration differ. No automatic repair is made."
                         } else {
-                            label.into()
-                        };
-                        if c::button(ui, &label, c::ButtonStyle::Secondary).clicked() {
-                            self.begin_mutation(SaveIntent::IdleTimeout(seconds));
-                        }
-                    }
-                    c::heading(ui, "Clipboard expiry", 2);
-                    c::body(
-                        ui,
-                        "Clear only the copy still owned by Authenticator. Windows or other clipboard tools may retain copies.",
+                            "Windows registration is not confirmed. Saving Off does not guarantee removal of an inaccessible or conflicting registration; manage it in Windows if needed."
+                        },
                     );
-                    let current = self
-                        .state
-                        .vault()
-                        .map(|v| v.preferences().clipboard_timeout_seconds())
-                        .unwrap_or(30);
-                    for seconds in [15, 30, 60, 120] {
-                        let label = format!(
-                            "{}{} seconds",
-                            if current == seconds {
-                                "Selected · "
-                            } else {
-                                ""
-                            },
-                            seconds
-                        );
-                        if c::button(ui, &label, c::ButtonStyle::Secondary).clicked() {
-                            self.begin_mutation(SaveIntent::ClipboardTimeout(seconds));
-                        }
+                    if c::button(ui, "Apply saved startup choice", c::ButtonStyle::Primary)
+                        .clicked()
+                    {
+                        self.start_startup_change(desired_startup);
                     }
-                });
-                if c::button(ui, "Lock vault", c::ButtonStyle::Primary).clicked() {
-                    self.lock();
                 }
             }
+            if c::button(ui, "Check startup registration", c::ButtonStyle::Secondary).clicked() {
+                self.settings.refresh();
+            }
+            c::secondary(
+                ui,
+                "Keep the executable in the same folder. A different registered command is preserved and must be managed in Windows before retrying.",
+            );
+        });
+        ui.add_space(theme::SMALL_GAP);
+        c::card(ui, |ui| {
+            c::heading(ui, "Time and offline help", 2);
+            if self.clock.shifted {
+                c::status(
+                    ui,
+                    "settings-clock-shift",
+                    "The system clock changed unexpectedly. Codes use the current Windows time. Check its date and time if codes are rejected.",
+                    c::StatusKind::Info,
+                );
+            }
+            c::body(
+                ui,
+                "Codes use Windows time. Authenticator does not change the clock or contact a time server.",
+            );
+            for (label, topic) in [
+                ("QR and manual entry help", HelpTopic::Capture),
+                ("Backup codes help", HelpTopic::BackupCodes),
+                ("Encrypted backup and recovery help", HelpTopic::Backups),
+                ("Windows time help", HelpTopic::Clock),
+                ("Trash and deletion help", HelpTopic::Trash),
+            ] {
+                let response = ui
+                    .push_id(("settings-help", topic.title()), |ui| {
+                        c::button(ui, label, c::ButtonStyle::Secondary)
+                    })
+                    .inner;
+                if response.clicked() {
+                    self.open_help(response.id, topic);
+                }
+            }
+            c::secondary(
+                ui,
+                &format!(
+                    "Authenticator · version {} · Windows desktop",
+                    env!("CARGO_PKG_VERSION")
+                ),
+            );
+            c::secondary(
+                ui,
+                "Local-only English interface. Website labels and icons never require network requests.",
+            );
+        });
+    }
+    fn start_security_settings(&mut self, lock_seconds: u32, clipboard_seconds: u32) {
+        let Some(preferences) = self.codes_preferences.clone() else {
+            return;
+        };
+        if self.begin_mutation(SaveIntent::SecuritySettings {
+            lock_seconds,
+            clipboard_seconds,
+            preferences,
+        }) {
+            self.settings.pending_settings = true;
+            self.settings.submitted_dirty = Some(self.preferences_dirty);
+            self.settings.return_focus = self.context.memory(|m| m.focused());
+            self.settings.feedback = None;
         }
+    }
+    fn start_startup_change(&mut self, enabled: bool) {
+        let Some(preferences) = self.codes_preferences.clone() else {
+            return;
+        };
+        if self.begin_mutation(SaveIntent::StartupChange {
+            enabled,
+            preferences,
+            startup: self.settings.service.clone(),
+        }) {
+            self.settings.pending_startup = true;
+            self.settings.submitted_dirty = Some(self.preferences_dirty);
+            self.settings.feedback = None;
+            self.settings.focus = true;
+        }
+    }
+    fn complete_settings(&mut self, outcome: Result<(), crate::error::AppError>) {
+        self.pending_mutation = false;
+        self.pending_preferences = false;
+        let startup = self.settings.pending_startup;
+        self.settings.pending_startup = false;
+        self.settings.pending_settings = false;
+        if let Some(id) = self.settings.return_focus.take() {
+            self.context.memory_mut(|m| m.request_focus(id));
+        }
+        let current_codes = self
+            .settings
+            .submitted_dirty
+            .take()
+            .is_some_and(|submitted| submitted == self.preferences_dirty);
+        if outcome.is_ok() {
+            if current_codes && let Ok(vault) = self.state.vault() {
+                let preferences = vault.preferences().codes();
+                self.state.query = preferences.query.to_string();
+                self.codes_preferences = Some(preferences);
+            }
+            if current_codes {
+                self.preferences_dirty = None;
+            }
+            self.preferences_error = false;
+            if startup {
+                let result = self
+                    .state
+                    .take_startup_result()
+                    .unwrap_or(Err(crate::platform::startup::Error::Unavailable));
+                self.settings.actual = Some(result);
+                self.settings.feedback = Some(if result.is_ok() {
+                    (
+                        "Startup choice saved and Windows registration checked. The vault will open locked.",
+                        false,
+                    )
+                } else {
+                    (
+                        "Your startup choice was saved, but Windows registration was not confirmed. Check the actual status and retry explicitly; no automatic repair is made.",
+                        true,
+                    )
+                });
+                // A failing mutation is not a trustworthy observation of actual state.
+                if result.is_err() {
+                    self.settings.refresh();
+                }
+            } else {
+                self.settings.feedback = Some((
+                    "Lock and clipboard settings saved in your encrypted vault.",
+                    false,
+                ));
+            }
+        } else {
+            self.settings.feedback = Some((
+                "Settings could not be saved. Your previous vault and Windows startup registration are unchanged. Retry the setting.",
+                true,
+            ));
+        }
+        self.status = None;
+    }
+    fn current_help_topic(&self) -> HelpTopic {
+        if !self.state.session_active() {
+            HelpTopic::Lock
+        } else if self.trash.is_some() {
+            HelpTopic::Trash
+        } else if self.export_hub || self.export_form.is_some() || self.backup_import.is_some() {
+            HelpTopic::Backups
+        } else if self.state.route == Route::BackupCodes {
+            HelpTopic::BackupCodes
+        } else if self.state.route == Route::Codes {
+            HelpTopic::Capture
+        } else {
+            HelpTopic::Overview
+        }
+    }
+    fn open_help(&mut self, opener: egui::Id, topic: HelpTopic) {
+        self.help_topic = topic;
+        self.help_open = true;
+        self.dialog = Some(c::Dialog::new("Offline help", opener));
     }
     fn trash_content(&mut self, ui: &mut egui::Ui) {
         let Some(mut session) = self.trash.take() else {
@@ -1547,8 +1859,7 @@ impl AuthenticatorApp {
                 }
             }
             backup_codes::Action::Help(opener) => {
-                self.dialog = Some(c::Dialog::new("About backup codes", opener));
-                self.help_open = true;
+                self.open_help(opener, HelpTopic::BackupCodes);
             }
             backup_codes::Action::AddAccount => {
                 self.backup_codes.reset();
@@ -1799,6 +2110,8 @@ impl AuthenticatorApp {
                     self.show_imported = false;
                     self.review = None;
                     self.clock.clear();
+                    self.settings.refresh();
+                    self.settings.feedback = None;
                     self.clipboard.clear();
                     self.clipboard_feedback = None;
                     self.state.navigate(Route::Codes);
@@ -2616,6 +2929,9 @@ impl AuthenticatorApp {
     }
     fn persist_codes_preferences(&mut self) {
         if self.preferences_error
+            || (!self.closing
+                && self.state.route == Route::Settings
+                && self.settings.feedback.is_some_and(|(_, error)| error))
             || self.state.busy()
             || !self.state.is_unlocked()
             || self.review.is_some()
@@ -3086,25 +3402,18 @@ impl AuthenticatorApp {
             let help = self.help_open;
             let workflow = self.state.pending();
             let close=dialog.show(ctx,|ui,first| {
+                let close = c::button(ui, "Close", c::ButtonStyle::Primary);
+                if first { close.request_focus(); close.scroll_to_me(Some(egui::Align::Min)); }
                 if help {
-                    if self.state.route == Route::BackupCodes {
-                        c::body(ui,"Backup codes are issued by each service and may work only once. Keep an independent copy somewhere safe in case you lose access to this vault.");
-                        c::secondary(ui,"Add Backup Codes selects an existing 2FA account. Search by its service or account identifier and check the selected account before continuing. Existing sets, including sets in Trash, are identified before you continue.");
-                        c::secondary(ui,"Enter one service-issued code per line or read a local UTF-8 text file, then Preview changes before Save. Exact duplicates require review. Editing keeps exact matching used history; omitted codes move to Trash. Available and used totals include active codes only. Detail has separate Reveal/Conceal, Copy, Mark used/available and one-step Undo actions. Copy never marks a code used.");
-                    }
-                    c::body(ui,"Authenticator keeps your vault on this device. Use the three tabs for verification codes, recovery codes and local settings.");
-                    c::secondary(ui,"Your vault passphrase cannot be reset. Settings → Export & Import saves a local encrypted backup protected by a separate backup passphrase. Keep the file and passphrase separately. Screenshot to Scan and image/manual entry work locally. Review each account before saving.");
-                    c::secondary(ui,"Keyboard: Tab and Shift+Tab move focus. Enter or Space activates buttons. Ctrl+L locks the vault. Escape cancels passphrase work or closes dialogs.");
+                    settings::help(ui, self.help_topic);
                 } else {
                     c::body(ui,match workflow {
-                        Some(Workflow::VaultLifecycle)=>"Vault setup and unlock will be connected in the next development stage. The vault remains locked.",
-                        Some(Workflow::AddAccount)=>"Use Screenshot to Scan on the 2FA Codes screen to select a QR in another window. Editable review, saving and manual entry are the next development stage. No account was added.",
+                        Some(Workflow::VaultLifecycle)=>"Create or unlock the local vault with its passphrase. There is no app account or passphrase reset.",
+                        Some(Workflow::AddAccount)=>"Use Screenshot to Scan on 2FA Codes to select a QR in another window, or choose image/manual entry. Review the account and explicitly Save to import it.",
                         Some(Workflow::AddBackupCodes)=>"Choose Add Backup Codes on the Backup Codes tab to select an account.",
                         None=>"No action is pending.",
                     });
                 }
-                let close=c::button(ui,"Close",c::ButtonStyle::Primary);
-                if first {close.request_focus();}
                 close.clicked()
             });
             if close {
@@ -3148,6 +3457,9 @@ mod recovery_detail_tests;
 #[cfg(all(test, windows))]
 #[path = "recovery_editor_tests.rs"]
 mod recovery_editor_tests;
+#[cfg(all(test, windows))]
+#[path = "settings_tests.rs"]
+mod settings_tests;
 #[cfg(all(test, windows))]
 #[path = "trash_tests.rs"]
 mod trash_tests;

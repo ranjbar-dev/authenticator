@@ -597,6 +597,12 @@ impl Vault {
         self.preferences.clipboard_timeout_seconds = seconds;
         self.state.touch(at)
     }
+    pub fn set_auto_start(&mut self, enabled: bool, at: Timestamp) -> Result<(), AppError> {
+        let at = self.mutation_time(at);
+        self.preferences.state.touch(at)?;
+        self.preferences.auto_start = enabled;
+        self.state.touch(at)
+    }
     pub fn trash_account(
         &mut self,
         id: AccountId,
