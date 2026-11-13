@@ -29,7 +29,7 @@ No app implementation has been started by generating this plan. Every initial st
 | 19 | [Settings, auto-start and contextual offline help](19-settings-startup-and-help.md) | in_progress; native counts/preferences/help reviewed, offline/logon/package QA open |
 | 20 | [Failure resilience and independent security audit](20-reliability-and-security-review.md) | in_progress; source audit/full suite approved, native/offline gates open |
 | 21 | [Full offline workflow, accessibility and visual QA](21-complete-ui-and-workflow-qa.md) | in_progress; native/full-graph journeys independently reviewed, environment/matrix QA open |
-| 22 | [Reference-format discovery and truthful compatibility](22-reference-migration-discovery.md) | todo |
+| 22 | [Reference-format discovery and truthful compatibility](22-reference-migration-discovery.md) | done; unsupported private format documented and independently reviewed |
 | 23 | [Windows packaging, clean-install recovery and documentation](23-windows-packaging-and-user-docs.md) | todo |
 | 24 | [Final completeness audit, PRD reconciliation and main push](24-final-prd-audit-and-main-push.md) | todo |
 
@@ -71,6 +71,10 @@ The UI consistency finding-patterns, values, decisions and planning guidance inf
 Codex orchestration was checked against the installed CLI help/features and [official subagent documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents). No fixed model is forced.
 
 ## Checkpoint
+
+**Task22 accepted:** implementer/reviewer FINAL, no material finding. Bounded public package/site/listing investigation established no sufficient reference `.vault` specification/disposable interoperability evidence; unsupported initial-release decision and native `.authpbk` guidance are documented. Independent negative worker/UI1passed19.41s; author native full-entity/24-OTP separate-key roundtrip1passed14.53s. No converter/parser/UI/runtime/dependency change. Parent inspected docs/source boundary and public marketing images in memory; current desktop differs from phone pictures and exact Windows parity remains open. Committing/pushing22, then sole23 packaging/docs child. New CI43446743225 on3b51851 passedFormat/Lint, Tests still running at last check; no full-suite pass yet. Use D: subprocess TEMP/TMP and preserve permanentpublicCargo junction targets.
+
+**Active22:** sole implementation child `implement22_discovery` is investigating only public lawful reference-format evidence and verifying honest unsupported-file behavior. Prior21 implementer/reviewer FINAL; scoped native journeys + caption/test compatibility corrections committed/pushed `3b51851`. ParentownsnewCI/status, not source implementation. Discovery proceeds independently of21's unavailable environment/matrix gates, as prompt recovery permits. After22 FINAL→distinct security/data-loss review→integration, then23 Windows packaging/docs;24 closure must still account for all genuine limitations. Use D: subprocess TEMP/TMP; publicCargoC paths are preserved by verifiedD junctions.
 
 **Accepted21 scoped checkpoint:** implementer and distinct reviewer are FINAL; both minor review findings are corrected/rechecked. Native recovery/folders/Trash/full-graph export/freshMerge/KeepCurrent/Replace evidence and all18 safe frames are independently reviewed. Parent test-only CAS compatibility fix passed clipboard6 and strictlint; affected TrashContext1passed13.85s. Cache recovery and D: subprocess scratch documented. Integrating/committing this scoped work, then sole22 discovery child (independent of unavailable21 environment gates), distinct review,23 packaging and final audit only with honest preceding outcomes. No all-state/scale/physical/offline/OS delivery/Narrator/logon completion claim. Last pushed source2af1ce4 had lint-only CI failure; new source must obtain fresh hosted checks.
 

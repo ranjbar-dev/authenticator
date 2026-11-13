@@ -256,6 +256,15 @@ Plan generation does not constitute implementation. Initial task status is todo,
 
 ### Current implementation checkpoint (13 November 2026)
 
+Task22 discovery is accepted: the FirstOrder reference app's private `.vault`
+format is unsupported in the initial release because sufficient lawful format
+evidence and disposable interoperability samples were not established. Native
+`AUTHPBK1` encrypted `.authpbk` export/import remains supported. Unknown formats
+are rejected without a vault transaction and the UI provides native-backup
+guidance. No speculative converter is shipped. See docs/migration-compatibility.md
+and docs/qa/task22/independent-review.md. Public phone marketing references are now
+documented; they do not establish exact installed Windows-version fidelity.
+
 Current Task21 follow-up completed actual recovery-code file review/copy/used/Undo,
 folders, association-preserving account restore, single/all permanent deletion,
 full-graph encrypted export, fresh Merge/HMAC verification, conflict-preserving

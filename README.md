@@ -24,4 +24,9 @@ For automated pointer/keyboard/accessibility checks, launch the no-argument `tar
 
 Runtime requires no registration or network service. Build-time Cargo dependency downloads and GitHub CI require network access. No framework persistence, link launching, telemetry or network client is enabled by this application. Packaging/user instructions follow in task 23.
 
+Backups use this app's native encrypted `AUTHPBK1` format, normally `.authpbk`.
+The reference app's private `.vault` format is unsupported in v1; renaming a file
+does not convert it. [Compatibility and migration evidence](docs/migration-compatibility.md)
+explains supported inputs and the safe native export/import path.
+
 See [architecture](docs/architecture.md), [security design](docs/security-design.md) and [reference evidence](docs/reference-ui.md). Windows CI runs formatting, warning-free Clippy, tests and a debug build; a local pass does not establish a hosted CI pass.

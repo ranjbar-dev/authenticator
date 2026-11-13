@@ -1,6 +1,6 @@
 # Task 22: Reference-format discovery and truthful compatibility
 
-Status: todo
+Status: done - evidence-based unsupported reference-format decision independently reviewed
 Priority: Required for complete v1
 Dependencies: 11–13, 20, 21
 Requirements: FR-6.4; PRD §§3, 5, 12
@@ -11,17 +11,17 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Implementation
 
-- [ ] Investigate reference .vault format only if public lawful documentation or disposable exports are already accessible. Do not access real secrets, enable sync, buy access or ask the user for material.
-- [ ] Record inspected evidence, format assumptions and unsupported cases in docs/migration-compatibility.md.
-- [ ] If evidence is sufficient to implement safely, add bounded parsing and disposable interoperability/round-trip tests before advertising support. Re-run security/import UI checks for any new path.
-- [ ] If evidence is unavailable or compatibility cannot be established, complete the discovery with the documented finding that reference .vault import is unsupported in v1. Keep native encrypted backup fully functional and show an honest unsupported-format error. Do not fabricate compatibility or block core delivery.
+- [x] Investigate reference .vault format only if public lawful documentation or disposable exports are already accessible. Do not access real secrets, enable sync, buy access or ask the user for material.
+- [x] Record inspected evidence, format assumptions and unsupported cases in docs/migration-compatibility.md.
+- [x] If evidence is sufficient to implement safely, add bounded parsing and disposable interoperability/round-trip tests before advertising support. Re-run security/import UI checks for any new path. — Not applicable: no sufficient evidence or converter; no compatibility advertised.
+- [x] If evidence is unavailable or compatibility cannot be established, complete the discovery with the documented finding that reference .vault import is unsupported in v1. Keep native encrypted backup fully functional and show an honest unsupported-format error. Do not fabricate compatibility or block core delivery.
 
 ## Acceptance and verification
 
-- [ ] Discovery result is documented with actual evidence, including a clear unsupported decision when appropriate.
-- [ ] No reference compatibility claim appears without successful disposable interoperability tests.
-- [ ] Unsupported imports leave the current vault unchanged and offer native-backup guidance.
-- [ ] Any implemented converter receives independent parsing/security review and regression coverage.
+- [x] Discovery result is documented with actual evidence, including a clear unsupported decision when appropriate.
+- [x] No reference compatibility claim appears without successful disposable interoperability tests.
+- [x] Unsupported imports leave the current vault unchanged and offer native-backup guidance.
+- [x] Any implemented converter receives independent parsing/security review and regression coverage. — No converter implemented; existing native rejection boundary independently reviewed.
 
 ## Handoff and completion
 
@@ -33,5 +33,5 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Evidence
 
-Not started. On execution record changed files, test commands/results, sanitized UI evidence paths where applicable, independent reviewer result and commit reference. If blocked, retain incomplete status and record exact cause, attempted remedies and resumption steps.
+Accepted after distinct security/data-loss review with no material findings. [Discovery/support boundary](../docs/migration-compatibility.md), [implementation evidence](../docs/qa/task22/implementation-evidence.md), [independent review](../docs/qa/task22/independent-review.md). Author negative worker/UI1 and independent-key/all-entity/24-OTP native1 passed; reviewer independently repeated negative1/210filtered19.41s and checked public package/primary-page evidence, source authentication/transaction boundary and actionable unsupported guidance. Generated unknown-format fixtures are not real reference exports. New public marketing-image availability is accurately recorded in docs/reference-ui.md without claiming native Windows pixel parity. No parser/converter/dependency/runtime/UI changes. Parent owns commit/push; reference follows in next checkpoint.
 

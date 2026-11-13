@@ -1,5 +1,16 @@
 # Architecture and concrete decisions
 
+## Reference-format compatibility boundary
+
+Task22 discovery identifies the reference package and inspects public publisher
+material, but establishes neither a private `.vault` specification nor a
+disposable interoperable export. V1 therefore supports only the native
+authenticated portable `AUTHPBK1` envelope through backup import. No converter
+or guessed private parser is added. Local `AUTHLOC1` is deliberately a different
+format; extensions do not establish compatibility. Existing unsupported preview
+paths preserve the current vault and provide native-backup guidance. Evidence,
+support table and future proof requirements: [migration compatibility](migration-compatibility.md).
+
 ## Native clipboard availability and rejected-copy cleanup
 
 Actual native keyboard input exposed advertised clipboard formats whose handles
