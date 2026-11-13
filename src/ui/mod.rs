@@ -6,6 +6,7 @@ mod backup_import;
 pub mod codes;
 pub mod components;
 mod export;
+pub mod folders;
 pub mod import_review;
 mod recovery_detail;
 mod recovery_editor;

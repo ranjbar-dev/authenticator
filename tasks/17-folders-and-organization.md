@@ -1,6 +1,6 @@
 # Task 17: Folder management and filtered navigation
 
-Status: todo
+Status: in_progress - corrected source reviewed; required portable/full-suite/native gates open
 Priority: Required for complete v1
 Dependencies: 10, 14–16
 Requirements: FR-4; PRD §§5.1, 7, 9, 12
@@ -11,31 +11,31 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Implementation
 
-- [ ] Implement folder creation/rename with name, six reference-style colors and searchable/sortable multi-account selection.
-- [ ] Use many-to-many memberships; include All accounts and Unfiled views with visible keyboard-operable navigation.
-- [ ] Persist membership, selected folder and organization preferences inside encrypted storage. Validate duplicate/empty folder names consistently.
-- [ ] Confirm folder removal where useful and explain that removing a folder preserves accounts. Handle trashed/restored members and imported folder conflicts predictably.
+- [x] Implement folder creation/rename with name, six reference-style colors and searchable/sortable multi-account selection.
+- [x] Use many-to-many memberships; include All accounts and Unfiled views with visible keyboard-operable navigation.
+- [x] Persist membership, selected folder and organization preferences inside encrypted storage. Validate duplicate/empty folder names consistently.
+- [x] Confirm folder removal where useful and explain that removing a folder preserves accounts. Handle trashed/restored members and imported folder conflicts predictably.
 
 ## Screen checklist
 
 Planning snapshot, 12 November 2026: no existing application source, screen family, theme or shared components was present. These are PRD/reference-derived roles, not measured project conventions. Use the shared Rust theme and widgets created by task 04 (or create those primitives in task 04 itself); reread this checklist before editing. Refresh implementation paths from the actual code.
 
-- [ ] Shared header names folder creation/editing with back/cancel. — PRD/reference structure; shared implementation from task 04.
-- [ ] Folder-name field has a label and inline validation. — PRD/reference structure; shared implementation from task 04.
-- [ ] Six color controls show selected state with a non-color cue. — PRD/reference structure; shared implementation from task 04.
-- [ ] Account search/sort appears before selectable membership rows. — PRD/reference structure; shared implementation from task 04.
-- [ ] Rows identify service/account and have accessible selected state. — PRD/reference structure; shared implementation from task 04.
-- [ ] Save action persists reviewed membership without deleting accounts. — PRD/reference structure; shared implementation from task 04.
-- [ ] Folder navigation clearly distinguishes All, Unfiled and named folders. — PRD/reference structure; shared implementation from task 04.
-- [ ] Empty/error/delete states, shared tokens, focus and narrow-window layout remain consistent. — PRD/reference structure; shared implementation from task 04.
+- [x] Shared header names folder creation/editing with back/cancel. — PRD/reference structure; shared implementation from task 04.
+- [x] Folder-name field has a label and inline validation. — PRD/reference structure; shared implementation from task 04.
+- [x] Six color controls show selected state with a non-color cue. — PRD/reference structure; shared implementation from task 04.
+- [x] Account search/sort appears before selectable membership rows. — PRD/reference structure; shared implementation from task 04.
+- [x] Rows identify service/account and have accessible selected state. — PRD/reference structure; shared implementation from task 04.
+- [x] Save action persists reviewed membership without deleting accounts. — PRD/reference structure; shared implementation from task 04.
+- [x] Folder navigation clearly distinguishes All, Unfiled and named folders. — PRD/reference structure; shared implementation from task 04.
+- [x] Empty/error/delete states, shared tokens, focus and narrow-window layout remain consistent. — PRD/reference structure; shared implementation from task 04.
 
 Must not be copied from the reference: profile/sign-in, cloud sync/backup, language selector, extension/companion promotions, optional encryption switches or swipe-only desktop actions. Reuse shared field, button, dialog and feedback components; do not recreate their styling per page.
 
 ## Acceptance and verification
 
-- [ ] Create/rename/recolor folders, place an account in multiple folders and verify All/Unfiled behavior.
+- [x] Create/rename/recolor folders, place an account in multiple folders and verify All/Unfiled behavior.
 - [ ] Restart and export/import preserve folders/memberships without duplicated records or orphan references.
-- [ ] Deleting a folder leaves all accounts and backup codes intact.
+- [x] Deleting a folder leaves all accounts and backup codes intact.
 - [ ] Pointer clicks, keyboard search/selection and compact layouts pass independent review.
 
 ## Handoff and completion
@@ -48,5 +48,5 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 
 ## Evidence
 
-Not started. On execution record changed files, test commands/results, sanitized UI evidence paths where applicable, independent reviewer result and commit reference. If blocked, retain incomplete status and record exact cause, attempted remedies and resumption steps.
+Source/Context checks above are implementation evidence, not native or complete acceptance. Implementation and exact commands: docs/qa/task17/implementation-evidence.md. Distinct review17 and focused re-review: docs/qa/task17/independent-review.md; P2 forged-caption ambiguity corrected with quoted/escaped names and permanent red/green regression; no new finding in focused scope. Domain5, labels2, focusedUI3, oldCI16scroll1, previewfixture1, strictClippy/fmt/diff/prodbinlibownexamplebuild passed. Required new portable-folder roundtrip independently did not complete within bounded runs; fullsuite/group INCOMPLETE. No engine cause established. Native2normal launches failed GetCursorPos0x80070005 before ownresources; no pixels/realinput claimed. Own PID30688 persisted after termination request; exact identity and cleanup limits in evidence, do not act on reusedPID. Workflow30min bound keeps all checks and timeoutfailure. Coherent incomplete sourcecheckpoint commit follows in tasks/README.md; new hosted evidence pending. All earlier manual gates remain open. Continue18-24 without marking17done.
 

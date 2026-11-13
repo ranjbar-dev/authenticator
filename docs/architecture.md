@@ -712,3 +712,10 @@ Reversible Trash preserves associations/history; actual restoration and permanen
 logical cascade remain Task18. Source/Context review passed; native pixels/input,
 assistive technology, hardware and interactive clipboard acceptance remain open.
 See `docs/qa/task16/` and the unresolved actual Task10 Copy ownership gate.
+
+
+## Folder organization (Task17)
+
+A metadata-only review guard binds folder, links, account metadata and duplicate-name inventory by contents, including equal logical timestamps. The existing sole worker atomically saves folder/name/color/many-to-many selections with latest Codes query/sort/view/filter. Schema2 remains. Raw256UTF8 bytes are checked before trim; exact trimmed duplicate names includingTrash need separate-folder consent, case variants remain distinct. Unselected links enterTrash; reselect reactivates sameID; hidden trashed-account assignments remain. Visibility requires active own-link and active endpoints. FolderTrash preserves accounts, settings, recovery values/used history and links; selectedfilter normalizesAll atomically.18 owns restore/permanent cascade.
+
+Manager/editor use shared Root roles and bounded20row pages; editor search/sort is separate session data. Named captions quote/escape raw names, with fullID outsidequotes for duplicates/reserved names, preventing raw-name imitation of generated identity. Stable FolderFilter IDs drive selection. Checked source/Context behavior is independently reviewed, not raster/native acceptance. Required new portable integration and fullsuite remain incomplete after bounded stalls inside existing KDF with unknown cause; no enginechange/ignore/resume workaround. Existing envelopecontrol and focused guards/UI/reopen pass. Hosted execution pending; CI30minjob budget preservesallchecks and failureon timeout. See docs/qa/task17/.

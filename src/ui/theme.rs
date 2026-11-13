@@ -8,6 +8,15 @@ pub const HOVER: Color32 = Color32::from_rgb(40, 52, 70);
 pub const TEXT: Color32 = Color32::from_rgb(239, 244, 255);
 pub const MUTED: Color32 = Color32::from_rgb(174, 187, 207);
 pub const BLUE: Color32 = Color32::from_rgb(75, 143, 255);
+// Blue, purple, pink, red, orange, green: opaque metadata accents, never text-only cues.
+pub const FOLDER_COLORS: [Color32; 6] = [
+    BLUE,
+    Color32::from_rgb(190, 160, 255),
+    Color32::from_rgb(255, 166, 212),
+    Color32::from_rgb(255, 153, 153),
+    Color32::from_rgb(255, 190, 117),
+    Color32::from_rgb(139, 222, 172),
+];
 pub const ON_BLUE: Color32 = Color32::from_rgb(9, 20, 38);
 pub const ERROR: Color32 = Color32::from_rgb(255, 177, 177);
 pub const ERROR_SURFACE: Color32 = Color32::from_rgb(57, 31, 40);

@@ -64,6 +64,9 @@ fn render(
     let mut out = ctx.run_ui(
         egui::RawInput {
             screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, size.into())),
+            // Advance UI animation time deterministically. Tight CI loops must
+            // still let wheel smoothing settle before the pointer-event hit.
+            time: Some(ctx.input(|i| i.time) + 1. / 60.),
             events,
             ..Default::default()
         },
@@ -193,8 +196,8 @@ fn click_nth(
         out = settle(app, size);
     }
     Err(format!(
-        "action unavailable: {label}; button bounds {:?}",
-        button(&out, label).map(|b| b.1)
+        "action unavailable: {label}; occurrence {occurrence}; button bounds {:?}",
+        button_nth(&out, label, occurrence).map(|b| b.1)
     )
     .into())
 }

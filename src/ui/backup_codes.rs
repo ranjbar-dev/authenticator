@@ -220,7 +220,7 @@ pub enum Action {
     Save(Box<super::state::SaveIntent>),
 }
 
-fn display_identity(account: &Account) -> (&str, &str) {
+pub(super) fn display_identity(account: &Account) -> (&str, &str) {
     (
         account.credential().service(),
         account
@@ -229,7 +229,7 @@ fn display_identity(account: &Account) -> (&str, &str) {
             .unwrap_or("No account identifier"),
     )
 }
-fn identity(ui: &mut egui::Ui, account: &Account, ambiguous: bool) {
+pub(super) fn identity(ui: &mut egui::Ui, account: &Account, ambiguous: bool) {
     let (service, identifier) = display_identity(account);
     c::heading(ui, service, 2);
     c::body(ui, identifier);

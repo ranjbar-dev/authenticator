@@ -79,3 +79,8 @@ Ready for the parent's distinct read-only UI/security/data-loss review. No self-
 ## Open gates
 
 Actual Windows pointer/keyboard, rasterized contrast/wrapping/focus, DPI/assistive-technology and native reboot/restore paths remain unverified. Context input/AX/shape tests cannot close them. The existing real interactive clipboard `Copy → Changed` ownership-proof issue from Task10 remains open; production checks were not weakened and no live success/expiry claim is made. Task18 still owns restoration/permanent deletion UI and logical cascade implementation. No next-task work was added.
+
+
+## Hosted CI follow-up, 13 November 2026
+
+Commit `7e1bf02890115bcf1c59f743ed023a1b85486b9e` run [43362221337](https://github.com/ranjbar-dev/authenticator/actions/runs/43362221337) failed: Format and Lint passed; Tests reported 160 passed, 1 failed, 4 ignored in629.77s; Build was skipped. Sole failure: `ui::shell::recovery_detail_tests::detail_later_code_and_scrolled_list_focus_are_visible_after_save_undo_and_trash`, `action unavailable: View set; button bounds Some([[33.0 -352.0] - [567.0 -316.0]])`. That error currently prints the first matching button, not necessarily the selected occurrence; do not infer the actual target geometry from it. Logs were retrieved from the run archive without exposing/persisting authentication. The sequential task17 source owner has the exact failure for diagnosis and correction; fix/re-review/new hosted evidence pending. Earlier local/reviewer passes remain limited evidence and do not override this failure.

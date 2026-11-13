@@ -86,6 +86,24 @@ fn ordered_with_filter(
     folder: FolderFilter,
 ) -> Vec<AccountId> {
     let query = Zeroizing::new(caseless::default_case_fold_str(query));
+    let active_folders: std::collections::BTreeSet<_> = vault
+        .folders()
+        .iter()
+        .filter(|f| f.state().deletion == DeletionState::Active)
+        .map(Folder::id)
+        .collect();
+    let filed: std::collections::BTreeSet<_> = vault
+        .memberships()
+        .iter()
+        .filter(|m| {
+            m.state().deletion == DeletionState::Active && active_folders.contains(&m.folder_id())
+        })
+        .filter(|m| match folder {
+            FolderFilter::Folder(id) => m.folder_id() == id,
+            _ => true,
+        })
+        .map(Membership::account_id)
+        .collect();
     // Fold metadata once per list change, never once per comparison or HMAC tick.
     let mut values = vault
         .accounts()
@@ -93,16 +111,8 @@ fn ordered_with_filter(
         .filter(|a| a.state().deletion == DeletionState::Active)
         .filter(|a| match folder {
             FolderFilter::All => true,
-            FolderFilter::Unfiled => !vault.memberships().iter().any(|m| {
-                m.account_id() == a.id()
-                    && vault.folders().iter().any(|f| {
-                        f.id() == m.folder_id() && f.state().deletion == DeletionState::Active
-                    })
-            }),
-            FolderFilter::Folder(id) => vault
-                .memberships()
-                .iter()
-                .any(|m| m.account_id() == a.id() && m.folder_id() == id),
+            FolderFilter::Unfiled => !filed.contains(&a.id()),
+            FolderFilter::Folder(_) => filed.contains(&a.id()),
         })
         .map(|a| {
             (

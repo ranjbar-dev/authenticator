@@ -3,6 +3,7 @@ use super::backup_codes::{self, Session as BackupSession};
 use super::backup_import::{self, Busy as ImportBusy, ImportForm};
 use super::codes;
 use super::export::{self, ExportForm, Picker};
+use super::folders::{self, Manager as FolderManager};
 use super::import_review::ImportReview;
 use super::recovery_editor::{self, Editor as RecoveryEditor};
 use super::{
@@ -80,6 +81,8 @@ pub struct AuthenticatorApp {
     backup_picker: Option<backup_import::Picker>,
     backup_codes: BackupSession,
     recovery_editor: Option<RecoveryEditor>,
+    folders: Option<FolderManager>,
+    folders_focus: bool,
     image: Option<ImageJob>,
     imported: Vec<AccountId>,
     show_imported: bool,
@@ -162,6 +165,8 @@ impl AuthenticatorApp {
             backup_picker: None,
             backup_codes: BackupSession::default(),
             recovery_editor: None,
+            folders: None,
+            folders_focus: false,
             image: None,
             imported: Vec::new(),
             show_imported: false,
@@ -190,6 +195,8 @@ impl AuthenticatorApp {
         }
     }
     pub fn lock(&mut self) {
+        self.folders = None;
+        self.folders_focus = false;
         self.recovery_editor = None;
         self.backup_codes.reset();
         #[cfg(debug_assertions)]
@@ -262,6 +269,9 @@ impl AuthenticatorApp {
         #[cfg(debug_assertions)]
         self.evidence_code_bounds.clear();
         let ctx = root.ctx().clone();
+        if self.state.route != Route::Codes || !self.state.session_active() {
+            self.folders = None;
+        }
         if self.state.route != Route::BackupCodes || !self.state.session_active() {
             self.backup_codes.reset();
             self.recovery_editor = None;
@@ -322,6 +332,27 @@ impl AuthenticatorApp {
             } else if let Some(exported) = self.state.take_exported() {
                 if let Some(form) = &mut self.export_form {
                     form.complete(exported, &ctx);
+                }
+            } else if self
+                .folders
+                .as_ref()
+                .is_some_and(|m| m.editor.as_ref().is_some_and(|e| e.saving))
+            {
+                if outcome.is_ok() {
+                    self.backup_codes.detail.changed();
+                    if let Ok(vault) = self.state.vault() {
+                        let preferences = vault.preferences().codes();
+                        self.state.query = preferences.query.to_string();
+                        self.codes_preferences = Some(preferences);
+                    }
+                    self.preferences_dirty = None;
+                    self.preferences_error = false;
+                    self.status = Some(
+                        "Folder changes saved in your encrypted vault. Your Codes search and view are kept; use the folder selector to browse accounts.",
+                    );
+                }
+                if let Some(manager) = &mut self.folders {
+                    manager.complete(outcome, &ctx);
                 }
             } else if self.recovery_editor.as_ref().is_some_and(|e| e.saving) {
                 if outcome.is_ok() {
@@ -567,6 +598,24 @@ impl AuthenticatorApp {
             self.image = None;
         }
         self.poll_image();
+        if ctx.input(|i| i.key_pressed(egui::Key::Escape))
+            && !self.state.busy()
+            && ctx.memory(|m| m.top_modal_layer().is_none())
+            && !egui::Popup::is_any_open(&ctx)
+            && let Some(manager) = &mut self.folders
+        {
+            if let Some(editor) = &mut manager.editor {
+                if editor.dirty() {
+                    editor.request_cancel();
+                } else {
+                    manager.editor = None;
+                    manager.focus = true;
+                }
+            } else {
+                self.folders = None;
+                self.folders_focus = true;
+            }
+        }
         if self.state.route == Route::BackupCodes
             && self.backup_codes.screen != backup_codes::Screen::List
             && ctx.input(|i| i.key_pressed(egui::Key::Escape))
@@ -698,23 +747,24 @@ impl AuthenticatorApp {
             let holder = if self.review.as_ref().is_some_and(|r|r.focus) { holder.vertical_scroll_offset(0.) } else { holder };
             holder.show(ui,|ui| {
                     ui.set_max_width(theme::CONTENT_MAX_WIDTH.min(ui.available_width()));
-                let codes_home=self.state.session_active() && self.state.route==Route::Codes && self.review.is_none() && self.backup_import.is_none() && self.capture_preparing.is_none() && !self.state.capture_busy();
+                let codes_home=self.state.session_active() && self.state.route==Route::Codes && self.folders.is_none() && self.review.is_none() && self.backup_import.is_none() && self.capture_preparing.is_none() && !self.state.capture_busy();
                 if !codes_home { c::secondary(ui,"AUTHENTICATOR · LOCAL VAULT"); }
                 c::toolbar(ui,|ui| {
-                    c::heading(ui,if self.backup_import.is_some() {"Import backup"} else if self.export_form.is_some() {"Export encrypted backup"} else if self.export_hub {"Export & Import"} else if self.recovery_editor.is_some() {"Backup Codes"} else if self.pending_mutation {self.state.route.title()} else if self.state.importing() {"Saving accounts"} else if self.review.as_ref().is_some_and(|r| !r.mode.is_import()) {"Account"} else if self.state.is_unlocked() && (self.capture_preparing.is_some() || self.state.capture_busy()) {"Screenshot to Scan"} else if self.state.session_active() {self.state.route.title()} else if self.exists {"Unlock vault"} else {"Create vault"},1);
+                    c::heading(ui,if let Some(manager) = &self.folders {manager.title()} else if self.backup_import.is_some() {"Import backup"} else if self.export_form.is_some() {"Export encrypted backup"} else if self.export_hub {"Export & Import"} else if self.recovery_editor.is_some() {"Backup Codes"} else if self.pending_mutation {self.state.route.title()} else if self.state.importing() {"Saving accounts"} else if self.review.as_ref().is_some_and(|r| !r.mode.is_import()) {"Account"} else if self.state.is_unlocked() && (self.capture_preparing.is_some() || self.state.capture_busy()) {"Screenshot to Scan"} else if self.state.session_active() {self.state.route.title()} else if self.exists {"Unlock vault"} else {"Create vault"},1);
                     let help=c::icon_button(ui,c::Icon::Help,"Help for this screen");
                     if help.clicked() {self.dialog=Some(c::Dialog::new("Offline help",help.id)); self.help_open=true;}
                     if self.state.session_active() && c::icon_button(ui,c::Icon::Lock,"Lock vault").clicked() {self.lock();}
                 });
                 if !codes_home { c::secondary(ui,if self.state.session_active() {"Vault unlocked on this device"} else {"Vault locked · credentials hidden"}); }
                 ui.add_space(theme::SMALL_GAP);
-                if self.recovery_editor.is_none() && !self.export_hub && self.backup_import.is_none() && self.export_form.is_none() && self.review.is_none() && self.image.is_none() && self.capture_preparing.is_none() && !self.state.capture_busy() && let Some(route)=c::tabs(ui,self.state.route) { if route != self.state.route { self.backup_codes.reset(); self.focus_form=true; } self.state.navigate(route); self.status=None; }
+                if self.folders.is_none() && self.recovery_editor.is_none() && !self.export_hub && self.backup_import.is_none() && self.export_form.is_none() && self.review.is_none() && self.image.is_none() && self.capture_preparing.is_none() && !self.state.capture_busy() && let Some(route)=c::tabs(ui,self.state.route) { if route != self.state.route { self.backup_codes.reset(); self.focus_form=true; } self.state.navigate(route); self.status=None; }
                 ui.add_space(theme::SMALL_GAP);
                 if let Some(error)=self.state.storage_error() {
                     c::status(ui,"storage-error",&error.to_string(),c::StatusKind::Error);
                     c::secondary(ui,"Close other Authenticator instances and restart. No replacement vault is created here.");
                 } else if self.backup_import.is_some() && self.state.session_active() { self.backup_import_content(ui);
                 } else if self.export_form.is_some() && self.state.session_active() { self.export_content(ui);
+                } else if self.folders.is_some() && self.state.session_active() { self.folder_content(ui);
                 } else if self.pending_mutation { self.unlocked_content(ui);
                 } else if self.recovery_editor.is_some() && self.state.session_active() { self.backup_codes_content(ui);
                 } else if self.state.importing() { self.review_content(ui);
@@ -887,6 +937,10 @@ impl AuthenticatorApp {
         }
     }
     fn unlocked_content(&mut self, ui: &mut egui::Ui) {
+        if self.folders.is_some() {
+            self.folder_content(ui);
+            return;
+        }
         if self.export_hub {
             self.export_hub_content(ui);
             return;
@@ -1032,6 +1086,86 @@ impl AuthenticatorApp {
                 if c::button(ui, "Lock vault", c::ButtonStyle::Primary).clicked() {
                     self.lock();
                 }
+            }
+        }
+    }
+    fn folder_content(&mut self, ui: &mut egui::Ui) {
+        let Some(mut manager) = self.folders.take() else {
+            return;
+        };
+        let saving = manager.editor.as_ref().is_some_and(|e| e.saving);
+        let action = if saving {
+            c::progress(ui, "Saving encrypted folder changes…", None);
+            if c::button(ui, "Cancel and lock", c::ButtonStyle::Secondary).clicked() {
+                folders::Action::Lock
+            } else {
+                folders::Action::None
+            }
+        } else if let Ok(vault) = self.state.vault() {
+            manager.content(ui, vault)
+        } else {
+            c::progress(ui, "Finishing the active encrypted save…", None);
+            folders::Action::None
+        };
+        let mut keep = true;
+        match action {
+            folders::Action::None => {}
+            folders::Action::Lock => {
+                self.lock();
+                keep = false;
+            }
+            folders::Action::Back => {
+                if manager.editor.is_some() {
+                    manager.editor = None;
+                    manager.focus = true;
+                } else {
+                    keep = false;
+                    self.folders_focus = true;
+                }
+                self.status = None;
+                c::clear_sensitive_widget_memory(&self.context);
+            }
+            folders::Action::Save(trash) => self.start_folder_save(&mut manager, trash),
+        }
+        if keep {
+            self.folders = Some(manager);
+        }
+    }
+    fn start_folder_save(&mut self, manager: &mut FolderManager, trash: bool) {
+        let Some(editor) = &mut manager.editor else {
+            return;
+        };
+        let Some(preferences) = self.codes_preferences.clone() else {
+            editor.error = Some(
+                "Current display preferences are unavailable. Cancel and reopen the folder.".into(),
+            );
+            return;
+        };
+        let Some(watch) = self
+            .lifecycle
+            .as_ref()
+            .ok()
+            .filter(|l| l.healthy())
+            .map(|l| l.watch())
+        else {
+            editor.error =
+                Some("Windows lifecycle protection is unavailable. Restart before saving.".into());
+            return;
+        };
+        let repaint = self.context.clone();
+        match self
+            .state
+            .begin_save(editor.intent(trash, preferences), watch, move || {
+                repaint.request_repaint()
+            }) {
+            Ok(()) => {
+                editor.saving = true;
+                editor.error = None;
+                self.status = None;
+                c::clear_sensitive_widget_memory(&self.context);
+            }
+            Err(error) => {
+                editor.error = Some(error.to_string());
             }
         }
     }
@@ -1452,6 +1586,8 @@ impl AuthenticatorApp {
                     self.state.backup_query.zeroize();
                     self.backup_codes.reset();
                     self.recovery_editor = None;
+                    self.folders = None;
+                    self.folders_focus = false;
                     self.imported.clear();
                     self.show_imported = false;
                     self.review = None;
@@ -2277,6 +2413,7 @@ impl AuthenticatorApp {
             || !self.state.is_unlocked()
             || self.review.is_some()
             || self.recovery_editor.is_some()
+            || self.folders.is_some()
             || self.export_form.is_some()
             || self.export_picker.is_some()
             || self.backup_import.is_some()
@@ -2342,18 +2479,7 @@ impl AuthenticatorApp {
         let Some(preferences) = &mut self.codes_preferences else {
             return;
         };
-        let folders = self
-            .state
-            .vault()
-            .map(|vault| {
-                vault
-                    .folders()
-                    .iter()
-                    .filter(|folder| folder.state().deletion == DeletionState::Active)
-                    .map(|folder| (folder.id(), folder.name().to_owned()))
-                    .collect::<Vec<_>>()
-            })
-            .unwrap_or_default();
+        let folders = self.state.vault().map(folders::labels).unwrap_or_default();
         let mut choices = vec![
             (FolderFilter::All, "All accounts"),
             (FolderFilter::Unfiled, "Unfiled"),
@@ -2425,6 +2551,29 @@ impl AuthenticatorApp {
         }
         if changed {
             self.preferences_changed();
+        }
+        // The compact trigger can truncate; keep the chosen named folder's full
+        // identity visible and wrapped, including duplicate/reserved-name IDs.
+        if let Some(FolderFilter::Folder(id)) = self.codes_preferences.as_ref().map(|p| p.folder)
+            && let Some((_, caption)) = folders.iter().find(|(folder, _)| *folder == id)
+        {
+            c::body(ui, caption);
+        }
+        let manage = ui
+            .push_id("folders-manage", |ui| {
+                c::button(ui, "Manage folders", c::ButtonStyle::Secondary)
+            })
+            .inner;
+        if self.folders_focus {
+            manage.request_focus();
+            manage.scroll_to_me(Some(egui::Align::Center));
+            self.folders_focus = false;
+        }
+        if manage.clicked() {
+            self.folders = Some(FolderManager::new());
+            self.status = None;
+            self.focus_form = false;
+            c::clear_sensitive_widget_memory(&self.context);
         }
         if self.preferences_dirty.is_some() {
             c::secondary(ui, "Saving display preferences locally…");
@@ -2782,6 +2931,9 @@ mod backup_import_tests;
 #[cfg(all(test, windows))]
 #[path = "export_tests.rs"]
 mod export_tests;
+#[cfg(all(test, windows))]
+#[path = "folder_tests.rs"]
+mod folder_tests;
 #[cfg(all(test, windows))]
 #[path = "recovery_detail_tests.rs"]
 mod recovery_detail_tests;

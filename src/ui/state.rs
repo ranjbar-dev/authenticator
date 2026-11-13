@@ -54,6 +54,18 @@ pub enum ScanAlternative {
 
 /// Explicit operation intent. An edit can only update its selected stable ID.
 pub enum SaveIntent {
+    FolderSave {
+        target: crate::domain::folder_edit::FolderTarget,
+        name: Zeroizing<String>,
+        color: crate::domain::records::FolderColor,
+        selected: std::collections::BTreeSet<AccountId>,
+        duplicate_consent: bool,
+        preferences: CodesPreferences,
+    },
+    FolderTrash {
+        target: crate::domain::folder_edit::FolderTarget,
+        preferences: CodesPreferences,
+    },
     RecoveryCode {
         target: crate::domain::recovery_code::CodeTarget,
         change: crate::domain::recovery_code::CodeChange,
@@ -86,6 +98,19 @@ pub enum SaveIntent {
 impl SaveIntent {
     fn validate(&self) -> Result<(), AppError> {
         match self {
+            Self::FolderSave {
+                name,
+                selected,
+                preferences,
+                ..
+            } => {
+                crate::domain::folder_edit::normalized_name(name)?;
+                preferences.validate()?;
+                if selected.len() > Vault::MAX_RECORDS {
+                    return Err(AppError::FolderLimit);
+                }
+            }
+            Self::FolderTrash { preferences, .. } => preferences.validate()?,
             Self::RecoverySave { values, .. } => {
                 if values.is_empty() || values.len() > Vault::MAX_RECORDS {
                     return Err(AppError::InvalidBackupCodes);
@@ -130,6 +155,40 @@ impl SaveIntent {
         at: Timestamp,
     ) -> Result<Vec<AccountId>, AppError> {
         match self {
+            Self::FolderSave {
+                target,
+                name,
+                color,
+                selected,
+                duplicate_consent,
+                preferences,
+            } => {
+                vault.save_folder(
+                    &target,
+                    crate::domain::folder_edit::FolderUpdate {
+                        name: &name,
+                        color,
+                        selected: &selected,
+                        duplicate_consent,
+                    },
+                    at,
+                )?;
+                vault.set_codes_preferences(preferences, at)?;
+                Ok(Vec::new())
+            }
+            Self::FolderTrash {
+                target,
+                mut preferences,
+            } => {
+                vault.trash_folder(&target, at)?;
+                if target.folder().is_some_and(|f| {
+                    preferences.folder == crate::domain::records::FolderFilter::Folder(f.id())
+                }) {
+                    preferences.folder = crate::domain::records::FolderFilter::All;
+                }
+                vault.set_codes_preferences(preferences, at)?;
+                Ok(Vec::new())
+            }
             Self::RecoveryCode { target, change } => {
                 vault.change_recovery_code(&target, change, at)?;
                 Ok(Vec::new())
