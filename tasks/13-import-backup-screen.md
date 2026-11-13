@@ -1,6 +1,6 @@
 # Task 13: Easy backup import, preview and conflict decisions
 
-Status: in_progress - corrected source approved; native UI/visual and Task12-to-13 GUI restore gates open
+Status: in_progress - native full-graph Merge/Replace reviewed; remaining conflict/matrix/environment gates open
 Priority: Required for complete v1
 Dependencies: 04, 05, 11, 12
 Requirements: FR-6.2/4; PRD §§7, 11–12
@@ -47,6 +47,8 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 5. Keep at most one child agent active; children must not spawn children, commit, push, change PRD scope or silently skip requirements. Return changed paths, checks, findings and remaining risks to the parent.
 
 ## Evidence
+
+Current native21 follow-up restored12's full record graph into a fresh independently keyed vault, verified the current code with independent HMAC, rejected a wrong phrase without ciphertext mutation, preserved a deliberate local used-state change with Keep current and no duplicates, and checked Replace Cancel/Confirm. Display adoption was explicit; local security/startup retained. [Journey](../docs/qa/task21/remaining-native-workflows.md), [independent review](../docs/qa/task21/remaining-native-independent-review.md). Other conflict choices, every state/scale and environment-only checks remain open; no byte-identical-vault claim is made.
 
 Corrected source approved by distinct review_13 and focused re-review. Implementation
 boxes above record source/engine/framework evidence; full screen/native acceptance

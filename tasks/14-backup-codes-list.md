@@ -1,6 +1,6 @@
 # Task 14: Backup Codes tab and account selection
 
-Status: in_progress - list/selector/editor/detail source reviewed; native and restore integration gates open
+Status: in_progress - native list/selector/detail and restore counts reviewed; remaining full QA gates open
 Priority: Required for complete v1
 Dependencies: 04, 05, 10–13
 Requirements: FR-3.1; PRD §§5.3, 7
@@ -47,6 +47,8 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 5. Keep at most one child agent active; children must not spawn children, commit, push, change PRD scope or silently skip requirements. Return changed paths, checks, findings and remaining risks to the parent.
 
 ## Evidence
+
+Current native21 used the actual empty list/account selector, created a real set and verified available/used counts after Lock/unlock, account Trash/restore and full-graph backup restoration. [Journey and frames](../docs/qa/task21/remaining-native-workflows.md), [independent review](../docs/qa/task21/remaining-native-independent-review.md). This supplies previously unavailable native positive-path evidence; all-state/large-list/environment checks are not newly certified.
 
 Corrected list/selector/typed metadata handoff source approved by distinct review_14
 and focused re-review. Account selection and exact-ID routes are implemented;

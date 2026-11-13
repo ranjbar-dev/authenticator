@@ -1,6 +1,6 @@
 # Task 12: Easy encrypted backup export screen
 
-Status: in_progress - corrected source approved; native UI/visual and Task13 GUI restore gates open
+Status: in_progress - native full-graph export/restore reviewed; remaining visual/environment gates open
 Priority: Required for complete v1
 Dependencies: 04, 05, 11
 Requirements: FR-6.1/3; PRD §§5.4, 7
@@ -47,6 +47,8 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 5. Keep at most one child agent active; children must not spawn children, commit, push, change PRD scope or silently skip requirements. Return changed paths, checks, findings and remaining risks to the parent.
 
 ## Evidence
+
+Current native21 follow-up completed Save selection, passphrase mismatch/no output, encrypted full-graph export and fresh native13 restore. Known plaintext sentinels were absent and source ciphertext unchanged. [Journey](../docs/qa/task21/remaining-native-workflows.md), [independent source/18-frame review](../docs/qa/task21/remaining-native-independent-review.md). This closes the previously missing positive GUI recovery evidence; full per-page/state/scale coverage and environment gates are not inferred. Earlier launch failures remain historical below.
 
 Corrected source approved by distinct review_12/focused re-review after fixing
 P2 export of stale debounced display preferences. Implementation boxes above

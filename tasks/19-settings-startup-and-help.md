@@ -1,6 +1,6 @@
 # Task 19: Settings, auto-start and contextual offline help
 
-Status: in_progress - corrected source/full suite validated; native/offline/logon gates open
+Status: in_progress - native counts/preferences/help reviewed; offline/logon/package/full QA gates open
 Priority: Required for complete v1
 Dependencies: 05, 10, 12–18
 Requirements: FR-7.2–4, FR-8; PRD §§5.4, 7, 12
@@ -48,6 +48,8 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 5. Keep at most one child agent active; children must not spawn children, commit, push, change PRD scope or silently skip requirements. Return changed paths, checks, findings and remaining risks to the parent.
 
 ## Evidence
+
+Current native21 verified real Settings counts across recovery used/Undo, Trash/restore, full-graph Merge and Replace, and explicit imported-display/retained-security/startup choices. A missing navigation glyph was replaced with plain English and verified in a fresh compiled native help view. [Journey](../docs/qa/task21/remaining-native-workflows.md), [independent review](../docs/qa/task21/remaining-native-independent-review.md). The example path could not register startup and no production Run/logon operation was attempted. Offline-machine, OS delivery and remaining help/state/scale checks stay open.
 
 Corrected source approved after distinct review_19 and focused re-review. The checked implementation/core items describe source, real encrypted store/reopen/import and isolated Windows registry adapter evidence. Screen/native acceptance remains open; no production Run registration or actual logon was tested.
 

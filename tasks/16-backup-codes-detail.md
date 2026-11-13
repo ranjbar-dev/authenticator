@@ -1,6 +1,6 @@
 # Task 16: Reveal/copy, used-state and delete recovery codes
 
-Status: in_progress - detail source approved; native/clipboard and Task18 restore/permanent-delete gates open
+Status: in_progress - native reveal/copy/used/Undo/restore/delete reviewed; remaining full QA gates open
 Priority: Required for complete v1
 Dependencies: 14, 15
 Requirements: FR-3.2–4; PRD §§7–9
@@ -47,6 +47,8 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 5. Keep at most one child agent active; children must not spawn children, commit, push, change PRD scope or silently skip requirements. Return changed paths, checks, findings and remaining risks to the parent.
 
 ## Evidence
+
+Current native21 exercised pointer Reveal/Conceal/Copy, keyboard Copy, Mark used/Undo/Mark used, revealed-state Ctrl+L cleanup, association-preserving account restoration and single-code permanent deletion after Cancel. Copy did not change used state. Full native encrypted restore/merge/replace preserved the reviewed used/Trash states. [Journey and340/600/960 frames](../docs/qa/task21/remaining-native-workflows.md), [independent review](../docs/qa/task21/remaining-native-independent-review.md). Shared clipboard availability/cleanup correction is separately approved in task10; every environment/editor/matrix branch is not inferred.
 
 Limited source approval by distinct review_16; no material defect found in reviewed
 source/isolated checks. Source boxes above do not close native or Task18 gates.

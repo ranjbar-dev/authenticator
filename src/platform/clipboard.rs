@@ -657,12 +657,21 @@ mod native {
     #[cfg(test)]
     static UNAVAILABLE_MARKER_READS: std::sync::atomic::AtomicUsize =
         std::sync::atomic::AtomicUsize::new(0);
+    #[cfg(test)]
+    fn consume_unavailable_read(counter: &std::sync::atomic::AtomicUsize) -> bool {
+        let mut remaining = counter.load(Ordering::SeqCst);
+        while let Some(next) = remaining.checked_sub(1) {
+            match counter.compare_exchange_weak(remaining, next, Ordering::SeqCst, Ordering::SeqCst)
+            {
+                Ok(_) => return true,
+                Err(current) => remaining = current,
+            }
+        }
+        false
+    }
     fn marker_handle(format: u32) -> HANDLE {
         #[cfg(test)]
-        if UNAVAILABLE_MARKER_READS
-            .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |n| n.checked_sub(1))
-            .is_ok()
-        {
+        if consume_unavailable_read(&UNAVAILABLE_MARKER_READS) {
             return std::ptr::null_mut();
         }
         unsafe { GetClipboardData(format) }
@@ -1178,10 +1187,7 @@ mod native {
         std::sync::atomic::AtomicUsize::new(0);
     fn unicode_handle() -> HANDLE {
         #[cfg(test)]
-        if UNAVAILABLE_UNICODE_READS
-            .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |n| n.checked_sub(1))
-            .is_ok()
-        {
+        if consume_unavailable_read(&UNAVAILABLE_UNICODE_READS) {
             return std::ptr::null_mut();
         }
         unsafe { GetClipboardData(UNICODE) }

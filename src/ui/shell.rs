@@ -3168,7 +3168,7 @@ impl AuthenticatorApp {
         };
         let mut confirm = false;
         let close = dialog.show(ctx, |ui, first| {
-            c::body(ui, "Move this account to Trash? Its recovery codes and folder memberships are retained. Open Settings → Trash to restore it. Records deleted separately stay in Trash.");
+            c::body(ui, "Move this account to Trash? Its recovery codes and folder memberships are retained. Open Trash in Settings to restore it. Records deleted separately stay in Trash.");
             let cancel = c::button(ui, "Keep account", c::ButtonStyle::Secondary);
             if first { cancel.request_focus(); }
             if c::button(ui, "Move to Trash", c::ButtonStyle::Primary).clicked() { confirm = true; }

@@ -1,6 +1,6 @@
 # Task 15: Add/edit backup codes from text and file
 
-Status: in_progress - corrected editor source approved; native input/picker/visual/restart gates open
+Status: in_progress - native file/duplicate-preview/save and round-trip reviewed; remaining full QA gates open
 Priority: Required for complete v1
 Dependencies: 09, 14
 Requirements: FR-3.1/3/4, FR-2.5; PRD §§7–9, 12
@@ -47,6 +47,8 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 5. Keep at most one child agent active; children must not spawn children, commit, push, change PRD scope or silently skip requirements. Return changed paths, checks, findings and remaining risks to the parent.
 
 ## Evidence
+
+Current native21 selected generated UTF-8 BOM/CRLF input through the real Open dialog; preview reported two unique codes, one blank and one duplicate, explicit consent saved the normalized set, and used history survived actual fresh native backup restore. [Journey](../docs/qa/task21/remaining-native-workflows.md), [independent review](../docs/qa/task21/remaining-native-independent-review.md). Existing adversarial/editor tests remain their own evidence; this does not assert every native edit/error/restart/scale branch was repeated.
 
 Corrected source/Context behavior approved by distinct review_15 and focused
 re-review. Implementation boxes record source/engine/framework evidence; actual

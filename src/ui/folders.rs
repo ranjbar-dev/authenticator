@@ -208,7 +208,7 @@ impl Manager {
         }
         c::secondary(
             ui,
-            "Folders in Trash have no automatic expiry. Open Settings → Trash to restore or permanently delete them.",
+            "Folders in Trash have no automatic expiry. Open Trash in Settings to restore or permanently delete them.",
         );
         Action::None
     }
@@ -571,7 +571,7 @@ impl Editor {
         if let Some((kind, mut dialog)) = self.dialog.take() {
             let mut consent = false;
             let close = dialog.show(ui.ctx(), |ui, first| {
-                c::body(ui, match kind { Confirmation::Discard => "Discard unsaved folder edits? Stored folders and accounts stay unchanged.", Confirmation::Trash => "Move this folder to Trash? All accounts, credential settings, backup codes and used history are preserved. Its links remain encrypted with no automatic expiry. If selected in Codes, the view returns to All accounts. Unsaved folder edits are discarded. Restore this folder from Settings → Trash." });
+                c::body(ui, match kind { Confirmation::Discard => "Discard unsaved folder edits? Stored folders and accounts stay unchanged.", Confirmation::Trash => "Move this folder to Trash? All accounts, credential settings, backup codes and used history are preserved. Its links remain encrypted with no automatic expiry. If selected in Codes, the view returns to All accounts. Unsaved folder edits are discarded. Restore this folder from Trash in Settings." });
                 let cancel = c::button(ui, "Keep editing", c::ButtonStyle::Secondary);
                 if first { cancel.request_focus(); }
                 if c::button(ui, match kind { Confirmation::Discard => "Discard edits", Confirmation::Trash => "Move folder to Trash" }, c::ButtonStyle::Primary).clicked() { consent = true; }

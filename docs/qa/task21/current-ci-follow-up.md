@@ -35,3 +35,28 @@ library205 passed,1 failed,4 direct helpers,887.99seconds. The added mask
 regression passed. Both failed run records remain retained; neither is a current
 full-suite pass. The single failure is reproducible on hosted Windows and needs
 correction rather than another unchanged CI rerun.
+
+After independently reviewed clipboard/Trash corrections, parent committed/pushed
+`2af1ce4f17ddb456e3a65469ff8b40f3c0b0d2c0`.
+[Run43435087798](https://github.com/ranjbar-dev/authenticator/actions/runs/43435087798)
+completed **failure** at13:38:03UTC: Format passed, Lint failed, Tests/app build
+were skipped. The newer hosted compiler reports deprecated
+`AtomicUsize::fetch_update` in two test-only clipboard fault counters,
+`clipboard.rs:663` and1182, with warnings denied. Local lint had passed.
+This is neither a test-suite result nor an observed production behavior failure.
+Use an equivalent MSRV-compatible compare/exchange counter after the current
+native21 implementation phase, then independently review and rerun hosted checks.
+
+During exclusive native work, parent queried public API metadata using Node
+`fetch` and fetched filtered logs through `execFile` with `windowsHide:true`;
+no terminal activation, UI input or credential output occurred. No failed run is
+relabeled successful.
+
+Parent sequential compatibility correction after native21 implementer FINAL:
+both test-only `fetch_update` calls now use one checked compare/exchange loop,
+retaining SeqCst success/failure ordering and never decrementing zero. No runtime
+clipboard behavior changed. The first local relink failed LNK1108 with C:0free;
+after verified public-cache relocation and D: subprocess TEMP/TMP, clipboard6
+ordinary cases passed4.43s with its direct helper exercised by the parent.
+See environment-recovery.md. Independent source review and a new hosted run are
+still required; the failed/skipped hosted run remains unchanged history.

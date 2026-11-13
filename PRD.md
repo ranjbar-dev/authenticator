@@ -256,6 +256,17 @@ Plan generation does not constitute implementation. Initial task status is todo,
 
 ### Current implementation checkpoint (13 November 2026)
 
+Current Task21 follow-up completed actual recovery-code file review/copy/used/Undo,
+folders, association-preserving account restore, single/all permanent deletion,
+full-graph encrypted export, fresh Merge/HMAC verification, conflict-preserving
+Merge and Replace Cancel/Confirm. Display preference adoption was explicit;
+security/startup stayed local. All18 sanitized frames were independently reviewed;
+minor guidance/identity captions were repaired. Evidence:
+docs/qa/task21/remaining-native-workflows.md and remaining-native-independent-review.md.
+Reference pixels, complete state/scale matrices, disconnected-machine execution,
+physical OS/DPI/accessibility/logon and packaging/final gates remain unverified;
+these native successes do not constitute full-project completion.
+
 Current Task10 follow-up repaired native advertised-but-unavailable clipboard
 reads using bounded ownership-preserving confirmation retries and guarded cleanup
 of rejected published copies. Independent re-review passed six clipboard cases,

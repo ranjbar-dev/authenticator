@@ -1,6 +1,6 @@
 # Task 18: Trash, restoration and permanent deletion
 
-Status: in_progress - independently reviewed source/full suite validated; native gates open
+Status: in_progress - native restore/single-permanent/Empty paths reviewed; remaining full QA gates open
 Priority: Required for complete v1
 Dependencies: 10–17
 Requirements: FR-1.5, FR-5; PRD §§5.4, 8–9, 12
@@ -48,6 +48,8 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 5. Keep at most one child agent active; children must not spawn children, commit, push, change PRD scope or silently skip requirements. Return changed paths, checks, findings and remaining risks to the parent.
 
 ## Evidence
+
+Current native21 verified account Cancel ciphertext preservation, restore with two memberships/set/two codes/used history, folder and individual-code Trash, single permanent-delete and Empty Cancel/Confirm, plus original Trash dates/states restored by native backup import. [Journey](../docs/qa/task21/remaining-native-workflows.md), [independent review](../docs/qa/task21/remaining-native-independent-review.md). Parent fixed a timing-sensitive pending-preference test precondition without changing runtime behavior; the exact correction independently passed, but new hosted full-suite evidence remains required. [CI history](../docs/qa/task21/current-ci-follow-up.md).
 
 Limited source approval by distinct review_18, with no material findings. Implementation checks above describe source/domain/worker/Context evidence, not native screen acceptance. Exact paths, commands, ownership/cleanup and limits: [author evidence](../docs/qa/task18/implementation-evidence.md) and [independent review](../docs/qa/task18/independent-review.md).
 

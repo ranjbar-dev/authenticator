@@ -1,6 +1,6 @@
 # Task 21: Full offline workflow, accessibility and visual QA
 
-Status: in_progress - resumed native QA; prior stopped-turn checkpoint preserved
+Status: in_progress - native recovery/full-graph journeys independently reviewed; environment/full-matrix gates open
 Priority: Required for complete v1
 Dependencies: 01–20
 Requirements: PRD §§2, 6–7, 11; all UI checklists
@@ -34,6 +34,8 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 5. Keep at most one child agent active; children must not spawn children, commit, push, change PRD scope or silently skip requirements. Return changed paths, checks, findings and remaining risks to the parent.
 
 ## Evidence
+
+Current remaining native journeys and all18 sanitized frames received distinct review with no material security/visual finding. [Author evidence](../docs/qa/task21/remaining-native-workflows.md), [independent review](../docs/qa/task21/remaining-native-independent-review.md). Two minor presentation findings were corrected and independently rechecked: accurate global-ID caption and no duplicate Account ID. [Parent checks](../docs/qa/task21/parent-review-fixes.md). Test-only compiler compatibility is corrected locally; new hosted full checks are required. No unavailable environment/state/scale check is marked passed and Task21 remains incomplete.
 
 Current source mask repair and two new locked/error frames received distinct [independent review](../docs/qa/task21/current-independent-review.md), with one exact painted-shape/frame-lifetime regression passing. This resolves the QA-only revealed-account-field capture gap. Prior [native milestones](../docs/qa/task21/resume-implementation.md) record screenshot import/HMAC/Copy feedback and one-account export/fresh Merge restore as attributed author evidence. Complete recovery/folder/Trash, clipboard lifecycle, full-graph/Replace and all-page/environment gates remain open; this is not full21 acceptance.
 

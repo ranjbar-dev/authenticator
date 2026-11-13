@@ -721,7 +721,7 @@ fn final_review(
             c::secondary(
                 ui,
                 &format!(
-                    "Same-ID collision {} · name collision {} · cross-type ID collision {} · exact content reused {}",
+                    "Same-ID collision {} · name collision {} · ID already in current vault {} · exact content reused {}",
                     resolution.local_folder_id_collision,
                     resolution.local_folder_name_collision,
                     resolution.local_global_id_collision,

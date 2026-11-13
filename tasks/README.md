@@ -19,16 +19,16 @@ No app implementation has been started by generating this plan. Every initial st
 | 09 | [Manual creation and account editing](09-manual-account-editor.md) | done |
 | 10 | [Complete 2FA list, search, sort, views and copy](10-codes-list-and-clipboard.md) | in_progress; repaired clipboard/native paths approved, hardware/full QA open |
 | 11 | [Authenticated encrypted export/import engine](11-portable-backup-engine.md) | done |
-| 12 | [Easy encrypted backup export screen](12-export-backup-screen.md) | in_progress; source approved, native/13 GUI gates open |
-| 13 | [Easy backup import, preview and conflict decisions](13-import-backup-screen.md) | in_progress; corrected source approved, native/12-to-13 GUI gates open |
-| 14 | [Backup Codes tab and account selection](14-backup-codes-list.md) | in_progress; list/selector/editor/detail source reviewed, native/restore integration open |
-| 15 | [Add/edit backup codes from text and file](15-backup-codes-editor.md) | in_progress; corrected editor source approved, native gates open |
-| 16 | [Reveal/copy, used-state and delete recovery codes](16-backup-codes-detail.md) | in_progress; source approved, native/clipboard/18 gates open |
-| 17 | [Folder management and filtered navigation](17-folders-and-organization.md) | in_progress; corrected source/hosted checks validated, native/18 gates open |
-| 18 | [Trash, restoration and permanent deletion](18-trash-and-restoration.md) | in_progress; reviewed source/full suite validated, native gates open |
-| 19 | [Settings, auto-start and contextual offline help](19-settings-startup-and-help.md) | in_progress; corrected source/full suite validated, native/offline/logon gates open |
+| 12 | [Easy encrypted backup export screen](12-export-backup-screen.md) | in_progress; native full-graph export/restore reviewed, remaining QA open |
+| 13 | [Easy backup import, preview and conflict decisions](13-import-backup-screen.md) | in_progress; native full-graph Merge/Replace reviewed, remaining QA open |
+| 14 | [Backup Codes tab and account selection](14-backup-codes-list.md) | in_progress; native list/selector/detail/restore reviewed, remaining QA open |
+| 15 | [Add/edit backup codes from text and file](15-backup-codes-editor.md) | in_progress; native file/preview/save/round-trip reviewed, remaining QA open |
+| 16 | [Reveal/copy, used-state and delete recovery codes](16-backup-codes-detail.md) | in_progress; native recovery/clipboard/Trash paths reviewed, remaining QA open |
+| 17 | [Folder management and filtered navigation](17-folders-and-organization.md) | in_progress; native membership/filter/Trash/backup reviewed, remaining QA open |
+| 18 | [Trash, restoration and permanent deletion](18-trash-and-restoration.md) | in_progress; native restore/permanent/Empty reviewed, remaining QA open |
+| 19 | [Settings, auto-start and contextual offline help](19-settings-startup-and-help.md) | in_progress; native counts/preferences/help reviewed, offline/logon/package QA open |
 | 20 | [Failure resilience and independent security audit](20-reliability-and-security-review.md) | in_progress; source audit/full suite approved, native/offline gates open |
-| 21 | [Full offline workflow, accessibility and visual QA](21-complete-ui-and-workflow-qa.md) | in_progress; user stopped Computer Use, checkpoint preserved |
+| 21 | [Full offline workflow, accessibility and visual QA](21-complete-ui-and-workflow-qa.md) | in_progress; native/full-graph journeys independently reviewed, environment/matrix QA open |
 | 22 | [Reference-format discovery and truthful compatibility](22-reference-migration-discovery.md) | todo |
 | 23 | [Windows packaging, clean-install recovery and documentation](23-windows-packaging-and-user-docs.md) | todo |
 | 24 | [Final completeness audit, PRD reconciliation and main push](24-final-prd-audit-and-main-push.md) | todo |
@@ -71,6 +71,12 @@ The UI consistency finding-patterns, values, decisions and planning guidance inf
 Codex orchestration was checked against the installed CLI help/features and [official subagent documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents). No fixed model is forced.
 
 ## Checkpoint
+
+**Accepted21 scoped checkpoint:** implementer and distinct reviewer are FINAL; both minor review findings are corrected/rechecked. Native recovery/folders/Trash/full-graph export/freshMerge/KeepCurrent/Replace evidence and all18 safe frames are independently reviewed. Parent test-only CAS compatibility fix passed clipboard6 and strictlint; affected TrashContext1passed13.85s. Cache recovery and D: subprocess scratch documented. Integrating/committing this scoped work, then sole22 discovery child (independent of unavailable21 environment gates), distinct review,23 packaging and final audit only with honest preceding outcomes. No all-state/scale/physical/offline/OS delivery/Narrator/logon completion claim. Last pushed source2af1ce4 had lint-only CI failure; new source must obtain fresh hosted checks.
+
+**Current21 review:** `complete_native21` is FINAL; sole `review_native21` is independently checking all18 sanitized frames, source copy repairs and parent test-only compiler compatibility change. Full native recovery/folder/Trash/full-graph export/freshMerge/conflictKeepCurrent/Replace Cancel+Confirm outcomes are in docs/qa/task21/remaining-native-workflows.md. Native destination5336/rootqm4ORE remains owned, may auto-lock; no default data touched. C:filled during subsequent link; all35127public source-cache files/778635483bytes were SHA256-verified and preserved permanently onD with originalCpath junction (environment-recovery.md). Use subprocess TEMP/TMP onfreshD target scratch. Parent clipboard6 tests and strictlint passed; independent clipboard6+Settings1 passed. Reviewer confirms minor inaccurate 'cross-type' label for globalID occupancy in backup_import.rs724; parent must fix wording after reviewFINAL, obtain focused recheck, then commit/push and newCI. Last pushed2af1ce4; CI43435087798 failed only deprecated testcounterAPI lint, now fixed locally with SeqCst checked CAS. Then proceed22discovery/23packaging;24closure stays gated by genuine open checks.
+
+**Active next work:** sole implementation child `complete_native21` is exercising remaining feasible recovery-code/folder/Trash/full-graph backup GUI journeys with disposable data and sanitized size evidence. Clipboard correction + deterministic Trash test are committed/pushed as `2af1ce4`; prior reviewer is FINAL. Parent owns current hosted CI/status only and stays source-idle during child implementation/exclusive native work. After21 FINAL obtain distinct UI/security review, integrate, then22 discovery and23 packaging. Hardware/offline-only gates remain open; no all24-complete claim.
 
 **Latest integration:** `resume10_clipboard` and distinct `review_clipboard_current` are FINAL; no child is active. Material clipboard availability/rejected-copy repair and parent deterministic Trash test correction independently approved, no material finding. Parent inspected source, both safe component images and exact native proof116/125→cleared117/126. Independent6clipboard+1Trash+release checks pass; parentfmt/strictClippy/diff pass. Qualify cleanup descriptor authority to confirmation failures with a nonzero candidate sequence; zero-sequence OS access remains an explicit limit. Preparing coherent commit/push and new hosted checks, then sole remaining-native21 child.22 discovery/23 packaging remain required and may proceed independently when environment-only acceptance is unavailable. Task24 final closure is gated; no full completion claim.
 

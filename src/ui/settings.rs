@@ -176,7 +176,7 @@ pub fn help(ui: &mut egui::Ui, topic: HelpTopic) {
             );
             c::secondary(
                 ui,
-                "Keyboard: Tab and Shift+Tab move focus. Enter or Space activates buttons. Ctrl+L locks the vault. Escape closes dialogs or cancels active work and locks. Settings → Export & Import creates or restores a local encrypted backup.",
+                "Keyboard: Tab and Shift+Tab move focus. Enter or Space activates buttons. Ctrl+L locks the vault. Escape closes dialogs or cancels active work and locks. Export & Import in Settings creates or restores a local encrypted backup.",
             );
             c::secondary(
                 ui,
@@ -208,13 +208,13 @@ pub fn help(ui: &mut egui::Ui, topic: HelpTopic) {
             );
             c::secondary(
                 ui,
-                "Editing keeps exact retained used history; omitted codes move to Trash. Detail has separate Reveal/Conceal, Copy, Mark used/available and one-step Undo actions. Copy never marks a code used. Available and used totals include active codes under active accounts and sets. Restore deleted records from Settings → Trash.",
+                "Editing keeps exact retained used history; omitted codes move to Trash. Detail has separate Reveal/Conceal, Copy, Mark used/available and one-step Undo actions. Copy never marks a code used. Available and used totals include active codes under active accounts and sets. Restore deleted records from Trash in Settings.",
             );
         }
         HelpTopic::Backups => {
             c::body(
                 ui,
-                "Settings → Export & Import → Export encrypted backup saves all accounts, OTP parameters, folders, recovery-code used states, Trash, metadata and preferences. Choose a local destination and a separate backup passphrase with confirmation. Encryption is mandatory. Existing files require explicit overwrite approval.",
+                "Export encrypted backup in Settings, under Export & Import, saves all accounts, OTP parameters, folders, recovery-code used states, Trash, metadata and preferences. Choose a local destination and a separate backup passphrase with confirmation. Encryption is mandatory. Existing files require explicit overwrite approval.",
             );
             c::secondary(
                 ui,
@@ -232,7 +232,7 @@ pub fn help(ui: &mut egui::Ui, topic: HelpTopic) {
             );
             c::secondary(
                 ui,
-                "If a service rejects a code, check Windows Settings → Time & language → Date & time. Confirm the date, time and time zone, then try a fresh code. Authenticator does not change the system clock, contact a time server or compensate with a hidden offset. A large clock error can make valid credentials produce rejected codes.",
+                "If a service rejects a code, check Date & time under Time & language in Windows Settings. Confirm the date, time and time zone, then try a fresh code. Authenticator does not change the system clock, contact a time server or compensate with a hidden offset. A large clock error can make valid credentials produce rejected codes.",
             );
         }
         HelpTopic::Trash => {

@@ -331,8 +331,9 @@ fn identity(ui: &mut egui::Ui, vault: &Vault, id: ItemId) {
             .find(|s| s.id() == id)
             .map(BackupCodeSet::account_id),
     };
-    if let Some(account) = account_id.and_then(|id| vault.accounts().iter().find(|a| a.id() == id))
-    {
+    let displayed_account =
+        account_id.and_then(|id| vault.accounts().iter().find(|a| a.id() == id));
+    if let Some(account) = displayed_account {
         backup_codes::identity(ui, account, true);
     }
     match id {
@@ -372,7 +373,9 @@ fn identity(ui: &mut egui::Ui, vault: &Vault, id: ItemId) {
         }
         _ => {}
     }
-    c::secondary(ui, &format!("{} · ID: {}", id.kind(), id.uuid()));
+    if !matches!(id, ItemId::Account(_)) || displayed_account.is_none() {
+        c::secondary(ui, &format!("{} · ID: {}", id.kind(), id.uuid()));
+    }
 }
 fn counts(c: Counts) -> String {
     format!(

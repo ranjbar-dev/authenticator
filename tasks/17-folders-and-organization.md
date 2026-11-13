@@ -1,6 +1,6 @@
 # Task 17: Folder management and filtered navigation
 
-Status: in_progress - corrected source and hosted checks validated; native/18 integration gates open
+Status: in_progress - native membership/filter/Trash/backup paths reviewed; remaining full QA gates open
 Priority: Required for complete v1
 Dependencies: 10, 14–16
 Requirements: FR-4; PRD §§5.1, 7, 9, 12
@@ -47,6 +47,8 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 5. Keep at most one child agent active; children must not spawn children, commit, push, change PRD scope or silently skip requirements. Return changed paths, checks, findings and remaining risks to the parent.
 
 ## Evidence
+
+Current native21 created Purple/Green folders for the same account through real pointer and keyboard selection, checked Unfiled/selected-folder results, preserved memberships during account restore, removed a trashed folder without deleting the account, and restored the full folder/membership graph through native backup import. [Journey](../docs/qa/task21/remaining-native-workflows.md), [independent review](../docs/qa/task21/remaining-native-independent-review.md). Native positive/18 cross-integration is now evidenced; all matrix/pagination/environment checks remain separately open.
 
 Source/Context checks above are implementation evidence, not native or complete acceptance. Implementation and exact commands: docs/qa/task17/implementation-evidence.md. Distinct review17 and focused re-review: docs/qa/task17/independent-review.md; P2 forged-caption ambiguity corrected with quoted/escaped names and permanent red/green regression; no new finding in focused scope. Domain5, labels2, focusedUI3, oldCI16scroll1, previewfixture1, strictClippy/fmt/diff/prodbinlibownexamplebuild passed. Required new portable-folder roundtrip independently did not complete within bounded runs; fullsuite/group INCOMPLETE. No engine cause established. Native2normal launches failed GetCursorPos0x80070005 before ownresources; no pixels/realinput claimed. Own PID30688 persisted after termination request; exact identity and cleanup limits in evidence, do not act on reusedPID. Workflow30min bound keeps all checks and timeoutfailure. Coherent incomplete sourcecheckpoint commit follows in tasks/README.md; new hosted evidence pending. All earlier manual gates remain open. Continue18-24 without marking17done.
 
