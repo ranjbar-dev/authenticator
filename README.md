@@ -2,7 +2,7 @@
 
 Windows-first desktop authenticator written in Rust. Work is tracked in [tasks/README.md](tasks/README.md).
 
-This is the task 01 foundation, **not a usable authenticator**. It stores no user data. Credential creation, encryption, QR capture and recovery are pending sequential tasks. Test with disposable accounts only once those features exist.
+Implementation is in progress. The repository now includes an encrypted local vault, TOTP and QR entry, portable encrypted backups, recovery-code management and folders. Remaining features and unverified native/manual acceptance checks are tracked in [the task checkpoint](tasks/README.md). Use disposable test data while required acceptance remains open; no production-readiness claim is made.
 
 ## Development on Windows
 

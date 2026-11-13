@@ -6,6 +6,7 @@ use super::export::{self, ExportForm, Picker};
 use super::folders::{self, Manager as FolderManager};
 use super::import_review::ImportReview;
 use super::recovery_editor::{self, Editor as RecoveryEditor};
+use super::trash::{self, Session as TrashSession};
 use super::{
     components as c,
     state::{AppState, CaptureEvent, Route, SaveIntent, ScanAlternative, VaultAction, Workflow},
@@ -83,6 +84,8 @@ pub struct AuthenticatorApp {
     recovery_editor: Option<RecoveryEditor>,
     folders: Option<FolderManager>,
     folders_focus: bool,
+    trash: Option<TrashSession>,
+    trash_focus: bool,
     image: Option<ImageJob>,
     imported: Vec<AccountId>,
     show_imported: bool,
@@ -167,6 +170,8 @@ impl AuthenticatorApp {
             recovery_editor: None,
             folders: None,
             folders_focus: false,
+            trash: None,
+            trash_focus: false,
             image: None,
             imported: Vec::new(),
             show_imported: false,
@@ -197,6 +202,8 @@ impl AuthenticatorApp {
     pub fn lock(&mut self) {
         self.folders = None;
         self.folders_focus = false;
+        self.trash = None;
+        self.trash_focus = false;
         self.recovery_editor = None;
         self.backup_codes.reset();
         #[cfg(debug_assertions)]
@@ -272,6 +279,9 @@ impl AuthenticatorApp {
         if self.state.route != Route::Codes || !self.state.session_active() {
             self.folders = None;
         }
+        if self.state.route != Route::Settings || !self.state.session_active() {
+            self.trash = None;
+        }
         if self.state.route != Route::BackupCodes || !self.state.session_active() {
             self.backup_codes.reset();
             self.recovery_editor = None;
@@ -285,6 +295,23 @@ impl AuthenticatorApp {
             self.clipboard.clear();
             self.clipboard_feedback = None;
             self.clear_form();
+            // Discard unsubmitted presentation before flushing display intent.
+            // Otherwise one of its autosave guards can strand advance_close.
+            // Active native pickers/capture and busy writes retain their gates
+            // below and take the existing cancellation/Lock path.
+            self.review = None;
+            self.recovery_editor = None;
+            self.folders = None;
+            self.folders_focus = false;
+            self.trash = None;
+            self.trash_focus = false;
+            self.delete = None;
+            self.backup_codes.reset();
+            self.dialog = None;
+            self.help_open = false;
+            self.export_form = None;
+            self.backup_import = None;
+            self.export_hub = false;
             let can_flush = (self.preferences_dirty.is_some() || self.pending_preferences)
                 && self.review.is_none()
                 && self.export_form.is_none()
@@ -327,11 +354,31 @@ impl AuthenticatorApp {
         if let Some(outcome) = self.state.poll(now) {
             self.ordered_ids = None;
             self.backup_codes.invalidate();
-            if let Some(imported) = self.state.take_backup_result() {
+            if let Some(reviewed) = self.state.take_trash_review() {
+                if let Some(session) = &mut self.trash {
+                    session.prepared(reviewed);
+                }
+            } else if let Some(imported) = self.state.take_backup_result() {
                 self.complete_backup_import(imported);
             } else if let Some(exported) = self.state.take_exported() {
                 if let Some(form) = &mut self.export_form {
                     form.complete(exported, &ctx);
+                }
+            } else if self.trash.as_ref().is_some_and(|session| session.saving) {
+                if outcome.is_ok() {
+                    self.backup_codes.reset();
+                    self.pending_recovery_code = None;
+                    if let Ok(vault) = self.state.vault() {
+                        let preferences = vault.preferences().codes();
+                        self.state.query = preferences.query.to_string();
+                        self.codes_preferences = Some(preferences);
+                    }
+                    self.preferences_dirty = None;
+                    self.preferences_error = false;
+                    self.status = Some("Trash changes saved in your encrypted vault.");
+                }
+                if let Some(session) = &mut self.trash {
+                    session.complete(outcome, &ctx);
                 }
             } else if self
                 .folders
@@ -460,7 +507,10 @@ impl AuthenticatorApp {
                 self.operation_cancelled = false;
             }
         }
-        if (self.export_hub || self.export_form.is_some() || self.backup_import.is_some())
+        if (self.export_hub
+            || self.export_form.is_some()
+            || self.backup_import.is_some()
+            || self.trash.is_some())
             && !self.state.session_active()
         {
             self.lock();
@@ -598,6 +648,18 @@ impl AuthenticatorApp {
             self.image = None;
         }
         self.poll_image();
+        if ctx.input(|i| i.key_pressed(egui::Key::Escape))
+            && !self.state.busy()
+            && ctx.memory(|m| m.top_modal_layer().is_none())
+            && !egui::Popup::is_any_open(&ctx)
+            && self
+                .trash
+                .as_ref()
+                .is_some_and(|session| !session.has_dialog())
+        {
+            self.trash = None;
+            self.trash_focus = true;
+        }
         if ctx.input(|i| i.key_pressed(egui::Key::Escape))
             && !self.state.busy()
             && ctx.memory(|m| m.top_modal_layer().is_none())
@@ -750,14 +812,14 @@ impl AuthenticatorApp {
                 let codes_home=self.state.session_active() && self.state.route==Route::Codes && self.folders.is_none() && self.review.is_none() && self.backup_import.is_none() && self.capture_preparing.is_none() && !self.state.capture_busy();
                 if !codes_home { c::secondary(ui,"AUTHENTICATOR · LOCAL VAULT"); }
                 c::toolbar(ui,|ui| {
-                    c::heading(ui,if let Some(manager) = &self.folders {manager.title()} else if self.backup_import.is_some() {"Import backup"} else if self.export_form.is_some() {"Export encrypted backup"} else if self.export_hub {"Export & Import"} else if self.recovery_editor.is_some() {"Backup Codes"} else if self.pending_mutation {self.state.route.title()} else if self.state.importing() {"Saving accounts"} else if self.review.as_ref().is_some_and(|r| !r.mode.is_import()) {"Account"} else if self.state.is_unlocked() && (self.capture_preparing.is_some() || self.state.capture_busy()) {"Screenshot to Scan"} else if self.state.session_active() {self.state.route.title()} else if self.exists {"Unlock vault"} else {"Create vault"},1);
+                    c::heading(ui,if self.trash.is_some() {"Trash"} else if let Some(manager) = &self.folders {manager.title()} else if self.backup_import.is_some() {"Import backup"} else if self.export_form.is_some() {"Export encrypted backup"} else if self.export_hub {"Export & Import"} else if self.recovery_editor.is_some() {"Backup Codes"} else if self.pending_mutation {self.state.route.title()} else if self.state.importing() {"Saving accounts"} else if self.review.as_ref().is_some_and(|r| !r.mode.is_import()) {"Account"} else if self.state.is_unlocked() && (self.capture_preparing.is_some() || self.state.capture_busy()) {"Screenshot to Scan"} else if self.state.session_active() {self.state.route.title()} else if self.exists {"Unlock vault"} else {"Create vault"},1);
                     let help=c::icon_button(ui,c::Icon::Help,"Help for this screen");
                     if help.clicked() {self.dialog=Some(c::Dialog::new("Offline help",help.id)); self.help_open=true;}
                     if self.state.session_active() && c::icon_button(ui,c::Icon::Lock,"Lock vault").clicked() {self.lock();}
                 });
                 if !codes_home { c::secondary(ui,if self.state.session_active() {"Vault unlocked on this device"} else {"Vault locked · credentials hidden"}); }
                 ui.add_space(theme::SMALL_GAP);
-                if self.folders.is_none() && self.recovery_editor.is_none() && !self.export_hub && self.backup_import.is_none() && self.export_form.is_none() && self.review.is_none() && self.image.is_none() && self.capture_preparing.is_none() && !self.state.capture_busy() && let Some(route)=c::tabs(ui,self.state.route) { if route != self.state.route { self.backup_codes.reset(); self.focus_form=true; } self.state.navigate(route); self.status=None; }
+                if self.trash.is_none() && self.folders.is_none() && self.recovery_editor.is_none() && !self.export_hub && self.backup_import.is_none() && self.export_form.is_none() && self.review.is_none() && self.image.is_none() && self.capture_preparing.is_none() && !self.state.capture_busy() && let Some(route)=c::tabs(ui,self.state.route) { if route != self.state.route { self.backup_codes.reset(); self.focus_form=true; } self.state.navigate(route); self.status=None; }
                 ui.add_space(theme::SMALL_GAP);
                 if let Some(error)=self.state.storage_error() {
                     c::status(ui,"storage-error",&error.to_string(),c::StatusKind::Error);
@@ -765,6 +827,7 @@ impl AuthenticatorApp {
                 } else if self.backup_import.is_some() && self.state.session_active() { self.backup_import_content(ui);
                 } else if self.export_form.is_some() && self.state.session_active() { self.export_content(ui);
                 } else if self.folders.is_some() && self.state.session_active() { self.folder_content(ui);
+                } else if self.trash.is_some() && self.state.session_active() { self.trash_content(ui);
                 } else if self.pending_mutation { self.unlocked_content(ui);
                 } else if self.recovery_editor.is_some() && self.state.session_active() { self.backup_codes_content(ui);
                 } else if self.state.importing() { self.review_content(ui);
@@ -941,6 +1004,10 @@ impl AuthenticatorApp {
             self.folder_content(ui);
             return;
         }
+        if self.trash.is_some() {
+            self.trash_content(ui);
+            return;
+        }
         if self.export_hub {
             self.export_hub_content(ui);
             return;
@@ -1031,6 +1098,31 @@ impl AuthenticatorApp {
                     self.export_focus = true;
                     self.status = None;
                 }
+                let trash_count = self
+                    .state
+                    .vault()
+                    .map(|v| crate::domain::trash::items(v).len())
+                    .unwrap_or(0);
+                let trash = ui
+                    .push_id("settings-trash", |ui| {
+                        c::button(
+                            ui,
+                            &format!("Trash · {trash_count} item(s)"),
+                            c::ButtonStyle::Secondary,
+                        )
+                    })
+                    .inner;
+                if self.trash_focus {
+                    trash.request_focus();
+                    trash.scroll_to_me(Some(egui::Align::Center));
+                    self.trash_focus = false;
+                }
+                if trash.clicked() {
+                    self.trash = Some(TrashSession::default());
+                    self.export_focus = false;
+                    self.status = None;
+                    c::clear_sensitive_widget_memory(&self.context);
+                }
                 c::card(ui, |ui| {
                     c::icon_tile(ui, c::Icon::Settings);
                     c::heading(ui, "Local vault", 2);
@@ -1087,6 +1179,119 @@ impl AuthenticatorApp {
                     self.lock();
                 }
             }
+        }
+    }
+    fn trash_content(&mut self, ui: &mut egui::Ui) {
+        let Some(mut session) = self.trash.take() else {
+            return;
+        };
+        let action = if session.saving || session.preparing {
+            c::progress(
+                ui,
+                if session.preparing {
+                    "Reviewing Trash contents…"
+                } else {
+                    "Saving encrypted Trash changes…"
+                },
+                None,
+            );
+            let cancel = c::button(ui, "Cancel and lock", c::ButtonStyle::Secondary);
+            if session.busy_focus {
+                cancel.request_focus();
+                cancel.scroll_to_me(Some(egui::Align::Min));
+                session.busy_focus = false;
+            }
+            if cancel.clicked() {
+                trash::Action::Lock
+            } else {
+                trash::Action::None
+            }
+        } else if let Ok(vault) = self.state.vault() {
+            session.content(ui, vault)
+        } else {
+            c::progress(ui, "Finishing the active encrypted save…", None);
+            trash::Action::None
+        };
+        let mut keep = true;
+        match action {
+            trash::Action::None => {}
+            trash::Action::Back => {
+                keep = false;
+                self.trash_focus = true;
+                self.status = None;
+                c::clear_sensitive_widget_memory(&self.context);
+            }
+            trash::Action::Lock => {
+                self.lock();
+                keep = false;
+            }
+            trash::Action::Prepare(operation, opener) => {
+                let watch = self
+                    .lifecycle
+                    .as_ref()
+                    .ok()
+                    .filter(|l| l.healthy())
+                    .map(|l| l.watch());
+                if let Some(watch) = watch {
+                    let repaint = self.context.clone();
+                    match self
+                        .state
+                        .begin_trash_review(operation, watch, move || repaint.request_repaint())
+                    {
+                        Ok(()) => {
+                            session.start_review(opener);
+                            self.status = None;
+                        }
+                        Err(e) => {
+                            session.error = Some(e.to_string());
+                            session.focus = true;
+                        }
+                    }
+                } else {
+                    session.error = Some("Windows lifecycle protection is unavailable. Restart before reviewing Trash.".into());
+                }
+            }
+            trash::Action::Save(review, duplicate_consent) => {
+                if let Some(preferences) = self.codes_preferences.clone() {
+                    let watch = self
+                        .lifecycle
+                        .as_ref()
+                        .ok()
+                        .filter(|l| l.healthy())
+                        .map(|l| l.watch());
+                    if let Some(watch) = watch {
+                        let repaint = self.context.clone();
+                        match self.state.begin_save(
+                            SaveIntent::TrashChange {
+                                review,
+                                duplicate_consent,
+                                preferences,
+                            },
+                            watch,
+                            move || repaint.request_repaint(),
+                        ) {
+                            Ok(()) => {
+                                session.saving = true;
+                                session.busy_focus = true;
+                                session.error = None;
+                                self.status = None;
+                                c::clear_sensitive_widget_memory(&self.context);
+                            }
+                            Err(e) => session.fail(e.to_string()),
+                        }
+                    } else {
+                        session.fail(
+                            "Windows lifecycle protection is unavailable. Restart before saving."
+                                .into(),
+                        );
+                    }
+                } else {
+                    session.fail("Current display preferences are unavailable. Return to Settings and reopen Trash.".into());
+                }
+            }
+        }
+        if keep {
+            self.trash = Some(session);
         }
     }
     fn folder_content(&mut self, ui: &mut egui::Ui) {
@@ -1588,6 +1793,8 @@ impl AuthenticatorApp {
                     self.recovery_editor = None;
                     self.folders = None;
                     self.folders_focus = false;
+                    self.trash = None;
+                    self.trash_focus = false;
                     self.imported.clear();
                     self.show_imported = false;
                     self.review = None;
@@ -2414,6 +2621,7 @@ impl AuthenticatorApp {
             || self.review.is_some()
             || self.recovery_editor.is_some()
             || self.folders.is_some()
+            || self.trash.is_some()
             || self.export_form.is_some()
             || self.export_picker.is_some()
             || self.backup_import.is_some()
@@ -2637,7 +2845,7 @@ impl AuthenticatorApp {
         };
         let mut confirm = false;
         let close = dialog.show(ctx, |ui, first| {
-            c::body(ui, "Move this account to Trash? Its recovery codes and folder memberships are retained. You can restore it from Trash when the Trash screen is available.");
+            c::body(ui, "Move this account to Trash? Its recovery codes and folder memberships are retained. Open Settings → Trash to restore it. Records deleted separately stay in Trash.");
             let cancel = c::button(ui, "Keep account", c::ButtonStyle::Secondary);
             if first { cancel.request_focus(); }
             if c::button(ui, "Move to Trash", c::ButtonStyle::Primary).clicked() { confirm = true; }
@@ -2940,6 +3148,9 @@ mod recovery_detail_tests;
 #[cfg(all(test, windows))]
 #[path = "recovery_editor_tests.rs"]
 mod recovery_editor_tests;
+#[cfg(all(test, windows))]
+#[path = "trash_tests.rs"]
+mod trash_tests;
 #[cfg(all(test, windows))]
 mod capture_privacy_tests {
     use super::*;

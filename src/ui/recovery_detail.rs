@@ -128,7 +128,7 @@ impl Detail {
         if active.is_empty() {
             c::body(
                 ui,
-                "No active codes in this set. Edit the set to add service-issued codes. Codes in Trash remain encrypted.",
+                "No active codes in this set. Restore deleted codes from Settings → Trash, or edit the set to add service-issued codes.",
             );
         }
         let pages = active.len().div_ceil(super::backup_codes::PAGE_SIZE).max(1);
@@ -324,7 +324,7 @@ impl Detail {
         {
             let mut consent = false;
             let close = dialog.show(ui.ctx(), |ui, first| {
-                    c::body(ui, "Move this code to Trash? Its value and used history stay encrypted. The account and other codes stay active. Restoration and permanent deletion belong to the Trash screen, which is not available in this build yet.");
+                    c::body(ui, "Move this code to Trash? Its value and used history stay encrypted. The account and other codes stay active. Open Settings → Trash to restore or permanently delete this code. Restore any deleted account or set first.");
                     let keep = c::button(ui, "Keep code", c::ButtonStyle::Secondary);
                     if first { keep.request_focus(); }
                     consent = c::button(ui, "Move code to Trash", c::ButtonStyle::Primary).clicked();

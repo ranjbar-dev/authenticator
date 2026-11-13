@@ -1,6 +1,6 @@
 # Task 18: Trash, restoration and permanent deletion
 
-Status: todo
+Status: in_progress - independently reviewed source approved; hosted full/native gates open
 Priority: Required for complete v1
 Dependencies: 10–17
 Requirements: FR-1.5, FR-5; PRD §§5.4, 8–9, 12
@@ -11,11 +11,11 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Implementation
 
-- [ ] Implement confirmed soft deletion and a Trash screen with service/account, deletion time and the explicit no-automatic-expiry policy.
-- [ ] Provide real Restore, Permanently delete and Empty trash buttons/context actions; do not require gestures.
-- [ ] Restore seed, metadata, folder relationships where folders still exist and associated backup-code states together. Preview meaningful collisions, preserve current entries and report atomic failure.
-- [ ] Require confirmation before permanent deletion of one/all entries. Remove logical references and encrypted records; explain that filesystem/SSD/old-backup secure erasure is not guaranteed.
-- [ ] Include trash in backup round-trips; ordinary active account/backup lists exclude it.
+- [x] Implement confirmed soft deletion and a Trash screen with service/account, deletion time and the explicit no-automatic-expiry policy.
+- [x] Provide real Restore, Permanently delete and Empty trash buttons/context actions; do not require gestures.
+- [x] Restore seed, metadata, folder relationships where folders still exist and associated backup-code states together. Preview meaningful collisions, preserve current entries and report atomic failure.
+- [x] Require confirmation before permanent deletion of one/all entries. Remove logical references and encrypted records; explain that filesystem/SSD/old-backup secure erasure is not guaranteed.
+- [x] Include trash in backup round-trips; ordinary active account/backup lists exclude it.
 
 ## Screen checklist
 
@@ -34,9 +34,9 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 
 ## Acceptance and verification
 
-- [ ] Delete/restore a disposable entry without changing TOTP settings or recovery-code used states.
-- [ ] Conflict/failure/cancel paths preserve existing active and trashed entries.
-- [ ] No expiry occurs silently; single/all permanent deletion requires explicit confirmation.
+- [x] Delete/restore a disposable entry without changing TOTP settings or recovery-code used states.
+- [x] Conflict/failure/cancel paths preserve existing active and trashed entries.
+- [x] No expiry occurs silently; single/all permanent deletion requires explicit confirmation.
 - [ ] Restart/import/restore counts and references stay consistent; real keyboard/pointer actions and visual review pass.
 
 ## Handoff and completion
@@ -49,5 +49,9 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 
 ## Evidence
 
-Not started. On execution record changed files, test commands/results, sanitized UI evidence paths where applicable, independent reviewer result and commit reference. If blocked, retain incomplete status and record exact cause, attempted remedies and resumption steps.
+Limited source approval by distinct review_18, with no material findings. Implementation checks above describe source/domain/worker/Context evidence, not native screen acceptance. Exact paths, commands, ownership/cleanup and limits: [author evidence](../docs/qa/task18/implementation-evidence.md) and [independent review](../docs/qa/task18/independent-review.md).
+
+All20 new library cases passed individually; independently18 focused cases passed across11 bounded invocations, including all five own-Trash kinds, preserved OTP/used history, parent-first/collision consent, cascade union/final-code set disclosure, equal-time stale checks, failed writes/retry/latest preferences, held preparation/admitted Lock and shared Close. Production/lib/own-example build, strict Clippy, formatting and diff checks pass. The author full196-library/all-target run is INCOMPLETE; retained process identity/cause limitations are recorded, not diagnosed by focused success. Current-source hosted suite remains required.
+
+Native screenshots/input:0. Normal own preview launch failed GetCursorPos0x80070005 before resources; no bypass or unchanged retry. Real pointer/keyboard, raster quality, physical DPI/Narrator/offline/hardware and earlier interactive clipboard gates remain OPEN. Screen checklist remains unchecked for native acceptance. Coherent source checkpoint commit and hosted evidence follow in tasks/README.md; continue independent19 without declaring18done.
 

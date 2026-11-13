@@ -1,6 +1,6 @@
 # Task 17: Folder management and filtered navigation
 
-Status: in_progress - corrected source reviewed; required portable/full-suite/native gates open
+Status: in_progress - corrected source and hosted checks validated; native/18 integration gates open
 Priority: Required for complete v1
 Dependencies: 10, 14–16
 Requirements: FR-4; PRD §§5.1, 7, 9, 12
@@ -34,7 +34,7 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 ## Acceptance and verification
 
 - [x] Create/rename/recolor folders, place an account in multiple folders and verify All/Unfiled behavior.
-- [ ] Restart and export/import preserve folders/memberships without duplicated records or orphan references.
+- [x] Restart and export/import preserve folders/memberships without duplicated records or orphan references.
 - [x] Deleting a folder leaves all accounts and backup codes intact.
 - [ ] Pointer clicks, keyboard search/selection and compact layouts pass independent review.
 
@@ -50,3 +50,8 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 
 Source/Context checks above are implementation evidence, not native or complete acceptance. Implementation and exact commands: docs/qa/task17/implementation-evidence.md. Distinct review17 and focused re-review: docs/qa/task17/independent-review.md; P2 forged-caption ambiguity corrected with quoted/escaped names and permanent red/green regression; no new finding in focused scope. Domain5, labels2, focusedUI3, oldCI16scroll1, previewfixture1, strictClippy/fmt/diff/prodbinlibownexamplebuild passed. Required new portable-folder roundtrip independently did not complete within bounded runs; fullsuite/group INCOMPLETE. No engine cause established. Native2normal launches failed GetCursorPos0x80070005 before ownresources; no pixels/realinput claimed. Own PID30688 persisted after termination request; exact identity and cleanup limits in evidence, do not act on reusedPID. Workflow30min bound keeps all checks and timeoutfailure. Coherent incomplete sourcecheckpoint commit follows in tasks/README.md; new hosted evidence pending. All earlier manual gates remain open. Continue18-24 without marking17done.
 
+
+
+## Hosted Windows follow-up
+
+[CI43370232096](https://github.com/ranjbar-dev/authenticator/actions/runs/43370232096) **SUCCESS** for committed/pushed `dba745a7295a016fb35556ad28338a466707d12c`, completed2026-11-13T05:21:56UTC. Format/Lint/Tests/BuildWindowsapp allpass. Exact testlog confirms `folders_backup_repeat_import_retains_ids_trash_membership_states_and_conflict_policy ... ok`05:19:48UTC and priorCI16 `detail_later_code_and_scrolled_list_focus_are_visible_after_save_undo_and_trash ... ok`05:20:23UTC. Library172passed/0failed/4directignored subprocess-helper entries,539.40s;17 exampletests also passed (189aggregate excluding duplicate subprocessresult). Required folder portable and fullsuite source-validation gates are now evidenced on the separate hostedWindows platform. Earlier local runs remain INCOMPLETE and local Wait/Suspended causeUNKNOWN; no sourcefix/explanation is attributed to platform difference. Native/manual, realclipboard/hardware/offline/accessibility and18actualrestore/permanentcrossgates remainOPEN.

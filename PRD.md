@@ -1,6 +1,6 @@
 # Product Requirements Document: Authenticator
 
-**Status:** Implementation in progress; tasks01–04 accepted; task05 implementation reviewed with hardware/integration QA open; task06 accepted; tasks07–24 pending
+**Status:** Implementation in progress; tasks01–04,06,09,11 accepted; other source through18 independently reviewed with explicit native/manual gates open;19–24 pending
 **Basis:** Direct inspection of the running Windows app “Authenticator App · 2FA” on 12 November 2026.  
 **Purpose:** Define Authenticator, a Rust desktop app matching the inspected reference UI, with screenshot-based 2FA import as its defining feature and encrypted local-only storage.  
 **Repository:** https://github.com/ranjbar-dev/authenticator  
@@ -290,3 +290,8 @@ Task16 adds concealed/paginated recovery detail, separate intentional Reveal/Cop
 
 
 Task17 implements folder manager/editor, sixcolors, searchable/sortable bounded account selections, stableID All/Unfiled/named navigation and atomic encrypted organization preferences without schema change. Exact trimmed duplicate names includingTrash require consent; case variants staydistinct. Raw256UTF8bytes checkedbeforetrim. Hidden trashed-account links and samepairIDs are retained; own-linkTrash affects visibility; folderremoval preserves allaccount/recovery records and normalizes selectedfilterAll. Quoted/escaped name captions prevent generated-ID suffix imitation. Distinct review/re-review cleared that P2; focused domain/UI/reopen/label/regression/static/build checks pass. **Task17 remains inprogress:** required new portable-folder integration and complete suite did not finish bounded execution, causeunknown, native input/raster denied. Task16 hostedCI failed a deep-scroll test; deterministic Contexttiming correction independentlypasses but newhostedevidencepending. No mandatory scope is narrowed;18-24 and all previous manualgates remain required. See docs/qa/task17/.
+
+
+Task17 hostedfollow-up: CI43370232096 atdba745a passed all172library+17exampletests/format/lint/productionbuild, including requiredportable-folderrepeat and prior16deepListregression. Source-validation gates nowevidenced onhostedWindows; earlierlocalincompleteexecution/unknowncause are retained aslimits, not productfixclaims.17remainsinprogress fornative/manualand18integration; no mandatoryrequirement waived.
+
+Task18 implements metadata-only Trash for all five own-deleted record kinds, parent-first restoration, explicit matching-record consent, separately confirmed permanent deletion/Empty and deduplicated cascade counts including final-code owning-set removal. Preserved OTP settings, used history, surviving folder relationships, failed-write atomicity, encrypted portable restoration, equal-time stale guards and latest preferences/Close behavior were independently tested. Review preparation uses the sole repository worker; Lock discards late results, while an already admitted encrypted write may complete. Distinct review_18 gave limited source approval with no material findings. Task18 remains in progress: full local suite is incomplete and current-source hosted/full native input/raster acceptance is pending. No expiry or secure-erasure guarantee, and no earlier hardware/offline/clipboard gate is waived. See docs/qa/task18/. Continue19–24.

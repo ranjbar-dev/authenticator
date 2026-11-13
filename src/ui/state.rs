@@ -54,6 +54,11 @@ pub enum ScanAlternative {
 
 /// Explicit operation intent. An edit can only update its selected stable ID.
 pub enum SaveIntent {
+    TrashChange {
+        review: crate::domain::trash::Review,
+        duplicate_consent: bool,
+        preferences: CodesPreferences,
+    },
     FolderSave {
         target: crate::domain::folder_edit::FolderTarget,
         name: Zeroizing<String>,
@@ -98,6 +103,7 @@ pub enum SaveIntent {
 impl SaveIntent {
     fn validate(&self) -> Result<(), AppError> {
         match self {
+            Self::TrashChange { preferences, .. } => preferences.validate()?,
             Self::FolderSave {
                 name,
                 selected,
@@ -155,6 +161,23 @@ impl SaveIntent {
         at: Timestamp,
     ) -> Result<Vec<AccountId>, AppError> {
         match self {
+            Self::TrashChange {
+                review,
+                duplicate_consent,
+                mut preferences,
+            } => {
+                review.apply(vault, duplicate_consent, at)?;
+                if let crate::domain::records::FolderFilter::Folder(id) = preferences.folder
+                    && !vault
+                        .folders()
+                        .iter()
+                        .any(|f| f.id() == id && f.state().deletion == DeletionState::Active)
+                {
+                    preferences.folder = crate::domain::records::FolderFilter::All;
+                }
+                vault.set_codes_preferences(preferences, at)?;
+                Ok(Vec::new())
+            }
             Self::FolderSave {
                 target,
                 name,
@@ -293,9 +316,12 @@ pub struct AppState {
     imported: Option<Vec<AccountId>>,
     exported: Option<Result<(), crate::backup::BackupError>>,
     backup_result: Option<BackupResult>,
+    trash_review: Option<Result<crate::domain::trash::Review, AppError>>,
     image_busy: bool,
     #[cfg(test)]
     next_save_gate: Option<Arc<crate::storage::test_gate::CommitGate>>,
+    #[cfg(test)]
+    next_trash_review_gate: Option<Arc<crate::storage::test_gate::CommitGate>>,
 }
 struct Completion {
     repository: VaultStore,
@@ -303,6 +329,7 @@ struct Completion {
     imported: Vec<AccountId>,
     exported: Option<Result<(), crate::backup::BackupError>>,
     backup_result: Option<BackupResult>,
+    trash_review: Option<Result<crate::domain::trash::Review, AppError>>,
 }
 /// Typed native-backup handoff, separate from QR/account import.
 pub enum BackupRequest {
@@ -328,6 +355,7 @@ fn finish_publication(cancel: &OperationCancellation, result: &Mutex<Option<Comp
     {
         completion.repository.lock();
         completion.backup_result = None;
+        completion.trash_review = None;
     }
 }
 struct Worker {
@@ -351,6 +379,7 @@ impl Worker {
         if let Some(result) = slot.as_mut() {
             result.repository.lock();
             result.backup_result = None;
+            result.trash_review = None;
         }
     }
 }
@@ -395,9 +424,12 @@ impl AppState {
             imported: None,
             exported: None,
             backup_result: None,
+            trash_review: None,
             image_busy: false,
             #[cfg(test)]
             next_save_gate: None,
+            #[cfg(test)]
+            next_trash_review_gate: None,
         }
     }
     pub fn is_unlocked(&self) -> bool {
@@ -421,6 +453,9 @@ impl AppState {
     }
     pub fn take_backup_result(&mut self) -> Option<BackupResult> {
         self.backup_result.take()
+    }
+    pub fn take_trash_review(&mut self) -> Option<Result<crate::domain::trash::Review, AppError>> {
+        self.trash_review.take()
     }
     pub fn idle_deadline(&self) -> Result<Instant, AppError> {
         Ok(self.last_activity
@@ -479,6 +514,7 @@ impl AppState {
         self.imported = None;
         self.exported = None;
         self.backup_result = None;
+        self.trash_review = None;
         self.image_busy = false;
         self.capture_region = None;
         self.scan_alternative = None;
@@ -657,6 +693,7 @@ impl AppState {
                 imported: Vec::new(),
                 exported: None,
                 backup_result: None,
+                trash_review: None,
             });
             drop(slot);
             finish_publication(&cancel, &result);
@@ -726,6 +763,75 @@ impl AppState {
                 imported,
                 exported: None,
                 backup_result: None,
+                trash_review: None,
+            });
+            drop(slot);
+            finish_publication(&cancel, &result);
+            repaint();
+        });
+        Ok(())
+    }
+    /// Read-only review preparation transfers the sole owner just like writes.
+    /// Full-graph hashing stays off Root; cancellation can discard its result
+    /// immediately even though the bounded hash itself runs to completion.
+    pub fn begin_trash_review(
+        &mut self,
+        operation: crate::domain::trash::Operation,
+        watch: LifecycleWatch,
+        repaint: impl Fn() + Send + 'static,
+    ) -> Result<(), AppError> {
+        if self.busy() || self.capture_busy() || self.image_busy {
+            return Err(AppError::VaultBusy);
+        }
+        if !self.is_unlocked() {
+            return Err(AppError::VaultLocked);
+        }
+        let deadline = self.idle_deadline()?;
+        let cancel =
+            OperationCancellation::guarded(move || !watch.changed() && Instant::now() < deadline);
+        let mut repository = self.repository.take().ok_or(AppError::VaultBusy)??;
+        #[cfg(test)]
+        let review_gate = self.next_trash_review_gate.take();
+        let result = Arc::new(Mutex::new(None));
+        self.worker = Some(Worker {
+            generation: self.generation,
+            cancel: cancel.clone(),
+            result: result.clone(),
+            importing: true,
+            deadline: Some(deadline),
+        });
+        std::thread::spawn(move || {
+            let reviewed = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                if cancel.is_cancelled() {
+                    return Err(AppError::VaultLocked);
+                }
+                #[cfg(test)]
+                if let Some(gate) = review_gate {
+                    gate.hold_admitted_action();
+                }
+                if cancel.is_cancelled() {
+                    return Err(AppError::VaultLocked);
+                }
+                crate::domain::trash::Review::new(repository.vault()?, operation)
+            }))
+            .unwrap_or_else(|_| {
+                repository.lock();
+                Err(AppError::StorageUnavailable)
+            });
+            let mut slot = result.lock().unwrap_or_else(|e| e.into_inner());
+            let reviewed = if cancel.is_cancelled() {
+                repository.lock();
+                None
+            } else {
+                Some(reviewed)
+            };
+            *slot = Some(Completion {
+                repository,
+                outcome: Ok(()),
+                imported: Vec::new(),
+                exported: None,
+                backup_result: None,
+                trash_review: reviewed,
             });
             drop(slot);
             finish_publication(&cancel, &result);
@@ -780,6 +886,7 @@ impl AppState {
                 imported: Vec::new(),
                 exported: Some(exported),
                 backup_result: None,
+                trash_review: None,
             });
             drop(slot);
             finish_publication(&cancel, &result);
@@ -855,6 +962,7 @@ impl AppState {
                 imported: Vec::new(),
                 exported: None,
                 backup_result,
+                trash_review: None,
             });
             drop(slot);
             finish_publication(&cancel, &result);
@@ -868,6 +976,13 @@ impl AppState {
         gate: Arc<crate::storage::test_gate::CommitGate>,
     ) {
         self.next_save_gate = Some(gate);
+    }
+    #[cfg(test)]
+    pub(crate) fn hold_next_trash_review(
+        &mut self,
+        gate: Arc<crate::storage::test_gate::CommitGate>,
+    ) {
+        self.next_trash_review_gate = Some(gate);
     }
     pub fn poll(&mut self, now: Instant) -> Option<Result<(), AppError>> {
         let worker = self.worker.as_ref()?;
@@ -888,6 +1003,7 @@ impl AppState {
         if current {
             self.exported = done.exported;
             self.backup_result = done.backup_result;
+            self.trash_review = done.trash_review;
         }
         self.repository = Some(Ok(done.repository));
         self.worker = None;
@@ -1190,6 +1306,7 @@ mod tests {
             imported: Vec::new(),
             exported: None,
             backup_result: None,
+            trash_review: None,
         })));
         let mut state = AppState::new(Err(AppError::VaultLocked));
         state.repository = None;

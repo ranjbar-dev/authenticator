@@ -13,6 +13,7 @@ mod recovery_editor;
 pub mod shell;
 pub mod state;
 pub mod theme;
+pub mod trash;
 
 use crate::platform::capture;
 use eframe::egui::{self, Color32};

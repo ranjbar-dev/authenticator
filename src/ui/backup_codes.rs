@@ -385,7 +385,7 @@ pub fn content(
                         c::secondary(
                             ui,
                             if metadata.trashed {
-                                "This account already has a set in Trash. It must be restored or permanently removed before adding another set."
+                                "This account already has a set in Trash. Open Settings → Trash to restore or permanently remove that set before adding another."
                             } else {
                                 "Code values are concealed until you choose Reveal."
                             },

@@ -590,7 +590,7 @@ impl Editor {
                     Confirmation::Discard => "Discard these unsaved edits? Stored backup codes stay unchanged.",
                     Confirmation::File => "A valid selected file replaces this unsaved input and opens a new preview. Cancel or a failed read keeps your input. The source file is never copied or changed.",
                     Confirmation::Replace => "Apply the previewed changes to this account's existing set? Exact retained and re-added codes keep used history. Removed codes move to Trash; no records are permanently deleted.",
-                    Confirmation::Delete => "Move this entire backup-code set to Trash? Code values and used history remain encrypted with no automatic expiry. The 2FA account stays active. Restoration belongs to the Trash screen, which is not available in this build yet.",
+                    Confirmation::Delete => "Move this entire backup-code set to Trash? Code values and used history remain encrypted with no automatic expiry. The 2FA account stays active. Open Settings → Trash to restore or permanently delete this set. Codes deleted separately stay in Trash.",
                 });
                 let cancel = c::button(ui, "Keep editing", c::ButtonStyle::Secondary);
                 if first { cancel.request_focus(); }
