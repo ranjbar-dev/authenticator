@@ -79,10 +79,14 @@ collision warning exist. Both unique and dense 10,000-account snapshots support
 explicit Replace; conflict pairs are never enumerated or silently truncated.
 Exact folder-name equality is unchanged by this credential policy.
 
-`plan(options)` consumes the preview and builds/validates a concrete final
+`plan(options)` borrows the immutable preview and builds/validates a concrete final
 candidate; `candidate_for_review` and `summary` let the UI present final changes
 before explicit apply. Decisions cannot be forged into or applied to another
-snapshot. A plan is consumed by apply. Apply rechecks the local encrypted revision
+snapshot. A preview may build another plan after Back/changed choices without
+retaining its passphrase or authenticating the file again. Only the opaque source
+path/ciphertext digest are cloned along with candidate construction; no store or
+DEK is cloned. Candidate construction runs on the sole store worker in Task13.
+A plan is consumed by apply. Apply rechecks the local encrypted revision
 and exact current source file bytes, then calls the existing sole-owner atomic
 local transaction. Changing either file invalidates the plan; applying a second
 old plan after a commit fails. The candidate never depends on rereading a changed

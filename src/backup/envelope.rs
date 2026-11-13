@@ -49,7 +49,10 @@ pub(super) fn encrypt_plain(
     Ok(header)
 }
 pub(super) fn parse(bytes: &[u8]) -> Result<KdfParameters> {
-    if !(HEADER + 16..=MAX_FILE).contains(&bytes.len()) || &bytes[..8] != MAGIC {
+    if bytes.len() >= 8 && &bytes[..8] != MAGIC {
+        return Err(BackupError::Unsupported);
+    }
+    if !(HEADER + 16..=MAX_FILE).contains(&bytes.len()) {
         return Err(BackupError::Invalid);
     }
     let word = |i: usize| u32::from_le_bytes([bytes[i], bytes[i + 1], bytes[i + 2], bytes[i + 3]]);

@@ -1,6 +1,7 @@
 //! Shared product shell. The original feasibility spike remains diagnostic-only.
 #[cfg(all(test, windows))]
 mod account_tests;
+mod backup_import;
 pub mod codes;
 pub mod components;
 mod export;

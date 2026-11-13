@@ -59,6 +59,77 @@ fn sample() -> std::result::Result<Vault, AppError> {
     Ok(v)
 }
 #[test]
+fn folder_decisions_match_engine_for_unique_named_stable_and_cross_type_collisions() -> TestResult {
+    let original = sample()?;
+    let empty = Vault::new(Timestamp(1));
+    let same = original.clone();
+    let mut named = sample()?;
+    named.folders[0].name = original.folders[0].name.clone();
+    let mut cross = sample()?;
+    cross.folders[0].name = "Cross-type fixture".into();
+    cross.folders[0].id = FolderId::from_uuid(original.backup_sets[0].codes[0].id.as_uuid())?;
+    cross.memberships[0].folder_id = cross.folders[0].id;
+    for (local, incoming, expected) in [
+        (
+            &empty,
+            &original,
+            FolderDecisions {
+                keep_local: false,
+                keep_both: false,
+            },
+        ),
+        (
+            &original,
+            &same,
+            FolderDecisions {
+                keep_local: true,
+                keep_both: true,
+            },
+        ),
+        (
+            &original,
+            &named,
+            FolderDecisions {
+                keep_local: true,
+                keep_both: true,
+            },
+        ),
+        (
+            &original,
+            &cross,
+            FolderDecisions {
+                keep_local: false,
+                keep_both: true,
+            },
+        ),
+    ] {
+        incoming.validate()?;
+        let allowed = merge::folder_decisions(local, incoming);
+        assert_eq!(allowed, vec![expected]);
+        let conflicts = merge::conflicts(local, incoming)?;
+        merge::build(local, incoming, &conflicts, ImportOptions::default())?;
+        for (choice, permitted) in [
+            (MergeChoice::KeepLocal, expected.keep_local),
+            (MergeChoice::KeepBoth, expected.keep_both),
+        ] {
+            let result = merge::build(
+                local,
+                incoming,
+                &conflicts,
+                ImportOptions {
+                    folder_choices: vec![(0, choice)],
+                    ..Default::default()
+                },
+            );
+            assert_eq!(result.is_ok(), permitted);
+            if !permitted {
+                assert!(matches!(result, Err(BackupError::InvalidDecision)));
+            }
+        }
+    }
+    Ok(())
+}
+#[test]
 fn portable_envelope_roundtrip_and_randomization()
 -> std::result::Result<(), Box<dyn std::error::Error>> {
     let v = sample()?;

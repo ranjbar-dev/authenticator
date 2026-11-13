@@ -1,4 +1,5 @@
 //! Inventory-derived shell and local vault lifecycle.
+use super::backup_import::{self, Busy as ImportBusy, ImportForm};
 use super::codes;
 use super::export::{self, ExportForm, Picker};
 use super::import_review::ImportReview;
@@ -66,6 +67,8 @@ pub struct AuthenticatorApp {
     export_form: Option<ExportForm>,
     export_picker: Option<Picker>,
     export_focus: bool,
+    backup_import: Option<ImportForm>,
+    backup_picker: Option<backup_import::Picker>,
     image: Option<ImageJob>,
     imported: Vec<AccountId>,
     show_imported: bool,
@@ -143,6 +146,8 @@ impl AuthenticatorApp {
             export_form: None,
             export_picker: None,
             export_focus: false,
+            backup_import: None,
+            backup_picker: None,
             image: None,
             imported: Vec::new(),
             show_imported: false,
@@ -198,6 +203,8 @@ impl AuthenticatorApp {
         self.export_picker = None;
         self.export_hub = false;
         self.export_focus = false;
+        self.backup_import = None;
+        self.backup_picker = None;
         self.image = None;
         self.state.finish_image();
         self.imported.clear();
@@ -259,6 +266,8 @@ impl AuthenticatorApp {
                 && self.review.is_none()
                 && self.export_form.is_none()
                 && self.export_picker.is_none()
+                && self.backup_import.is_none()
+                && self.backup_picker.is_none()
                 && self.image.is_none()
                 && self.capture_preparing.is_none()
                 && !self.state.capture_busy()
@@ -294,7 +303,9 @@ impl AuthenticatorApp {
         let save_mode = self.review.as_ref().map(|r| r.mode);
         if let Some(outcome) = self.state.poll(now) {
             self.ordered_ids = None;
-            if let Some(exported) = self.state.take_exported() {
+            if let Some(imported) = self.state.take_backup_result() {
+                self.complete_backup_import(imported);
+            } else if let Some(exported) = self.state.take_exported() {
                 if let Some(form) = &mut self.export_form {
                     form.complete(exported, &ctx);
                 }
@@ -349,8 +360,28 @@ impl AuthenticatorApp {
                 self.operation_cancelled = false;
             }
         }
-        if (self.export_hub || self.export_form.is_some()) && !self.state.session_active() {
+        if (self.export_hub || self.export_form.is_some() || self.backup_import.is_some())
+            && !self.state.session_active()
+        {
             self.lock();
+        }
+        if let Some(picker) = &self.backup_picker
+            && let Some(selection) = picker.poll()
+        {
+            let current = picker.generation == self.state.generation() && self.state.is_unlocked();
+            self.backup_picker = None;
+            self.state.finish_image();
+            if current && let Some(form) = &mut self.backup_import {
+                match selection {
+                    Ok(Some(path)) => {
+                        form.reset_selection();
+                        form.path = Some(path);
+                    }
+                    Ok(None) => {}
+                    Err(error) => form.error = Some(backup_import::error_message(error)),
+                }
+                form.focus = true;
+            }
         }
         if let Some(picker) = &self.export_picker
             && let Some(selection) = picker.poll()
@@ -536,6 +567,7 @@ impl AuthenticatorApp {
         // Real monotonic expiry continues even with no pointer/keyboard events.
         if self.state.busy()
             || self.export_picker.is_some()
+            || self.backup_picker.is_some()
             || self.image.is_some()
             || self.capture_preparing.is_some()
             || self.state.capture_busy()
@@ -577,21 +609,22 @@ impl AuthenticatorApp {
             let holder = if self.review.as_ref().is_some_and(|r|r.focus) { holder.vertical_scroll_offset(0.) } else { holder };
             holder.show(ui,|ui| {
                     ui.set_max_width(theme::CONTENT_MAX_WIDTH.min(ui.available_width()));
-                let codes_home=self.state.session_active() && self.state.route==Route::Codes && self.review.is_none() && self.capture_preparing.is_none() && !self.state.capture_busy();
+                let codes_home=self.state.session_active() && self.state.route==Route::Codes && self.review.is_none() && self.backup_import.is_none() && self.capture_preparing.is_none() && !self.state.capture_busy();
                 if !codes_home { c::secondary(ui,"AUTHENTICATOR · LOCAL VAULT"); }
                 c::toolbar(ui,|ui| {
-                    c::heading(ui,if self.export_form.is_some() {"Export encrypted backup"} else if self.export_hub {"Export & Import"} else if self.pending_mutation {self.state.route.title()} else if self.state.importing() {"Saving accounts"} else if self.review.as_ref().is_some_and(|r| !r.mode.is_import()) {"Account"} else if self.state.is_unlocked() && (self.capture_preparing.is_some() || self.state.capture_busy()) {"Screenshot to Scan"} else if self.state.session_active() {self.state.route.title()} else if self.exists {"Unlock vault"} else {"Create vault"},1);
+                    c::heading(ui,if self.backup_import.is_some() {"Import backup"} else if self.export_form.is_some() {"Export encrypted backup"} else if self.export_hub {"Export & Import"} else if self.pending_mutation {self.state.route.title()} else if self.state.importing() {"Saving accounts"} else if self.review.as_ref().is_some_and(|r| !r.mode.is_import()) {"Account"} else if self.state.is_unlocked() && (self.capture_preparing.is_some() || self.state.capture_busy()) {"Screenshot to Scan"} else if self.state.session_active() {self.state.route.title()} else if self.exists {"Unlock vault"} else {"Create vault"},1);
                     let help=c::icon_button(ui,c::Icon::Help,"Help for this screen");
                     if help.clicked() {self.dialog=Some(c::Dialog::new("Offline help",help.id)); self.help_open=true;}
                     if self.state.session_active() && c::icon_button(ui,c::Icon::Lock,"Lock vault").clicked() {self.lock();}
                 });
                 if !codes_home { c::secondary(ui,if self.state.session_active() {"Vault unlocked on this device"} else {"Vault locked · credentials hidden"}); }
                 ui.add_space(theme::SMALL_GAP);
-                if !self.export_hub && self.export_form.is_none() && self.review.is_none() && self.image.is_none() && self.capture_preparing.is_none() && !self.state.capture_busy() && let Some(route)=c::tabs(ui,self.state.route) { self.state.navigate(route); self.status=None; }
+                if !self.export_hub && self.backup_import.is_none() && self.export_form.is_none() && self.review.is_none() && self.image.is_none() && self.capture_preparing.is_none() && !self.state.capture_busy() && let Some(route)=c::tabs(ui,self.state.route) { self.state.navigate(route); self.status=None; }
                 ui.add_space(theme::SMALL_GAP);
                 if let Some(error)=self.state.storage_error() {
                     c::status(ui,"storage-error",&error.to_string(),c::StatusKind::Error);
                     c::secondary(ui,"Close other Authenticator instances and restart. No replacement vault is created here.");
+                } else if self.backup_import.is_some() && self.state.session_active() { self.backup_import_content(ui);
                 } else if self.export_form.is_some() && self.state.session_active() { self.export_content(ui);
                 } else if self.pending_mutation { self.unlocked_content(ui);
                 } else if self.state.importing() { self.review_content(ui);
@@ -998,6 +1031,11 @@ impl AuthenticatorApp {
                 self.export_form = Some(ExportForm::new(export.id));
                 c::clear_sensitive_widget_memory(&self.context);
             }
+            let import = c::button(ui, "Import backup", c::ButtonStyle::Secondary);
+            if import.clicked() {
+                self.backup_import = Some(ImportForm::new(import.id));
+                c::clear_sensitive_widget_memory(&self.context);
+            }
         });
     }
     fn start_export(&mut self, form: &mut ExportForm) {
@@ -1139,6 +1177,268 @@ impl AuthenticatorApp {
         }
         if keep {
             self.export_form = Some(form);
+        }
+    }
+    fn complete_backup_import(&mut self, result: super::state::BackupResult) {
+        use super::state::BackupResult;
+        let Some(form) = &mut self.backup_import else {
+            return;
+        };
+        form.busy = None;
+        form.focus = true;
+        form.clear_secret(&self.context);
+        match result {
+            BackupResult::Preview(result) => match result {
+                Ok(preview) => {
+                    form.preview = Some(preview);
+                    form.error = None;
+                }
+                Err(error) => {
+                    form.reset_selection();
+                    form.error = Some(backup_import::error_message(error));
+                }
+            },
+            BackupResult::Plan(result) => match result {
+                Ok(plan) => {
+                    form.plan = Some(*plan);
+                    form.error = None;
+                }
+                Err(error) => form.error = Some(backup_import::error_message(error)),
+            },
+            BackupResult::Applied(result) => match result {
+                Ok(_) => {
+                    // Only an adopted, current approved success invalidates the
+                    // projection. Failures keep the old session data intact.
+                    self.backup_import = None;
+                    self.backup_picker = None;
+                    self.export_form = None;
+                    self.export_picker = None;
+                    self.export_hub = false;
+                    self.codes_preferences = None;
+                    self.preferences_dirty = None;
+                    self.preferences_error = false;
+                    self.ordered_ids = None;
+                    self.state.query.zeroize();
+                    self.state.backup_query.zeroize();
+                    self.imported.clear();
+                    self.show_imported = false;
+                    self.review = None;
+                    self.clock.clear();
+                    self.clipboard.clear();
+                    self.clipboard_feedback = None;
+                    self.state.navigate(Route::Codes);
+                    self.capture_message = Some("Backup import saved in your encrypted vault. The current vault data is shown below.".into());
+                    self.capture_failed = false;
+                    self.capture_focus = true;
+                    c::clear_sensitive_widget_memory(&self.context);
+                }
+                Err(error) => {
+                    form.reset_selection();
+                    form.error = Some(backup_import::error_message(error));
+                }
+            },
+        }
+    }
+    fn start_backup_preview(&mut self, form: &mut ImportForm) {
+        if form.busy.is_some() {
+            return;
+        }
+        if let Err(error) = form.validate() {
+            form.error = Some(error);
+            return;
+        }
+        if self.state.busy() {
+            if self.pending_preferences {
+                form.saving_preferences = true;
+                form.focus = true;
+            } else {
+                form.error = Some("Finish the active operation before previewing this backup.");
+            }
+            return;
+        }
+        // Save the latest projection before the engine captures its exact
+        // committed destination revision. Cancellation later cannot roll back
+        // this independently requested preferences transaction.
+        if self.preferences_dirty.is_some() {
+            let Some(preferences) = self.codes_preferences.clone() else {
+                form.clear_secret(&self.context);
+                form.error = Some(
+                    "Current display settings are unavailable. Return to Settings and reopen import.",
+                );
+                return;
+            };
+            self.preferences_error = false;
+            if self.begin_mutation(SaveIntent::CodesPreferences(preferences)) {
+                self.preferences_dirty = None;
+                form.saving_preferences = true;
+                form.focus = true;
+                form.error = None;
+            } else {
+                form.clear_secret(&self.context);
+                form.error = Some(
+                    "Display settings could not be saved. Check local vault access, enter the backup passphrase and retry.",
+                );
+            }
+            return;
+        }
+        let Some(path) = form.path.clone() else {
+            return;
+        };
+        let passphrase = std::mem::take(&mut form.passphrase);
+        form.clear_secret(&self.context);
+        self.start_backup_job(
+            form,
+            super::state::BackupRequest::Preview(path, passphrase),
+            ImportBusy::Preview,
+        );
+    }
+    fn start_backup_job(
+        &mut self,
+        form: &mut ImportForm,
+        request: super::state::BackupRequest,
+        busy: ImportBusy,
+    ) {
+        let repaint = self.context.clone();
+        let result = match &self.lifecycle {
+            Ok(lifecycle) if lifecycle.healthy() => {
+                self.state
+                    .begin_backup(request, lifecycle.watch(), move || {
+                        repaint.request_repaint()
+                    })
+            }
+            _ => Err(crate::error::AppError::StorageUnavailable),
+        };
+        match result {
+            Ok(()) => {
+                form.busy = Some(busy);
+                form.focus = true;
+                form.error = None;
+            }
+            Err(_) => {
+                form.error = Some(
+                    "Cannot start import. Finish other operations or restart Authenticator if lifecycle protection is unavailable, then preview again.",
+                );
+                form.focus = true;
+            }
+        }
+    }
+    fn apply_backup_plan(&mut self, form: &mut ImportForm) {
+        let Some(plan) = form.plan.take() else {
+            return;
+        };
+        // Final consent has been obtained. UI no longer retains incoming/local
+        // snapshot metadata while a worker owns the approved candidate.
+        form.preview = None;
+        form.replace = None;
+        form.options = crate::backup::ImportOptions::default();
+        form.clear_secret(&self.context);
+        self.start_backup_job(
+            form,
+            super::state::BackupRequest::Apply(Box::new(plan)),
+            ImportBusy::Apply,
+        );
+    }
+    fn backup_import_content(&mut self, ui: &mut egui::Ui) {
+        let Some(mut form) = self.backup_import.take() else {
+            return;
+        };
+        if form.saving_preferences && !self.state.busy() {
+            form.saving_preferences = false;
+            if self.preferences_error {
+                form.clear_secret(&self.context);
+                form.error = Some(
+                    "Your display changes could not be saved, so preview did not start. Check local vault access, enter the backup passphrase and retry. No backup data was imported.",
+                );
+            } else {
+                self.start_backup_preview(&mut form);
+            }
+        }
+        let mut keep = true;
+        match backup_import::form(ui, &mut form, self.backup_picker.is_some()) {
+            backup_import::Action::None => {}
+            backup_import::Action::Back => {
+                if form.plan.take().is_some() {
+                    form.focus = true;
+                    form.error = None;
+                } else if form.preview.is_some() {
+                    form.reset_selection();
+                    form.clear_secret(&self.context);
+                } else {
+                    form.clear_secret(&self.context);
+                    self.export_focus = false;
+                    self.context.memory_mut(|m| m.request_focus(form.opener));
+                    keep = false;
+                }
+            }
+            backup_import::Action::CancelAndLock => {
+                self.lock();
+                keep = false;
+            }
+            backup_import::Action::Pick => {
+                form.clear_secret(&self.context);
+                let launch = self.state.idle_deadline().and_then(|deadline| {
+                    let watch = self.lifecycle.as_ref().map_err(|e| *e)?.watch();
+                    self.state.begin_image()?;
+                    self.backup_picker = Some(backup_import::Picker::start(
+                        self.state.generation(),
+                        watch,
+                        deadline,
+                        self.context.clone(),
+                    ));
+                    Ok(())
+                });
+                if launch.is_err() {
+                    form.error = Some(
+                        "Cannot open the backup picker. Finish other operations or restart Authenticator, then retry.",
+                    );
+                }
+            }
+            backup_import::Action::Preview => self.start_backup_preview(&mut form),
+            backup_import::Action::Plan => {
+                if let Some(preview) = form.preview.clone() {
+                    let options = form.plan_options();
+                    self.start_backup_job(
+                        &mut form,
+                        super::state::BackupRequest::Plan(preview, options),
+                        ImportBusy::Plan,
+                    );
+                }
+            }
+            backup_import::Action::Apply(opener) => {
+                if form
+                    .plan
+                    .as_ref()
+                    .is_some_and(|p| p.summary().mode == crate::backup::ImportMode::Replace)
+                {
+                    form.replace =
+                        Some(c::Dialog::new("Replace current vault collections?", opener));
+                } else {
+                    self.apply_backup_plan(&mut form);
+                }
+            }
+        }
+        if let Some(mut dialog) = form.replace.take() {
+            let mut consent = false;
+            let close = dialog.show(&self.context, |ui, first| {
+                if let Some(plan) = &form.plan {
+                    backup_import::counts(ui, "Current records that will be removed", plan.summary().removed_local_records);
+                    backup_import::counts(ui, "Resulting vault", plan.summary().after);
+                }
+                c::body(ui, "This replaces accounts, folders, memberships and recovery records, including Trash and used states. Keep a current encrypted backup if you may need these records again.");
+                let cancel = c::button(ui, "Keep current vault · go back", c::ButtonStyle::Secondary);
+                if first { cancel.request_focus(); }
+                let confirm = c::button(ui, "Replace collections and import", c::ButtonStyle::Primary);
+                if confirm.clicked() { consent = true; }
+                cancel.clicked() || consent
+            });
+            if consent {
+                self.apply_backup_plan(&mut form);
+            } else if !close {
+                form.replace = Some(dialog);
+            }
+        }
+        if keep {
+            self.backup_import = Some(form);
         }
     }
     fn capture_controls(&mut self, ui: &mut egui::Ui) {
@@ -1746,6 +2046,8 @@ impl AuthenticatorApp {
             || self.review.is_some()
             || self.export_form.is_some()
             || self.export_picker.is_some()
+            || self.backup_import.is_some()
+            || self.backup_picker.is_some()
             || self.delete.is_some()
             || self.state.capture_busy()
             || self.image.is_some()
@@ -2232,6 +2534,9 @@ impl eframe::App for AuthenticatorApp {
     }
 }
 
+#[cfg(all(test, windows))]
+#[path = "backup_import_tests.rs"]
+mod backup_import_tests;
 #[cfg(all(test, windows))]
 #[path = "export_tests.rs"]
 mod export_tests;

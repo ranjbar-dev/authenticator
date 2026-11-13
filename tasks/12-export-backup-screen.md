@@ -72,6 +72,9 @@ or new-user native completion are claimed.
   340/600/960 screenshots, busy/error/success/new-user flow and Task13 GUI restore
   remain OPEN. Physical/offline/device/Narrator/reference gates unchanged.
 
-Continue independent Task13 after integration, then revisit these gates in13/21/23.
+Task13 now verifies this production form/worker output through its own preview/plan/
+apply into a fresh independent local vault, including full codec graph and24 OTP
+settings. Its distinct reviewer approved the corrected source. Actual native
+Task12-to-13 interactive recovery remains OPEN; revisit these gates in21/23.
 No real/default/reference data, retained owned state or unrelated preview changes.
 Commit reference follows in the parent checkpoint.

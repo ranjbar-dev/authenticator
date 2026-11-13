@@ -1,6 +1,6 @@
 # Task 13: Easy backup import, preview and conflict decisions
 
-Status: todo
+Status: in_progress - corrected source approved; native UI/visual and Task12-to-13 GUI restore gates open
 Priority: Required for complete v1
 Dependencies: 04, 05, 11, 12
 Requirements: FR-6.2/4; PRD §§7, 11–12
@@ -11,10 +11,10 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Implementation
 
-- [ ] Build Import backup with local file selection, concealed backup-passphrase entry, validation and a safe counts/conflict preview.
-- [ ] Offer explicit merge/replace and per-conflict decisions consistent with the engine; default merge preserves existing entries. Require confirmation before replacement.
-- [ ] Show exactly what will change, including trash and used-code state; gate optional imported preference/security/startup effects behind deliberate choices.
-- [ ] Commit only approved validated data atomically; cancel/wrong password/invalid format/lock leaves the vault unchanged. Unsupported reference .vault files receive an honest compatibility message, never guessed parsing.
+- [x] Build Import backup with local file selection, concealed backup-passphrase entry, validation and a safe counts/conflict preview.
+- [x] Offer explicit merge/replace and per-conflict decisions consistent with the engine; default merge preserves existing entries. Require confirmation before replacement.
+- [x] Show exactly what will change, including trash and used-code state; gate optional imported preference/security/startup effects behind deliberate choices.
+- [x] Commit only approved validated data atomically; cancel/wrong password/invalid format/lock leaves the vault unchanged. Unsupported reference .vault files receive an honest compatibility message, never guessed parsing.
 
 ## Screen checklist
 
@@ -48,5 +48,36 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 
 ## Evidence
 
-Not started. On execution record changed files, test commands/results, sanitized UI evidence paths where applicable, independent reviewer result and commit reference. If blocked, retain incomplete status and record exact cause, attempted remedies and resumption steps.
+Corrected source approved by distinct review_13 and focused re-review. Implementation
+boxes above record source/engine/framework evidence; full screen/native acceptance
+stays open. An admitted complete atomic write may finish after cancellation/Lock,
+as documented in Task09; stale completion cannot unlock or publish late success.
+
+- [Author evidence and exact commands](../docs/qa/task13/implementation-evidence.md).
+- [Independent findings, corrections and scope](../docs/qa/task13/independent-review.md).
+- [Parent fixes and final checks](../docs/qa/task13/parent-fixes.md).
+- Full143 tests passed,4 directly ignored subprocess helpers exercised by parents,
+  16 suites91.69s. Final10 import tests passed42.40s after pagination correction;
+  independent final10 passed40.80s and engine-decision1 passed. Strict all-target/
+  all-feature Clippy, formatting/diff and production/lib/import-example build pass.
+- Task12 production form/worker export restores through Task13 form/worker into a
+  fresh independently keyed vault: full normalized codec graph equality,24 OTP
+  settings plus independent published RFC6238 value, metadata/associations/recovery
+  used states/Trash, deliberate display/security and retained startup/identity.
+  This is framework/engine recovery, not a completed native new-user journey.
+- Wrong phrase/tamper/future/local/reference/oversize, stale source/local revisions,
+  write fault/retry, safe Replace confirmation, pending preferences, early/admitted
+  Lock/lifecycle/idle/publication and duplicate worker refusal are covered.
+- Reviewer P2 invalid unique-folder KeepBoth option fixed using engine-authoritative
+  precomputed decisions; P2 omitted association disclosure fixed with paginated actual
+  candidate endpoint/Trash/date review. Named Previous/Next controls retain identities.
+- Author2/reviewer1 normal Sky launches denied GetCursorPos0x80070005, no owned window,
+  process or fixture. No native picker/input/framebuffer/visual pass is claimed.
+- Actual pointer/keyboard choices, native Task12-to-13 recovery,340/600/960 screenshots,
+  rendered quality, physical DPI/Narrator/offline/hardware/device gates remain OPEN.
+  Synthetic AX/normal-viewport Tab/scroll tests do not replace those gates.
+
+Source integrated by parent; continue independent Task14, revisit native gates21/23.
+No real/default/reference data or unrelated preview was changed. Commit reference
+follows in the parent checkpoint.
 

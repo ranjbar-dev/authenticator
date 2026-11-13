@@ -23,6 +23,7 @@ impl DestinationReview {
         self.0
     }
 }
+#[derive(Clone)]
 pub(super) struct Source {
     path: PathBuf,
     digest: [u8; 32],

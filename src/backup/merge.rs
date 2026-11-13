@@ -63,6 +63,41 @@ pub enum MergeChoice {
     KeepLocal,
     KeepBoth,
 }
+/// Engine-authoritative decisions for one incoming folder in Merge mode.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct FolderDecisions {
+    pub keep_local: bool,
+    pub keep_both: bool,
+}
+impl FolderDecisions {
+    fn for_collision(reusable: bool, occupied_id: bool) -> Self {
+        Self {
+            keep_local: reusable,
+            keep_both: reusable || occupied_id,
+        }
+    }
+    fn permits(self, choice: MergeChoice) -> bool {
+        match choice {
+            MergeChoice::KeepLocal => self.keep_local,
+            MergeChoice::KeepBoth => self.keep_both,
+        }
+    }
+}
+pub(super) fn folder_decisions(local: &Vault, incoming: &Vault) -> Vec<FolderDecisions> {
+    let occupied: BTreeSet<_> = ids(local).into_iter().collect();
+    let folders: BTreeSet<_> = local.folders.iter().map(|f| f.id).collect();
+    let names: BTreeSet<_> = local.folders.iter().map(|f| f.name.as_str()).collect();
+    incoming
+        .folders
+        .iter()
+        .map(|f| {
+            FolderDecisions::for_collision(
+                folders.contains(&f.id) || names.contains(f.name.as_str()),
+                occupied.contains(&f.id.as_uuid()),
+            )
+        })
+        .collect()
+}
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ImportMode {
     Merge,
@@ -70,6 +105,7 @@ pub enum ImportMode {
 }
 /// Merge defaults keep conflicting local account bundles and local preferences.
 /// Choices address incoming account indices, not potentially colliding IDs.
+#[derive(Clone)]
 pub struct ImportOptions {
     pub mode: ImportMode,
     pub account_choices: Vec<(usize, MergeChoice)>,
@@ -368,9 +404,12 @@ pub(super) fn build(
             .ok_or(BackupError::InvalidDecision)?;
         let reusable = local_folders_by_id.contains_key(&folder.id)
             || local_folders_by_name.contains_key(folder.name.as_str());
+        let allowed = FolderDecisions::for_collision(
+            reusable,
+            local_record_ids.contains(&folder.id.as_uuid()),
+        );
         if options.mode == ImportMode::Replace
-            || !(reusable || local_record_ids.contains(&folder.id.as_uuid()))
-            || (choice == MergeChoice::KeepLocal && !reusable)
+            || !allowed.permits(choice)
             || folder_choices.insert(i, choice).is_some()
         {
             return Err(BackupError::InvalidDecision);

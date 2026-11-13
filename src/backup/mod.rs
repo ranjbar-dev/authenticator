@@ -8,7 +8,8 @@ use crate::{
 };
 pub use files::{Destination, DestinationReview};
 pub use merge::{
-    Conflict, Counts, FolderCopy, ImportMode, ImportOptions, ImportSummary, MergeChoice,
+    Conflict, Counts, FolderCopy, FolderDecisions, ImportMode, ImportOptions, ImportSummary,
+    MergeChoice,
 };
 use sha2::{Digest, Sha256};
 use std::{fmt, path::Path};
@@ -109,6 +110,7 @@ pub struct ImportPreview {
     incoming: Vault,
     local: Vault,
     conflicts: Vec<Conflict>,
+    folder_decisions: Vec<FolderDecisions>,
 }
 pub struct ImportPlan {
     source: files::Source,
@@ -132,12 +134,14 @@ pub fn preview(
     merge::unique_ids(&incoming)?;
     let local = store.vault().map_err(local_error)?.clone();
     let conflicts = merge::conflicts(&local, &incoming)?;
+    let folder_decisions = merge::folder_decisions(&local, &incoming);
     Ok(ImportPreview {
         source,
         revision,
         incoming,
         local,
         conflicts,
+        folder_decisions,
     })
 }
 impl ImportPreview {
@@ -146,19 +150,28 @@ impl ImportPreview {
     pub fn incoming_vault(&self) -> &Vault {
         &self.incoming
     }
+    /// Immutable authenticated destination snapshot for safe metadata review.
+    pub fn local_vault(&self) -> &Vault {
+        &self.local
+    }
     pub fn counts(&self) -> Counts {
         Counts::of(&self.incoming)
     }
     pub fn conflicts(&self) -> &[Conflict] {
         &self.conflicts
     }
+    /// Precomputed on the preview worker; indices address immutable incoming
+    /// folders. Unique folders need only the default import policy.
+    pub fn folder_decisions(&self, index: usize) -> Option<FolderDecisions> {
+        self.folder_decisions.get(index).copied()
+    }
     /// Final reviewable candidate. Every decision is bound to this authenticated
     /// snapshot, not to subsequently supplied IDs, filenames or mutable records.
-    pub fn plan(self, options: ImportOptions) -> Result<ImportPlan> {
+    pub fn plan(&self, options: ImportOptions) -> Result<ImportPlan> {
         let (candidate, summary) =
             merge::build(&self.local, &self.incoming, &self.conflicts, options)?;
         Ok(ImportPlan {
-            source: self.source,
+            source: self.source.clone(),
             revision: self.revision,
             candidate,
             summary,

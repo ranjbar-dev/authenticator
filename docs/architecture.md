@@ -565,3 +565,54 @@ Primary API references: [GetSaveFileNameW](https://learn.microsoft.com/en-us/win
 and [Open and Save As dialogs](https://learn.microsoft.com/en-us/windows/win32/dlgbox/open-and-save-as-dialog-boxes).
 Task12 source/worker tests are distinct from actual native picker/pointer evidence;
 see `docs/qa/task12/implementation-evidence.md` for the current denied-launch gate.
+
+## Native encrypted import screen (Task13)
+
+Settings → Export & Import → Import backup uses the shared ROOT heading, scroll
+holder, masked password adapter, full-width buttons, native selectors and dialog.
+`backup_import` owns only session form state. Native `GetOpenFileNameW` selection
+uses the existing cancellable Save adapter infrastructure with FILEMUSTEXIST and
+all-files selection; recognition uses bytes, never the extension. Non-native
+discriminators receive Unsupported; short/truncated native envelopes remain
+invalid. No reference-app private format or local AUTHLOC1 migration is guessed.
+
+Pending Codes display intent is saved before preview captures the committed
+local revision. Failure blocks authentication with retry feedback and clears the
+passphrase; completed preference saves are independent transactions and are not
+rolled back by later backup cancellation. Preview authentication, file hashes,
+conflict discovery, candidate clones/validation and consuming apply run through
+one typed `BackupRequest`/`BackupResult` worker while that worker owns the sole
+VaultStore. No mutable repository, session key or DEK copies are introduced.
+The immutable authenticated preview is held through Arc while unlocked, permitting
+Back from final review and another worker-built plan without another passphrase.
+The engine retains exact source ciphertext and destination revision checks.
+
+Default Merge skips conflicting incoming account bundles, including their
+memberships/recovery records. Indexed selectors address that preview, including
+incoming duplicates and Trash. Folder decisions show metadata/IDs and the final
+candidate's copy/reuse/trash result. Account conflicts, incoming/resolved folders,
+candidate accounts and recovery used/trash metadata are paginated five per page;
+no seed or recovery value is shown. Counts compare before/incoming/after, and
+Replace explicitly shows current removed counts. Display and security timeout
+imports are independent deliberate options, both false by default, even Replace.
+Exact source/current/resulting display values and security timeout values are
+visible; missing-folder fallback to All is announced. Startup/registry, local
+identity, local vault passphrase and key are always preserved. Replace requires a
+second ROOT modal whose initial focus is Keep current vault; Enter cannot silently
+confirm the destructive action. Long reviews use the shared modal scroll holder.
+
+Apply consumes only the plan the user reviewed. Preview/plan metadata drops when
+apply starts and all form/picker/dialog metadata drops on Back out, close or Lock.
+The worker uses the existing monotonic idle/lifecycle guard, generation exclusion,
+nonblocking UI cancellation and post-publication cancellation check; cancelled
+worker payloads are discarded before adoption. UI privacy does not wait for KDF
+or admitted native I/O. An admitted complete encrypted commit may finish after
+Lock; the UI does not claim rollback, immediate erasure or late success. Only a
+current adopted successful import clears cached Codes/Backup queries, preference
+projection, IDs, old imported markers, export review, clock and clipboard display
+before reloading from the actual store and returning to Codes with success focus.
+
+Framework event/geometry checks and full graph roundtrips do not establish native
+input or raster quality. Two normal isolated Task13 launches were denied by Sky
+GetCursorPos (0x80070005); real native picker/pointer, framebuffer, visual/DPI and
+Task12→13 interactive cross-flow remain open. See Task13 implementation evidence.
