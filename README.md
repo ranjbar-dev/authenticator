@@ -20,13 +20,26 @@ rtk cargo test --locked --all-targets
 
 RTK is the local command proxy required by this workspace's rules; elsewhere run the underlying Cargo commands directly. The debug executable is `target/debug/Authenticator.exe`. The spike flag exposes inert test controls, resize/zoom actions and a separate region-selection test viewport. It captures no screen pixels. Do not type credentials into the spike.
 
-For automated pointer/keyboard/accessibility checks, launch the no-argument `target/debug/examples/framework_spike.exe` with the computer-use helper's documented `launch_app` API. An elevated terminal's `Start-Process` inherits high integrity; the medium-integrity helper cannot inject input or inspect its controls through Windows UIPI. Authenticator does not require elevation. An unelevated launch exposes labeled controls and supports real input. Application zoom is not a Windows DPI test. Secondary egui viewport accessibility remains a documented limitation; task 07 will use a Windows-native capture overlay adapter with accessible controls.
+For automated pointer/keyboard/accessibility checks, launch the no-argument `target/debug/examples/framework_spike.exe` with the computer-use helper's documented `launch_app` API. An elevated terminal's `Start-Process` inherits high integrity; the medium-integrity helper cannot inject input or inspect its controls through Windows UIPI. Authenticator does not require elevation. An unelevated launch exposes labeled controls and supports real input. Application zoom is not a Windows DPI test. Production screen selection uses the Windows-native capture overlay adapter.
 
-Runtime requires no registration or network service. Build-time Cargo dependency downloads and GitHub CI require network access. No framework persistence, link launching, telemetry or network client is enabled by this application. Packaging/user instructions follow in task 23.
+Runtime requires no registration or network service. Build-time Cargo dependency downloads and GitHub CI require network access. No framework persistence, link launching, telemetry or network client is enabled by this application.
+
+## Windows portable package
+
+Build the unsigned x64 ZIP with `rtk proxy python scripts/package_windows.py`.
+The allowlisted archive and SHA256 file appear under `dist/`; `--replace` only
+replaces a verified prior build. [Build/package details](docs/windows-build.md)
+describe static CRT linkage, Windows resources, notices and source-dirty metadata.
+End users extract and run `Authenticator.exe` without Rust/Python/Node.
+
+[User guide](docs/user-guide.md) covers every shipped workflow and deliberate
+update/uninstall handling. [Security and validation limits](docs/security-limits.md)
+distinguish implemented behavior from unperformed release gates. App-folder
+removal preserves the per-user encrypted vault; backups are separately managed.
 
 Backups use this app's native encrypted `AUTHPBK1` format, normally `.authpbk`.
 The reference app's private `.vault` format is unsupported in v1; renaming a file
 does not convert it. [Compatibility and migration evidence](docs/migration-compatibility.md)
 explains supported inputs and the safe native export/import path.
 
-See [architecture](docs/architecture.md), [security design](docs/security-design.md) and [reference evidence](docs/reference-ui.md). Windows CI runs formatting, warning-free Clippy, tests and a debug build; a local pass does not establish a hosted CI pass.
+See [architecture](docs/architecture.md), [security design](docs/security-design.md) and [reference evidence](docs/reference-ui.md). Windows CI runs formatting, warning-free Clippy, tests, a debug build and release/package validation; a local pass does not establish a hosted CI pass.

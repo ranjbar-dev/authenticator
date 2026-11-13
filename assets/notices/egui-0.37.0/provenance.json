@@ -1,0 +1,21 @@
+{
+  "crate": "egui",
+  "version": "0.37.0",
+  "published_crate_commit": "7c0b40402271e8d40cda69f87cf3c2617c2e4382",
+  "license_source_commit": "841a328ba2dd8f6996beb7189ebb7fc00e668a2a",
+  "release_tag": "0.37.0",
+  "current_upstream_fallback": false,
+  "note": "License texts only; source is the published crate's commit, or the recorded release tag when that commit is unavailable, or an explicitly marked current-upstream fallback. This does not establish code-version equality. SPDX declaration is retained from the published crate.",
+  "files": [
+    {
+      "file": "LICENSE-APACHE",
+      "url": "https://raw.githubusercontent.com/emilk/egui/841a328ba2dd8f6996beb7189ebb7fc00e668a2a/LICENSE-APACHE",
+      "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+    },
+    {
+      "file": "LICENSE-MIT",
+      "url": "https://raw.githubusercontent.com/emilk/egui/841a328ba2dd8f6996beb7189ebb7fc00e668a2a/LICENSE-MIT",
+      "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+    }
+  ]
+}

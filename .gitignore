@@ -1,8 +1,10 @@
 /target/
 /dist/
+/scripts/__pycache__/
 /.test-data/
 *.vault
 *.authbackup
+*.authpbk
 *.backup
 *.key
 *.pem

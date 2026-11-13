@@ -256,6 +256,16 @@ Plan generation does not constitute implementation. Initial task status is todo,
 
 ### Current implementation checkpoint (13 November 2026)
 
+Task23 now implements the unsigned Windows x64 portable ZIP, original local icon,
+English version resources, asInvoker/PerMonitorV2 manifest, static CRT, allowlisted
+public documentation/notices and build/validation CI. Actual packaged scan,
+copy, encrypted export, independent-key restore, ordinary Explorer launch,
+startup on/off and restart persistence passed. Distinct review approved the
+scoped evidence and 13 packaging regressions after parent fixes. Same-user
+recovery is not proof of another Windows profile. Clean-machine/no-Rust,
+effective offline and physical/manual gates remain open; no full completion is
+claimed. See docs/qa/task23/implementation-evidence.md and independent-review.md.
+
 Task22 discovery is accepted: the FirstOrder reference app's private `.vault`
 format is unsupported in the initial release because sufficient lawful format
 evidence and disposable interoperability samples were not established. Native

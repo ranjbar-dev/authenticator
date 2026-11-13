@@ -1,6 +1,6 @@
 # Task 23: Windows packaging, clean-install recovery and documentation
 
-Status: todo
+Status: in_progress; package/native recovery reviewed, clean-machine/offline gates open
 Priority: Required for complete v1
 Dependencies: 01–22
 Requirements: PRD §§1–3, 7–11, 13–14
@@ -11,18 +11,18 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Implementation
 
-- [ ] Produce a reproducible Windows release build and distributable package/installer without requiring paid signing credentials. Use app name Authenticator, correct version, local icon/assets and user-scoped data paths.
-- [ ] Document install/run/update/uninstall, Rust development, screenshot scan, manual/image entry, supported TOTP parameters, lock/recovery, backup codes, folders/trash and easy encrypted export/import in English.
-- [ ] Document that uninstall preserves user vaults unless separately deliberately removed; packaging/startup changes must not delete data or weaken ACLs. Do not ship test records or hardcoded business data.
+- [x] Produce a repeatable Windows release build and distributable portable ZIP without requiring paid signing credentials. Use app name Authenticator, correct version, local icon/assets and user-scoped data paths. Bit-identical builds are not claimed.
+- [x] Document install/run/update/uninstall, Rust development, screenshot scan, manual/image entry, supported TOTP parameters, lock/recovery, backup codes, folders/trash and easy encrypted export/import in English.
+- [x] Document that uninstall preserves user vaults unless separately deliberately removed; packaging/startup changes must not delete data or weaken ACLs. Do not ship test records or hardcoded business data.
 - [ ] Smoke-test the packaged binary on a clean local profile/VM if available and restore an encrypted backup independently of original profile keys. Confirm offline runtime and startup toggle behavior.
 - [ ] Add Windows CI release-build/package validation and record artifact location/checksum/license notices. Do not publish a GitHub release or upload user data as part of this task.
 
 ## Acceptance and verification
 
 - [ ] A clean environment can build the documented package and launch Authenticator offline without Rust installed for end users.
-- [ ] Packaged screenshot scan, unlock, clipboard, export/import and restart persistence work with disposable credentials.
+- [x] Packaged screenshot scan, unlock, clipboard, export/import and restart persistence work with disposable credentials.
 - [ ] Install/update/uninstall handling preserves vault data; recovery on another profile is verified or explicitly recorded as blocked evidence.
-- [ ] Docs accurately cover every shipped workflow, supported format and security limitation without invented claims.
+- [x] Docs accurately cover every shipped workflow, supported format and security limitation without invented claims.
 
 ## Handoff and completion
 
@@ -34,5 +34,7 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Evidence
 
-Not started. On execution record changed files, test commands/results, sanitized UI evidence paths where applicable, independent reviewer result and commit reference. If blocked, retain incomplete status and record exact cause, attempted remedies and resumption steps.
+Implementation and actual packaged pointer/keyboard evidence: [implementation report](../docs/qa/task23/implementation-evidence.md). Distinct package/security/UI review and re-review: [review](../docs/qa/task23/independent-review.md). Parent repaired three archive-validator findings (reserved Windows device aliases, case-insensitive file/ancestor collisions, raw NUL filename normalization); independent 13 regressions, existing ZIP validation and diff check pass. Build/resource/dependency changes and public notices are reviewed. Source commit and clean-HEAD artifact follow in the next checkpoint to avoid circular attribution.
+
+Actual production scan/review/save/HMAC/copy, native encrypted export, separate-key restore, ordinary Explorer launch, startup registration on/off and relaunch persistence passed. Three locked frames were inspected independently. Another Windows-user/VM, no-build-tools machine and effective networking-disabled runtime remain unverified. Exact-app firewall rules were present but reported CategoryDisabled enforcement; both owned rules were removed. No ready VM or other user session was available. Do not call same-user separate-key recovery a cross-profile pass. Resume on an isolated ready Windows VM/user with networking disabled; build from the clean commit, verify checksum, launch without Rust and repeat scan/copy/export/fresh-profile restore/restart, then obtain independent review. Actual logon, physical OS/DPI/accessibility and full matrix gates remain with their owning tasks.
 

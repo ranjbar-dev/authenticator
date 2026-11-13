@@ -1,0 +1,15 @@
+{
+  "crate": "khronos_api",
+  "version": "3.1.0",
+  "published_crate_commit": "f150967b1c44ae888e6676f93f639ebc82771bdc",
+  "license_source_commit": "f150967b1c44ae888e6676f93f639ebc82771bdc",
+  "current_upstream_fallback": false,
+  "note": "License texts only; a fallback does not establish code-version equality. SPDX declaration is retained from the published crate.",
+  "files": [
+    {
+      "file": "LICENSE",
+      "url": "https://raw.githubusercontent.com/brendanzab/gl-rs/f150967b1c44ae888e6676f93f639ebc82771bdc/LICENSE",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    }
+  ]
+}

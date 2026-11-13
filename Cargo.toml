@@ -49,3 +49,6 @@ expect_used = "deny"
 [profile.release]
 lto = "thin"
 strip = true
+
+[build-dependencies]
+winresource = "=0.1.34"

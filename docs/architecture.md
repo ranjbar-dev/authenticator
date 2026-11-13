@@ -774,3 +774,30 @@ Local help topics cover acquisition/limits/TOTP parameters, service recovery cod
 Official API basis: [Run and RunOnce keys](https://learn.microsoft.com/windows/win32/setupapi/run-and-runonce-registry-keys), [RegQueryValueExW termination caveat](https://github.com/MicrosoftDocs/sdk-api/blob/docs/sdk-api-src/content/winreg/nf-winreg-regqueryvalueexw.md), and [writing/deleting registry data](https://learn.microsoft.com/en-us/windows/win32/sysinfo/writing-and-deleting-registry-data). Checked13November2026; no API result implies logon/packaged execution was tested.
 
 Task19 independent review found that the later duplicate Settings Lock button could leave counts/preferences in its triggering AX frame. Lock is now consolidated in the shared header, before private page content, with header/Ctrl+L guidance beside auto-lock. A permanent all-present-actions test checks triggering AX and text paint output at three widths and one/two-pass budgets; no additional rendering pass is required for this concealment. See docs/qa/task19/parent-fixes.md and independent-review.md for exact red/green evidence and re-review status.
+
+## Task23: Windows distribution
+
+The v1 distribution is an unsigned portable Windows x64 ZIP. Cargo's locked
+`winresource` build dependency embeds an original local vector-derived key icon,
+English product/version resources and an asInvoker/PerMonitorV2 manifest. The
+production viewport uses the same icon. Packaging builds the explicit MSVC
+target with a process-local static CRT flag; a PE import check rejects external
+VC runtime imports. No installer, paid signing service or runtime downloader is
+introduced. The executable continues to use the Windows per-user Known Folder;
+distribution portability does not relocate the vault beside the executable.
+
+The stdlib Python packager stages an explicit allowlist into a fresh owned
+target directory without recursive cleanup. It validates bounded archive paths,
+CRCs, manifest checksums and PE resource/import properties before replacing only
+a matching verified prior artifact. It records source SHA, dirty flag, compiler,
+Cargo.lock hash and relative payload checksums; repeatable steps do not establish
+bit-identical builds. Public dependency/runtime/font license texts and provenance
+are bundled, including an explicit hash-pinned Quircs metadata/text discrepancy.
+CI builds/validates and uploads only these public ZIP/checksum artifacts, with no
+GitHub release publication. User/runtime fixtures never enter the package.
+
+Native automation launched through the Codex MSIX host inherits its package
+identity and Windows redirected Known Folder context. That test vault resides
+under the host package's LocalCache rather than the ordinary Explorer-launched
+`%LOCALAPPDATA%\\Authenticator` location. This is test-environment evidence, not
+an MSIX distribution choice or proof of a separate clean Windows user/VM.

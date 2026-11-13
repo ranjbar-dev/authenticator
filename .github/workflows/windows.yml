@@ -10,7 +10,9 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Install Rust
         run: rustup toolchain install stable --profile minimal --component rustfmt --component clippy
       - name: Format
@@ -21,3 +23,36 @@ jobs:
         run: cargo test --locked --all-targets
       - name: Build Windows app
         run: cargo build --locked --bin Authenticator
+  package:
+    needs: check
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Install Rust
+        run: rustup toolchain install stable --profile minimal
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Build Windows portable ZIP
+        run: python scripts/package_windows.py
+      - name: Packaging regression checks
+        run: python scripts/test_package_windows.py
+      - name: Validate package contents and checksums
+        shell: pwsh
+        run: |
+          $archives = @(Get-ChildItem -LiteralPath dist -Filter '*.zip' -File)
+          if ($archives.Count -ne 1) { throw 'Expected one Windows package' }
+          python scripts/package_windows.py --validate $archives[0].FullName
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Upload public package artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: Authenticator-windows-x86_64
+          path: |
+            dist/*.zip
+            dist/*.zip.sha256
+          if-no-files-found: error
+          retention-days: 14
