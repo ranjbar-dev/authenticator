@@ -55,6 +55,8 @@ Status of every row at plan generation: **planned, not implemented or verified**
 
 ## Execution updates
 
+13 November resumed05: actual disposable native Create → empty Codes → explicit Lock, two safe 600×800 frames and current private-HWND/held-save checks were independently reviewed with limited approval. [Evidence](../docs/qa/task05/resume-2026-11-13.md), [review](../docs/qa/task05/resume-independent-review.md). Actual offline-machine/OS-lock/suspend gates remain open. A QA screenshot-redaction gap for revealed Account fields is assigned to21 before further captures; no leaking capture was created. No multi-owner row is newly fully verified.
+
 Task01 accepted: implementation 7502fa4, independent review_01 re-review approved, Windows CI run 43227714011 succeeded, six local tests and live inert spike evidence in docs/qa/task01/. No full multi-owner requirement row is yet verified. Replace each row's state with verified only after its acceptance checks pass; link commands, report paths and commit IDs here or in owning task evidence. Hardware or reference limitations must stay explicitly unverified. Optional reference-format compatibility may be unsupported with a completed discovery report; mandatory core features may not be silently waived.
 
 
@@ -93,3 +95,5 @@ Task19 corrected source independently approved after P2 triggering-frame Setting
 Hosted19 follow-up: CI43391082018 SUCCESS on6264c54;205library+18other top-leveltests andformat/lint/appbuild pass, including18Trash/CI18corrections/19triggeringLockprivacy. Full-source suite gates18/19 evidenced, native/manual/offline/logon/clipboard unchanged. New20audit changes notcoveredbythisSHA. Exact evidence docs/qa/task19/hosted-follow-up.md.
 
 Task20 limited source approval: distinct security/data-loss reviewer found no material issue;25 independent focused cases/core encrypted recovery+sentinel probe and audit/license reproduction pass; author57unique targeted cases/5helpers/static/releasecheck/build pass. Source/fault/privacy/dependency portions of PRD8–11 now independently evidenced in docs/security-review.md and docs/qa/task20/. Own-PID network sampling with adaptersenabled is notoffline-machine proof. New hosted suite, actual UI/clipboard/Narrator/physical/OS lifecycle/package remain OPEN; earlier coveredrows mustnot be globally calledverified.
+
+Hosted20 CI43397135687 SUCCESS on4e0f715:224ordinary top-level cases (205lib+1main+18other),5directignoredhelperentries exercisedbyparents, formatting/lint/appbuildpass. Source20fullsuitegateclosed. Currentnative21ownfixturelaunchnowsucceedsafterCcache recovery; livejourneys inprogress, notyetacceptance. Native/offline/physical/clipboard/package rowsremainOPENuntilactualownerevidence.

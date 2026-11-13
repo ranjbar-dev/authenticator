@@ -44,7 +44,7 @@ A targeted current-tree key/token-pattern scan returned no matches and no tracke
 
 ## Open gates and residual limits
 
-- Distinct Task20 source review passed; new-source hosted full checks are still required. Independent25 focused cases and core recovery/sentinel probe passed; no full native or disconnected-machine acceptance is inferred.
+- Distinct Task20 source review and hosted full checks passed (CI43397135687 on4e0f715; see qa/task20/hosted-follow-up.md). Independent25 focused cases and core recovery/sentinel probe passed; no full native or disconnected-machine acceptance is inferred.
 - Native full journeys, physical DPI/Narrator/high contrast, actual OS lock/suspend/logon, disconnected-machine operation, interactive clipboard success/expiry/Lock/exit and packaged clean-profile recovery remain open. No unchanged cursor-access denial was retried or bypassed.
 - A compromised unlocked endpoint, administrator/process memory access, clipboard history/observers, pagefile/hibernation/OS dumps and prior exported backups remain outside complete protection. Zeroizing owners reduce lifetime, not all copies.
 - Atomic logical replacement is not a promise of physical power-loss durability or secure SSD/filesystem/memory erasure. Existing backups are neither revoked nor rewritten by Trash deletion. Malicious concurrent same-user filesystem/registry manipulation has documented race limits.

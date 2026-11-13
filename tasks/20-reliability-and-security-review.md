@@ -1,6 +1,6 @@
 # Task 20: Failure resilience and independent security audit
 
-Status: in_progress - source audit independently approved; hosted/native/offline gates open
+Status: in_progress - source audit/full suite approved; native/offline gates open
 Priority: Required for complete v1
 Dependencies: 01–19
 Requirements: PRD §§8–11; all FR cross-cutting guarantees
@@ -43,4 +43,6 @@ Limited source approval by distinct review_20, no material source security/data-
 Release demo entry is debug-only; bounded plaintext conversions avoid avoidable reallocations; explicit StorageFull rollback and attested panic-output checks pass. Independent core restore/sentinel probe passed with62 own-PID TCP/UDP samples showing0 observed entries; adapters stayed enabled and sampling can miss transients. Cargo audit found0 known matches and3 unsuppressed Unix-only maintenance notices; Windows normal/build license inventory185entries independently matched. Actual notice distribution remains23.
 
 Current-source formatting/strict lint/release configuration/prod-bin+lib+own-example build and targeted tests pass; new hosted full suite is required. Native screenshots/input0, interactive Copy→Changed cause unknown, disconnected-machine/full native/physical/Narrator/OS-lock/suspend/logon/package checks remain OPEN. Checked boxes describe bounded source/fault/probe evidence, not those missing gates. Continue21–24 and record commit/hosted result in parent checkpoint.
+
+[Hosted CI43397135687](https://github.com/ranjbar-dev/authenticator/actions/runs/43397135687) subsequently SUCCESS at4e0f715:205library+1main+18other ordinary tests,0failures,5direct helper entries exercised by parents; format/lint/appbuild pass. [Exact follow-up](../docs/qa/task20/hosted-follow-up.md). Hosted source gate closes; native/offline and actual packaged behavior remain separate.
 
