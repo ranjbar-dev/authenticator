@@ -6,7 +6,7 @@ use crate::{
     error::AppError,
     storage::{KdfParameters, OperationCancellation, VaultStore, codec},
 };
-pub use files::Destination;
+pub use files::{Destination, DestinationReview};
 pub use merge::{
     Conflict, Counts, FolderCopy, ImportMode, ImportOptions, ImportSummary, MergeChoice,
 };

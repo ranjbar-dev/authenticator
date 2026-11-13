@@ -200,6 +200,7 @@ pub struct AppState {
     capture_region: Option<crate::platform::capture::Region>,
     scan_alternative: Option<ScanAlternative>,
     imported: Option<Vec<AccountId>>,
+    exported: Option<Result<(), crate::backup::BackupError>>,
     image_busy: bool,
     #[cfg(test)]
     next_save_gate: Option<Arc<crate::storage::test_gate::CommitGate>>,
@@ -208,6 +209,7 @@ struct Completion {
     repository: VaultStore,
     outcome: Result<(), AppError>,
     imported: Vec<AccountId>,
+    exported: Option<Result<(), crate::backup::BackupError>>,
 }
 /// Worker-only post-publication check closes the race where UI cancel records
 /// its request but try_lock misses a slot still held by the producer. After
@@ -282,6 +284,7 @@ impl AppState {
             capture_region: None,
             scan_alternative: None,
             imported: None,
+            exported: None,
             image_busy: false,
             #[cfg(test)]
             next_save_gate: None,
@@ -302,6 +305,13 @@ impl AppState {
     }
     pub fn take_imported(&mut self) -> Option<Vec<AccountId>> {
         self.imported.take()
+    }
+    pub fn take_exported(&mut self) -> Option<Result<(), crate::backup::BackupError>> {
+        self.exported.take()
+    }
+    pub fn idle_deadline(&self) -> Result<Instant, AppError> {
+        Ok(self.last_activity
+            + Duration::from_secs(self.vault()?.preferences().lock_timeout_seconds().into()))
     }
     pub fn vault(&self) -> Result<&Vault, AppError> {
         self.repository
@@ -354,6 +364,7 @@ impl AppState {
         }
         self.review = None;
         self.imported = None;
+        self.exported = None;
         self.image_busy = false;
         self.capture_region = None;
         self.scan_alternative = None;
@@ -530,6 +541,7 @@ impl AppState {
                 repository,
                 outcome,
                 imported: Vec::new(),
+                exported: None,
             });
             drop(slot);
             finish_publication(&cancel, &result);
@@ -597,6 +609,60 @@ impl AppState {
                 repository,
                 outcome,
                 imported,
+                exported: None,
+            });
+            drop(slot);
+            finish_publication(&cancel, &result);
+            repaint();
+        });
+        Ok(())
+    }
+    /// Export transfers the sole decrypted owner, with the same generation,
+    /// lifecycle, idle and nonblocking publication checks as local writes.
+    pub fn begin_export(
+        &mut self,
+        destination: crate::backup::Destination,
+        passphrase: Zeroizing<String>,
+        watch: LifecycleWatch,
+        repaint: impl Fn() + Send + 'static,
+    ) -> Result<(), AppError> {
+        if self.busy() || self.capture_busy() || self.image_busy {
+            return Err(AppError::VaultBusy);
+        }
+        if !self.is_unlocked() {
+            return Err(AppError::VaultLocked);
+        }
+        let deadline = self.idle_deadline()?;
+        let cancel =
+            OperationCancellation::guarded(move || !watch.changed() && Instant::now() < deadline);
+        #[cfg(test)]
+        let cancel = cancel.with_test_gate(self.next_save_gate.take());
+        let mut repository = self.repository.take().ok_or(AppError::VaultBusy)??;
+        let result = Arc::new(Mutex::new(None));
+        self.worker = Some(Worker {
+            generation: self.generation,
+            cancel: cancel.clone(),
+            result: result.clone(),
+            importing: true,
+            deadline: Some(deadline),
+        });
+        std::thread::spawn(move || {
+            let exported = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                crate::backup::export(&repository, destination, passphrase, &cancel).map(|_| ())
+            }))
+            .unwrap_or_else(|_| {
+                repository.lock();
+                Err(crate::backup::BackupError::Unavailable)
+            });
+            let mut slot = result.lock().unwrap_or_else(|e| e.into_inner());
+            if cancel.is_cancelled() {
+                repository.lock();
+            }
+            *slot = Some(Completion {
+                repository,
+                outcome: Ok(()),
+                imported: Vec::new(),
+                exported: Some(exported),
             });
             drop(slot);
             finish_publication(&cancel, &result);
@@ -626,6 +692,9 @@ impl AppState {
         }
         if current && done.outcome.is_ok() && !done.imported.is_empty() {
             self.imported = Some(done.imported);
+        }
+        if current {
+            self.exported = done.exported;
         }
         self.repository = Some(Ok(done.repository));
         self.worker = None;
@@ -926,6 +995,7 @@ mod tests {
             repository: store,
             outcome: Ok(()),
             imported: Vec::new(),
+            exported: None,
         })));
         let mut state = AppState::new(Err(AppError::VaultLocked));
         state.repository = None;

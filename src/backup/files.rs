@@ -10,6 +10,19 @@ pub struct Destination {
     path: PathBuf,
     expected: Option<[u8; 32]>,
 }
+/// Inspected on a worker without granting overwrite consent. The UI must show
+/// the selected path and obtain explicit consent before consuming `approve`.
+pub struct DestinationReview(Destination);
+redacted!(DestinationReview);
+impl DestinationReview {
+    pub fn needs_overwrite(&self) -> bool {
+        self.0.expected.is_some()
+    }
+    /// Call only after the user's explicit export/overwrite action. No I/O.
+    pub fn approve(self) -> Destination {
+        self.0
+    }
+}
 pub(super) struct Source {
     path: PathBuf,
     digest: [u8; 32],
@@ -100,6 +113,11 @@ fn digest(path: &Path) -> Result<Option<[u8; 32]>> {
     }
 }
 impl Destination {
+    /// Binds a future user decision to inspected bytes without granting consent.
+    /// File inspection/hashing is synchronous and belongs on a worker.
+    pub fn review(path: &Path) -> Result<DestinationReview> {
+        Ok(DestinationReview(Self::new(path, digest(path)?)?))
+    }
     /// A missing destination is explicit create-only intent. Existing files fail.
     pub fn create_new(path: &Path) -> Result<Self> {
         if digest(path)?.is_some() {

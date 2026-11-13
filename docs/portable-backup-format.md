@@ -147,7 +147,11 @@ Codes/Backup Codes queries, IDs, filters and codes after successful import.
 
 `Destination::create_new` is explicit create-only intent. Existing files require
 `overwrite_reviewed` after UI overwrite consent; this binds consent to the exact
-reviewed ciphertext bytes. The writer checks them again inside commit admission.
+reviewed bytes. Task12's `Destination::review` alternative inspects the target
+on a worker without granting consent, returning an opaque `DestinationReview`.
+The UI consumes `approve` only after an explicit Export or named overwrite
+confirmation. It retains the same inspected bytes/absence across the confirmation;
+approving performs no I/O. The writer checks them again inside commit admission.
 Changed/missing/replaced targets fail. Native create-only rename also refuses a
 concurrent newly created destination. The writer only writes ciphertext into a
 random generic `pending-UUID.bin` beside the target, flushes the file and performs

@@ -1,6 +1,6 @@
 # Task 12: Easy encrypted backup export screen
 
-Status: todo
+Status: in_progress - corrected source approved; native UI/visual and Task13 GUI restore gates open
 Priority: Required for complete v1
 Dependencies: 04, 05, 11
 Requirements: FR-6.1/3; PRD §§5.4, 7
@@ -11,10 +11,10 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Implementation
 
-- [ ] Build Settings → Export & Import → Export encrypted backup. Show a concise included-data summary and local file destination picker.
-- [ ] Require backup passphrase and confirmation, conceal both and explain that this passphrase cannot be recovered. Do not provide an encryption-disable switch.
-- [ ] Show explicit overwrite confirmation, busy state, cancellation handling and success destination without contents. Release passphrase buffers after exit/completion.
-- [ ] Use the real backup engine and show safe actionable failures such as denied access or insufficient space.
+- [x] Build Settings → Export & Import → Export encrypted backup. Show a concise included-data summary and local file destination picker.
+- [x] Require backup passphrase and confirmation, conceal both and explain that this passphrase cannot be recovered. Do not provide an encryption-disable switch.
+- [x] Show explicit overwrite confirmation, busy state, cancellation handling and success destination without contents. Release passphrase buffers after exit/completion.
+- [x] Use the real backup engine and show safe actionable failures such as denied access or insufficient space.
 
 ## Screen checklist
 
@@ -48,5 +48,30 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 
 ## Evidence
 
-Not started. On execution record changed files, test commands/results, sanitized UI evidence paths where applicable, independent reviewer result and commit reference. If blocked, retain incomplete status and record exact cause, attempted remedies and resumption steps.
+Corrected source approved by distinct review_12/focused re-review after fixing
+P2 export of stale debounced display preferences. Implementation boxes above
+record source/engine/framework evidence. Screen and acceptance items remain open
+for actual native interaction/rendering and Task13 GUI recovery; no screenshots
+or new-user native completion are claimed.
 
+- [Implementation and exact command matrix](../docs/qa/task12/implementation-evidence.md).
+- [Independent finding, correction and scope](../docs/qa/task12/independent-review.md).
+- Final131 tests passed,4 subprocess helper entrypoints exercised by parents,
+  15 suites76.52s; strict Clippy/fmt/diff and production/lib/export-example build pass.
+- Independent export9/picker2/contrast1 and focused current-preferences1,
+  save-failure/retry1, unexpected-lock1 passed. The original external probe exposed
+  the P2 rather than being recorded as a passing acceptance case.
+- Preference preparation uses the existing guarded worker, retains reviewed bytes/
+  overwrite consent and waits for current save before encryption. Failure blocks
+  backup writing and clears phrases while preserving retry intent. A completed
+  earlier preference save is not rolled back by a later export failure/cancel.
+- Both author normal launches and the reviewer launch returned GetCursorPos
+  Access denied0x80070005, with no owned window/process/fixture. No bypass or cause
+  inference. Synthetic event/AX/geometry checks are not native/pixel proof.
+- Actual picker/pointer/keyboard/focus, long paths/short-window modals, readable
+  340/600/960 screenshots, busy/error/success/new-user flow and Task13 GUI restore
+  remain OPEN. Physical/offline/device/Narrator/reference gates unchanged.
+
+Continue independent Task13 after integration, then revisit these gates in13/21/23.
+No real/default/reference data, retained owned state or unrelated preview changes.
+Commit reference follows in the parent checkpoint.

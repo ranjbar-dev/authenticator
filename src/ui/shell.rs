@@ -1,5 +1,6 @@
 //! Inventory-derived shell and local vault lifecycle.
 use super::codes;
+use super::export::{self, ExportForm, Picker};
 use super::import_review::ImportReview;
 use super::{
     components as c,
@@ -61,6 +62,10 @@ pub struct AuthenticatorApp {
     capture_focus: bool,
     capture_preparing: Option<(u64, bool)>,
     review: Option<ImportReview>,
+    export_hub: bool,
+    export_form: Option<ExportForm>,
+    export_picker: Option<Picker>,
+    export_focus: bool,
     image: Option<ImageJob>,
     imported: Vec<AccountId>,
     show_imported: bool,
@@ -134,6 +139,10 @@ impl AuthenticatorApp {
             capture_focus: false,
             capture_preparing: None,
             review: None,
+            export_hub: false,
+            export_form: None,
+            export_picker: None,
+            export_focus: false,
             image: None,
             imported: Vec::new(),
             show_imported: false,
@@ -185,6 +194,10 @@ impl AuthenticatorApp {
         self.clock.clear();
         egui::Popup::close_all(&self.context);
         self.review = None;
+        self.export_form = None;
+        self.export_picker = None;
+        self.export_hub = false;
+        self.export_focus = false;
         self.image = None;
         self.state.finish_image();
         self.imported.clear();
@@ -244,6 +257,8 @@ impl AuthenticatorApp {
             self.clear_form();
             let can_flush = (self.preferences_dirty.is_some() || self.pending_preferences)
                 && self.review.is_none()
+                && self.export_form.is_none()
+                && self.export_picker.is_none()
                 && self.image.is_none()
                 && self.capture_preparing.is_none()
                 && !self.state.capture_busy()
@@ -279,7 +294,11 @@ impl AuthenticatorApp {
         let save_mode = self.review.as_ref().map(|r| r.mode);
         if let Some(outcome) = self.state.poll(now) {
             self.ordered_ids = None;
-            if self.pending_mutation {
+            if let Some(exported) = self.state.take_exported() {
+                if let Some(form) = &mut self.export_form {
+                    form.complete(exported, &ctx);
+                }
+            } else if self.pending_mutation {
                 self.pending_mutation = false;
                 self.preferences_error = self.pending_preferences && outcome.is_err();
                 self.status = Some(if outcome.is_ok() {
@@ -328,6 +347,31 @@ impl AuthenticatorApp {
                 self.focus_form = true;
                 self.form_error = outcome.err().map(|e| e.to_string());
                 self.operation_cancelled = false;
+            }
+        }
+        if (self.export_hub || self.export_form.is_some()) && !self.state.session_active() {
+            self.lock();
+        }
+        if let Some(picker) = &self.export_picker
+            && let Some(selection) = picker.poll()
+        {
+            let current = picker.generation == self.state.generation() && self.state.is_unlocked();
+            self.export_picker = None;
+            self.state.finish_image();
+            if current && let Some(form) = &mut self.export_form {
+                match selection {
+                    Ok(Some((path, destination))) => {
+                        form.path = Some(path);
+                        form.destination = Some(destination);
+                        form.error = None;
+                        form.success = false;
+                    }
+                    Ok(None) => {}
+                    Err(error) => {
+                        form.set_error(export::error_message(error));
+                    }
+                }
+                form.focus = form.error.is_none();
             }
         }
         if self.codes_preferences.is_none()
@@ -407,6 +451,11 @@ impl AuthenticatorApp {
             return;
         }
         if !self.state.session_active() && !self.state.busy() {
+            if self.export_form.is_some() {
+                // An unexpected worker failure may have locked its repository.
+                // Drop queued export secrets/metadata just as for explicit Lock.
+                self.lock();
+            }
             self.review = None;
             self.image = None;
         }
@@ -486,6 +535,7 @@ impl AuthenticatorApp {
         }
         // Real monotonic expiry continues even with no pointer/keyboard events.
         if self.state.busy()
+            || self.export_picker.is_some()
             || self.image.is_some()
             || self.capture_preparing.is_some()
             || self.state.capture_busy()
@@ -530,18 +580,19 @@ impl AuthenticatorApp {
                 let codes_home=self.state.session_active() && self.state.route==Route::Codes && self.review.is_none() && self.capture_preparing.is_none() && !self.state.capture_busy();
                 if !codes_home { c::secondary(ui,"AUTHENTICATOR · LOCAL VAULT"); }
                 c::toolbar(ui,|ui| {
-                    c::heading(ui,if self.pending_mutation {self.state.route.title()} else if self.state.importing() {"Saving accounts"} else if self.review.as_ref().is_some_and(|r| !r.mode.is_import()) {"Account"} else if self.state.is_unlocked() && (self.capture_preparing.is_some() || self.state.capture_busy()) {"Screenshot to Scan"} else if self.state.session_active() {self.state.route.title()} else if self.exists {"Unlock vault"} else {"Create vault"},1);
+                    c::heading(ui,if self.export_form.is_some() {"Export encrypted backup"} else if self.export_hub {"Export & Import"} else if self.pending_mutation {self.state.route.title()} else if self.state.importing() {"Saving accounts"} else if self.review.as_ref().is_some_and(|r| !r.mode.is_import()) {"Account"} else if self.state.is_unlocked() && (self.capture_preparing.is_some() || self.state.capture_busy()) {"Screenshot to Scan"} else if self.state.session_active() {self.state.route.title()} else if self.exists {"Unlock vault"} else {"Create vault"},1);
                     let help=c::icon_button(ui,c::Icon::Help,"Help for this screen");
                     if help.clicked() {self.dialog=Some(c::Dialog::new("Offline help",help.id)); self.help_open=true;}
                     if self.state.session_active() && c::icon_button(ui,c::Icon::Lock,"Lock vault").clicked() {self.lock();}
                 });
                 if !codes_home { c::secondary(ui,if self.state.session_active() {"Vault unlocked on this device"} else {"Vault locked · credentials hidden"}); }
                 ui.add_space(theme::SMALL_GAP);
-                if self.review.is_none() && self.image.is_none() && self.capture_preparing.is_none() && !self.state.capture_busy() && let Some(route)=c::tabs(ui,self.state.route) { self.state.navigate(route); self.status=None; }
+                if !self.export_hub && self.export_form.is_none() && self.review.is_none() && self.image.is_none() && self.capture_preparing.is_none() && !self.state.capture_busy() && let Some(route)=c::tabs(ui,self.state.route) { self.state.navigate(route); self.status=None; }
                 ui.add_space(theme::SMALL_GAP);
                 if let Some(error)=self.state.storage_error() {
                     c::status(ui,"storage-error",&error.to_string(),c::StatusKind::Error);
                     c::secondary(ui,"Close other Authenticator instances and restart. No replacement vault is created here.");
+                } else if self.export_form.is_some() && self.state.session_active() { self.export_content(ui);
                 } else if self.pending_mutation { self.unlocked_content(ui);
                 } else if self.state.importing() { self.review_content(ui);
                 } else if !self.state.is_unlocked() {
@@ -713,6 +764,10 @@ impl AuthenticatorApp {
         }
     }
     fn unlocked_content(&mut self, ui: &mut egui::Ui) {
+        if self.export_hub {
+            self.export_hub_content(ui);
+            return;
+        }
         if self.pending_mutation && self.state.route == Route::Settings {
             c::progress(ui, "Saving encrypted settings…", None);
             return;
@@ -849,6 +904,16 @@ impl AuthenticatorApp {
                 }
             }
             Route::Settings => {
+                let export = c::button(ui, "Export & Import", c::ButtonStyle::Primary);
+                if self.export_focus {
+                    export.request_focus();
+                    self.export_focus = false;
+                }
+                if export.clicked() {
+                    self.export_hub = true;
+                    self.export_focus = true;
+                    self.status = None;
+                }
                 c::card(ui, |ui| {
                     c::icon_tile(ui, c::Icon::Settings);
                     c::heading(ui, "Local vault", 2);
@@ -905,6 +970,175 @@ impl AuthenticatorApp {
                     self.lock();
                 }
             }
+        }
+    }
+    fn export_hub_content(&mut self, ui: &mut egui::Ui) {
+        if c::button(ui, "Back to Settings", c::ButtonStyle::Secondary).clicked() {
+            self.export_hub = false;
+            self.export_focus = true;
+            return;
+        }
+        c::card(ui, |ui| {
+            c::icon_tile(ui, c::Icon::Lock);
+            c::heading(ui, "A backup you control", 2);
+            c::body(
+                ui,
+                "Save a portable encrypted copy of your full vault to a local file. Keep a separate backup passphrase to restore it later.",
+            );
+            c::secondary(
+                ui,
+                "No registration or internet connection is needed. Store the file and its passphrase separately.",
+            );
+            let export = c::button(ui, "Export encrypted backup", c::ButtonStyle::Primary);
+            if self.export_focus {
+                export.request_focus();
+                self.export_focus = false;
+            }
+            if export.clicked() {
+                self.export_form = Some(ExportForm::new(export.id));
+                c::clear_sensitive_widget_memory(&self.context);
+            }
+        });
+    }
+    fn start_export(&mut self, form: &mut ExportForm) {
+        if form.exporting {
+            return;
+        }
+        if self.state.busy() {
+            if self.pending_preferences {
+                form.saving_preferences = true;
+                form.focus = true;
+            } else {
+                form.set_error("Finish the active operation before exporting the backup.");
+            }
+            return;
+        }
+        if let Err(error) = form.validate() {
+            form.set_error(error);
+            return;
+        }
+        if self.preferences_dirty.is_some() {
+            let Some(preferences) = self.codes_preferences.clone() else {
+                form.clear_secrets(&self.context);
+                form.set_error("Current display settings are unavailable. Return to Settings and reopen export before retrying.");
+                return;
+            };
+            self.preferences_error = false;
+            if self.begin_mutation(SaveIntent::CodesPreferences(preferences)) {
+                self.preferences_dirty = None;
+                form.saving_preferences = true;
+                form.error = None;
+                form.focus = true;
+            } else {
+                form.clear_secrets(&self.context);
+                form.set_error("Display settings could not be saved. Finish other operations or restart Authenticator, then retry export.");
+            }
+            return;
+        }
+        let Some(destination) = form.destination.take() else {
+            return;
+        };
+        let passphrase = std::mem::take(&mut form.passphrase);
+        form.clear_secrets(&self.context);
+        let repaint = self.context.clone();
+        let result = match &self.lifecycle {
+            Ok(lifecycle) if lifecycle.healthy() => self.state.begin_export(
+                destination.approve(),
+                passphrase,
+                lifecycle.watch(),
+                move || repaint.request_repaint(),
+            ),
+            _ => Err(crate::error::AppError::StorageUnavailable),
+        };
+        match result {
+            Ok(()) => {
+                form.exporting = true;
+                form.focus = true;
+                form.error = None;
+            }
+            Err(_) => {
+                form.set_error("Cannot start export. Wait for other operations, or restart Authenticator if lifecycle protection is unavailable. Choose a destination and retry.");
+            }
+        }
+    }
+    fn export_content(&mut self, ui: &mut egui::Ui) {
+        let Some(mut form) = self.export_form.take() else {
+            return;
+        };
+        if form.saving_preferences && !self.state.busy() {
+            form.saving_preferences = false;
+            if self.preferences_error {
+                form.clear_secrets(&self.context);
+                form.set_error("Your display changes could not be saved, so export did not start. Check access to the local vault, enter the backup passphrase and retry. Export did not write to the selected file.");
+            } else {
+                self.start_export(&mut form);
+            }
+        }
+        let action = export::form(ui, &mut form, self.export_picker.is_some());
+        let mut keep = true;
+        match action {
+            export::Action::None => {}
+            export::Action::Back => {
+                form.clear_secrets(&self.context);
+                self.export_picker = None;
+                self.state.finish_image();
+                self.export_focus = true;
+                self.context
+                    .memory_mut(|memory| memory.request_focus(form.opener));
+                keep = false;
+            }
+            export::Action::CancelAndLock => {
+                self.lock();
+                keep = false;
+            }
+            export::Action::Pick => {
+                let launch = self.state.idle_deadline().and_then(|deadline| {
+                    let watch = self.lifecycle.as_ref().map_err(|e| *e)?.watch();
+                    self.state.begin_image()?;
+                    self.export_picker = Some(Picker::start(
+                        self.state.generation(),
+                        watch,
+                        deadline,
+                        self.context.clone(),
+                    ));
+                    Ok(())
+                });
+                if launch.is_err() {
+                    form.set_error("Cannot open the destination picker. Finish other operations or restart Authenticator, then retry.");
+                }
+            }
+            export::Action::Submit(opener) => match form.validate() {
+                Err(error) => form.set_error(error),
+                Ok(())
+                    if form
+                        .destination
+                        .as_ref()
+                        .is_some_and(|d| d.needs_overwrite()) =>
+                {
+                    form.overwrite = Some(c::Dialog::new("Replace existing backup file?", opener));
+                }
+                Ok(()) => self.start_export(&mut form),
+            },
+        }
+        if let Some(mut dialog) = form.overwrite.take() {
+            let mut consent = false;
+            let close = dialog.show(&self.context, |ui, first| {
+                c::body(ui, "Export will replace this existing file with the encrypted vault backup:");
+                if let Some(path) = &form.path { c::body(ui, &path.to_string_lossy()); }
+                c::secondary(ui, "Keep the existing file if it is your only working backup. A changed file must be selected and reviewed again.");
+                let cancel = c::button(ui, "Keep existing file", c::ButtonStyle::Secondary);
+                if first { cancel.request_focus(); }
+                if c::button(ui, "Replace file and export", c::ButtonStyle::Primary).clicked() { consent = true; }
+                cancel.clicked() || consent
+            });
+            if consent {
+                self.start_export(&mut form);
+            } else if !close {
+                form.overwrite = Some(dialog);
+            }
+        }
+        if keep {
+            self.export_form = Some(form);
         }
     }
     fn capture_controls(&mut self, ui: &mut egui::Ui) {
@@ -1510,6 +1744,8 @@ impl AuthenticatorApp {
             || self.state.busy()
             || !self.state.is_unlocked()
             || self.review.is_some()
+            || self.export_form.is_some()
+            || self.export_picker.is_some()
             || self.delete.is_some()
             || self.state.capture_busy()
             || self.image.is_some()
@@ -1959,7 +2195,7 @@ impl AuthenticatorApp {
             let close=dialog.show(ctx,|ui,first| {
                 if help {
                     c::body(ui,"Authenticator keeps your vault on this device. Use the three tabs for verification codes, recovery codes and local settings.");
-                    c::secondary(ui,"Your vault passphrase cannot be reset. Keep a separate encrypted backup and its passphrase. Screenshot to Scan and image/manual entry work locally. Review each account before saving. Backup screens are still being built.");
+                    c::secondary(ui,"Your vault passphrase cannot be reset. Settings → Export & Import saves a local encrypted backup protected by a separate backup passphrase. Keep the file and passphrase separately. Screenshot to Scan and image/manual entry work locally. Review each account before saving.");
                     c::secondary(ui,"Keyboard: Tab and Shift+Tab move focus. Enter or Space activates buttons. Ctrl+L locks the vault. Escape cancels passphrase work or closes dialogs.");
                 } else {
                     c::body(ui,match workflow {
@@ -1996,6 +2232,9 @@ impl eframe::App for AuthenticatorApp {
     }
 }
 
+#[cfg(all(test, windows))]
+#[path = "export_tests.rs"]
+mod export_tests;
 #[cfg(all(test, windows))]
 mod capture_privacy_tests {
     use super::*;

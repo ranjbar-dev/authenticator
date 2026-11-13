@@ -513,3 +513,55 @@ wall-clock account edits or creation fail. OTP uses actual UTC as before. Direct
 recovery-code updates must use the aggregate logical time and update their set
 and vault together (Task16). Tasks12/13 own all GUI/worker/session wiring and
 post-import cached display/ID/code invalidation; this task adds no UI route.
+
+## Encrypted export screen (Task12)
+
+Settings → Export & Import → Export encrypted backup reuses ROOT's existing
+native form/theme and sole `VaultStore` owner. A separate exact backup passphrase
+and confirmation are concealed with the shared password adapter. Bounds remain
+12–1024 UTF-8 bytes without trimming; no plaintext export/encryption toggle exists.
+Selection and validation do not write any vault or backup data. Pending valid
+display changes are first saved through the existing guarded asynchronous
+mutation worker. Export waits for that success before taking its snapshot;
+failure blocks backup writing with retry feedback and retained display intent.
+The sole owner then moves into the guarded export worker and returns only a safe
+unit result; the original store is never cloned for UI work. A completed earlier
+preference save is not rolled back if the subsequent export fails or is cancelled.
+
+The Save adapter uses documented `GetSaveFileNameW` with the same worker/hook/timer
+cancellation pattern as the existing local image picker. It is unowned so ROOT
+can process Lock. `OFN_NOTESTFILECREATE` prevents the dialog's test-file creation;
+the real backup writer reports access/space failures. `OFN_NOCHANGEDIR`,
+`OFN_DONTADDTORECENT` and `OFN_NODEREFERENCELINKS` are used. All application paths
+are absolute; as documented for Task08, this flag does not provide a process-wide
+current-directory isolation guarantee. Standard Windows dialog/shell behavior is
+not a promise to erase OS metadata. No network call or cloud destination adapter
+was added. The engine still rejects UNC/device/reparse paths.
+
+The native dialog does not prompt for overwrite: ROOT performs one deliberate
+named confirmation. `Destination::review` inspects/hashes on the picker worker
+and returns an opaque `DestinationReview` without consent. Its `approve` consumes
+the same prepared destination only after explicit Export for a missing file or
+Replace file and export for an existing one. Initial modal focus is Keep existing
+file. The atomic writer's existing bytes/absence check rejects a later change;
+this addition does not strengthen the documented hostile-filesystem race limits.
+
+Both passphrase buffers and widget history clear when handing off to encryption,
+on preparation failure, completion, Back, close and Lock. During the optional
+preference-save stage the concealed form owns them; its fields are hidden and
+Lock or unexpected repository locking drops the queued form immediately.
+Export path/review/dialog metadata is session-only and drops
+on Lock before waiting for file/KDF work. The picker observes cancellation,
+lifecycle changes and the original monotonic idle deadline. Export reuses guarded
+commit admission, generation rejection, `try_lock` cancellation and worker
+post-publication checks. Native I/O/KDF cannot be forcibly interrupted: pending
+worker memory may live until return, and an already admitted whole encrypted
+write may complete after Lock. UI wording does not promise rollback or absence
+of a file after that boundary. Errors ask the user to reselect/review rather than
+reusing stale consent; success displays only the destination.
+
+Primary API references: [GetSaveFileNameW](https://learn.microsoft.com/en-us/windows/win32/api/commdlg/nf-commdlg-getsavefilenamew),
+[OPENFILENAMEW flags](https://learn.microsoft.com/en-us/windows/win32/api/commdlg/ns-commdlg-openfilenamew),
+and [Open and Save As dialogs](https://learn.microsoft.com/en-us/windows/win32/dlgbox/open-and-save-as-dialog-boxes).
+Task12 source/worker tests are distinct from actual native picker/pointer evidence;
+see `docs/qa/task12/implementation-evidence.md` for the current denied-launch gate.

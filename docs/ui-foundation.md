@@ -37,6 +37,24 @@ framework/OS limits. Task09's full-node/clipboard/actual multiline metrics tests
 and actual340/600/960 pointer/key/screenshots are in its QA handoff. The native
 Task07 GDI typography exception remains unchanged.
 
+Task12 adds Settings → Export & Import → Export encrypted backup using the same
+ROOT heading, non-dragging scroll holder, full typography, card, opaque icon tile,
+labeled concealed fields, buttons, progress, status and modal. The platform Save
+dialog is unowned on its own thread so ROOT Lock stays available. Destination
+inspection is also off UI; no file is created by selection. ROOT overwrite review
+names the full selected file, initially focuses Keep existing file and binds the
+later explicit replacement to the inspected bytes. Busy removes editor/submit
+controls, cancellation locks immediately, and success shows only the destination.
+Back, Lock, close, idle and completion clear owned passphrase strings and editor
+history, subject to the existing framework/OS memory-lifetime limits.
+
+Task12 synthetic Context/AccessKit checks cover concealed fields and control
+states at340/600/960, safe-default overwrite cancellation and explicit replacement,
+busy and completion. Both documented normal own-preview launches failed with
+GetCursorPos Access denied0x80070005 and no own window. Thus no native screenshot,
+actual pointer/keyboard, Save-dialog cancellation or visual-quality pass is
+claimed. See docs/qa/task12/implementation-evidence.md for the exact open gate.
+
 Task08 extends the same ROOT codes screen and scroll holder with explicit
 candidate choice, labeled editable review and committed account/code cards.
 Screenshot to Scan remains primary, with local image and manual entry directly
