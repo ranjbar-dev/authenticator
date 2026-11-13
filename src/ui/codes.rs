@@ -66,13 +66,32 @@ pub fn copy_value(account: &Account, clock: &dyn Clock) -> Result<Zeroizing<Stri
     Ok(Zeroizing::new(code.expose_value().to_owned()))
 }
 pub fn ordered(vault: &Vault, preferences: &CodesPreferences) -> Vec<AccountId> {
-    let query = Zeroizing::new(caseless::default_case_fold_str(&preferences.query));
+    ordered_with_filter(
+        vault,
+        &preferences.query,
+        preferences.sort,
+        preferences.folder,
+    )
+}
+
+/// Shared search/sort semantics without borrowing or changing Codes preferences.
+pub fn ordered_accounts(vault: &Vault, query: &str, sort: SortOrder) -> Vec<AccountId> {
+    ordered_with_filter(vault, query, sort, FolderFilter::All)
+}
+
+fn ordered_with_filter(
+    vault: &Vault,
+    query: &str,
+    sort: SortOrder,
+    folder: FolderFilter,
+) -> Vec<AccountId> {
+    let query = Zeroizing::new(caseless::default_case_fold_str(query));
     // Fold metadata once per list change, never once per comparison or HMAC tick.
     let mut values = vault
         .accounts()
         .iter()
         .filter(|a| a.state().deletion == DeletionState::Active)
-        .filter(|a| match preferences.folder {
+        .filter(|a| match folder {
             FolderFilter::All => true,
             FolderFilter::Unfiled => !vault.memberships().iter().any(|m| {
                 m.account_id() == a.id()
@@ -99,7 +118,7 @@ pub fn ordered(vault: &Vault, preferences: &CodesPreferences) -> Vec<AccountId> 
         })
         .collect::<Vec<_>>();
     values.sort_by(|(a, service_a, account_a), (b, service_b, account_b)| {
-        let primary = match preferences.sort {
+        let primary = match sort {
             SortOrder::LatestFirst => b.state().created_at.cmp(&a.state().created_at),
             SortOrder::EarliestFirst => a.state().created_at.cmp(&b.state().created_at),
             SortOrder::ServiceAscending => service_a.cmp(service_b),
@@ -109,9 +128,7 @@ pub fn ordered(vault: &Vault, preferences: &CodesPreferences) -> Vec<AccountId> 
                 match (account_a.is_empty(), account_b.is_empty()) {
                     (true, false) => Ordering::Greater,
                     (false, true) => Ordering::Less,
-                    _ if preferences.sort == SortOrder::AccountAscending => {
-                        account_a.cmp(account_b)
-                    }
+                    _ if sort == SortOrder::AccountAscending => account_a.cmp(account_b),
                     _ => account_b.cmp(account_a),
                 }
             }

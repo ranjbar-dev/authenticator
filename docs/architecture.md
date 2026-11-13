@@ -1,5 +1,31 @@
 # Architecture and concrete decisions
 
+## Task14 concealed recovery list and selection
+
+`ui::backup_codes` derives set metadata using associated active account IDs,
+active set state and active code used state. It never calls `expose_value` or
+creates plaintext code strings. A trashed set is absent from the list but remains
+an explicit selection status because the domain permits only one set per account,
+including Trash. `Screen::Editor(AccountId)` is therefore only a no-existing-set
+handoff; `Screen::Detail` binds both real account and set IDs. Both revalidate the
+target against the borrowed current vault before rendering. Downstream Tasks15/16
+must perform their own current-state checks before any mutation/secret action.
+
+The derived cache contains IDs, counts and ambiguity IDs only. Search and sort
+changes, every adopted worker completion, Lock, tab departure and successful backup
+import invalidate/reset it. A timestamp alone is deliberately not a cache revision:
+clamped logical timestamps can repeat. Session-only query/sort/page/selection never
+enter the encrypted schema and never mutate Codes preferences. A shared ordering
+helper provides full Unicode case folding, all six existing sort modes, stable UUID
+ties and missing-identifier-last behavior with an all-account filter. Pagination
+renders twenty rows while retaining exact selected IDs across pages.
+
+Only the existing store/sole-worker pipeline writes data. Task14 adds no save
+intent, synchronous paint-time disk/crypto operation, whole-vault clone, persistence
+format, dependency, network or clipboard action. Task15 text/file persistence and
+Task16 concealed-code operations remain explicitly unavailable in the typed handoff
+bodies. Full native interaction/visual evidence is still required separately.
+
 ## Task09 account form and save intents
 
 Review09 correction: `OperationCancellation` uses atomic REQUESTED/ADMITTED bits

@@ -1,5 +1,36 @@
 # Shared Rust UI foundation
 
+Task14 extends the Backup Codes ROOT route with the shared introductory body,
+primary Add Backup Codes action, local learn-more dialog, labeled search and
+native six-option sort, opaque recovery icon tiles, metadata cards and explicit
+account selection. It reuses complete theme typography and the non-dragging ROOT
+scroll holder. There is no new theme or stored selector preference.
+
+`ui::backup_codes::Session` retains only screen/selection IDs, sort/page/focus and
+an ID/count projection; display names remain borrowed from the authenticated
+vault. The visible list excludes trashed accounts and sets; available/used totals
+exclude trashed individual codes. Selection includes active accounts with no set,
+an active set, or an explicitly identified set in Trash. The latter retains its
+real set ID and cannot route to a new conflicting set. Equal service/identifier
+pairs show full account IDs. Twenty rows per page bound the widget tree; stable
+Previous/Next identities, live filtering, selected-account confirmation and Back
+are covered by synthetic ROOT events. Lock, tab departure and successful adopted
+backup import reset IDs/projection; every worker completion invalidates derived
+counts, including mutations sharing the same aggregate update timestamp.
+
+Task14's typed `Editor(AccountId)` / `Detail { account, set, from_selection }`
+handoffs currently show safe account/set summaries and explicit build capability
+limits. Task15 owns code entry/file/review/save; Task16 owns reveal/copy/used/edit/
+delete. No pretend Save or secret action was added. Existing account creation can
+already persist real recovery sets, which this list displays.
+
+Context/AccessKit checks cover 340x780, 600x800 and 960x900 keyboard reachability,
+separate full-height wrapping/metadata checks, input, routes and locked privacy.
+Both normal Task14 own-preview launches failed with GetCursorPos Access denied
+0x80070005 before any owned window/process/temp fixture was found. Actual pointer,
+keyboard, screenshots and pixel quality remain unverified; this is not a native
+visual pass. See `docs/qa/task14/implementation-evidence.md` for commands and limits.
+
 Review09 corrections preserve the screen hierarchy. Duplicate-code approval now
 clears its contradictory global warning immediately; disabling backup input also
 clears code-specific feedback, while unrelated metadata errors and input remain.

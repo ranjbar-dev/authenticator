@@ -1,6 +1,6 @@
 # Task 14: Backup Codes tab and account selection
 
-Status: todo
+Status: in_progress - corrected list/selector/handoff source approved; Task15/16 bodies and native gates open
 Priority: Required for complete v1
 Dependencies: 04, 05, 10–13
 Requirements: FR-3.1; PRD §§5.3, 7
@@ -11,10 +11,10 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Implementation
 
-- [ ] Implement the Backup Codes tab listing real sets by associated account without exposing code contents.
-- [ ] Create an empty state with concise explanation, Add Backup Codes and local learn-more help.
+- [x] Implement the Backup Codes tab listing real sets by associated account without exposing code contents.
+- [x] Create an empty state with concise explanation, Add Backup Codes and local learn-more help.
 - [ ] Add the searchable/sortable account-selection screen, excluding trashed accounts and making existing sets clear. Route to the editor/detail actions.
-- [ ] Compute available/used counts from real vault state and refresh after changes/import/restore/lock.
+- [x] Compute available/used counts from real vault state and refresh after changes/import/restore/lock.
 
 ## Screen checklist
 
@@ -48,5 +48,30 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 
 ## Evidence
 
-Not started. On execution record changed files, test commands/results, sanitized UI evidence paths where applicable, independent reviewer result and commit reference. If blocked, retain incomplete status and record exact cause, attempted remedies and resumption steps.
+Corrected list/selector/typed metadata handoff source approved by distinct review_14
+and focused re-review. Account selection and exact-ID routes are implemented;
+item3 remains open for the actual editor/detail bodies in15/16. Source boxes above
+do not certify native rendering or the full task.
+
+- [Author checklist, policy and exact checks](../docs/qa/task14/implementation-evidence.md).
+- [Independent finding, re-review and limits](../docs/qa/task14/independent-review.md).
+- [Parent identity correction and checks](../docs/qa/task14/parent-fixes.md).
+- Final151 all-target/all-feature tests passed,4 parent-exercised helper entrypoints,
+  17 suites103.62s; strict Clippy, fmt/diff and production/lib/owned-example build pass.
+- Independent original7 tests plus ordering/query/contrast and focused collision1
+  (7.29s)/route-help-Lock1 (21.36s) passed. P2 missing-vs-literal identifier ambiguity
+  fixed with one displayed-identity rule; rows, selection summaries and both handoffs
+  now show exact UUIDs when rendered service/identifier pairs collide.
+- Real active parent/set/code counts, existing trashed-set identity, Unicode six sorts,
+  stable paging, same-timestamp invalidation, encrypted export/reopen/import and
+  failed-import selection preservation are tested. No code values are read by the list.
+- Task15 text/file/save and16 reveal/copy/used/edit/delete bodies remain pending;
+  current routes expose concealed metadata and honest capability text, no fake Save.
+- Author2 normal Sky launches denied GetCursorPos0x80070005, no owned window/process/
+  fixture remained. Actual pointer/keyboard, screenshots, rendered quality, physical
+  DPI/Narrator and earlier hardware/offline/Copy/GUI-recovery gates remain OPEN.
+  Synthetic normal-viewport keyboard and tall AX checks do not replace them.
+
+Parent integrates source, then immediately executes15. No real/default/reference
+data or unrelated preview changed; commit reference follows in parent checkpoint.
 

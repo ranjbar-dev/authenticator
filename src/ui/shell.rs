@@ -1,4 +1,5 @@
 //! Inventory-derived shell and local vault lifecycle.
+use super::backup_codes::{self, Session as BackupSession};
 use super::backup_import::{self, Busy as ImportBusy, ImportForm};
 use super::codes;
 use super::export::{self, ExportForm, Picker};
@@ -69,6 +70,7 @@ pub struct AuthenticatorApp {
     export_focus: bool,
     backup_import: Option<ImportForm>,
     backup_picker: Option<backup_import::Picker>,
+    backup_codes: BackupSession,
     image: Option<ImageJob>,
     imported: Vec<AccountId>,
     show_imported: bool,
@@ -148,6 +150,7 @@ impl AuthenticatorApp {
             export_focus: false,
             backup_import: None,
             backup_picker: None,
+            backup_codes: BackupSession::default(),
             image: None,
             imported: Vec::new(),
             show_imported: false,
@@ -175,6 +178,7 @@ impl AuthenticatorApp {
         }
     }
     pub fn lock(&mut self) {
+        self.backup_codes.reset();
         #[cfg(debug_assertions)]
         {
             self.evidence_copy_queued = None;
@@ -239,20 +243,13 @@ impl AuthenticatorApp {
         // Secret editors additionally drop undo history after every edit pass.
         c::clear_sensitive_widget_memory(&self.context);
     }
-    fn open_workflow(&mut self, workflow: Workflow, opener: egui::Id) {
-        if workflow == Workflow::AddAccount {
-            self.start_alternative(ScanAlternative::Manual);
-            return;
-        }
-        if self.state.request(workflow).is_ok() {
-            self.dialog = Some(c::Dialog::new("Development build", opener));
-            self.help_open = false;
-        }
-    }
     pub fn show(&mut self, root: &mut egui::Ui) {
         #[cfg(debug_assertions)]
         self.evidence_code_bounds.clear();
         let ctx = root.ctx().clone();
+        if self.state.route != Route::BackupCodes || !self.state.session_active() {
+            self.backup_codes.reset();
+        }
         let now = Instant::now();
         let close_requested = ctx.input(|i| i.viewport().close_requested());
         let was_closing = self.closing;
@@ -303,6 +300,7 @@ impl AuthenticatorApp {
         let save_mode = self.review.as_ref().map(|r| r.mode);
         if let Some(outcome) = self.state.poll(now) {
             self.ordered_ids = None;
+            self.backup_codes.invalidate();
             if let Some(imported) = self.state.take_backup_result() {
                 self.complete_backup_import(imported);
             } else if let Some(exported) = self.state.take_exported() {
@@ -491,6 +489,15 @@ impl AuthenticatorApp {
             self.image = None;
         }
         self.poll_image();
+        if self.state.route == Route::BackupCodes
+            && self.backup_codes.screen != backup_codes::Screen::List
+            && ctx.input(|i| i.key_pressed(egui::Key::Escape))
+            && !self.state.busy()
+            && ctx.memory(|m| m.top_modal_layer().is_none())
+            && !egui::Popup::is_any_open(&ctx)
+        {
+            self.backup_codes.back();
+        }
         if ctx.input(|i| i.key_pressed(egui::Key::Escape))
             && (self.review.is_some() || self.image.is_some())
             && !self.state.busy()
@@ -619,7 +626,7 @@ impl AuthenticatorApp {
                 });
                 if !codes_home { c::secondary(ui,if self.state.session_active() {"Vault unlocked on this device"} else {"Vault locked · credentials hidden"}); }
                 ui.add_space(theme::SMALL_GAP);
-                if !self.export_hub && self.backup_import.is_none() && self.export_form.is_none() && self.review.is_none() && self.image.is_none() && self.capture_preparing.is_none() && !self.state.capture_busy() && let Some(route)=c::tabs(ui,self.state.route) { self.state.navigate(route); self.status=None; }
+                if !self.export_hub && self.backup_import.is_none() && self.export_form.is_none() && self.review.is_none() && self.image.is_none() && self.capture_preparing.is_none() && !self.state.capture_busy() && let Some(route)=c::tabs(ui,self.state.route) { if route != self.state.route { self.backup_codes.reset(); self.focus_form=true; } self.state.navigate(route); self.status=None; }
                 ui.add_space(theme::SMALL_GAP);
                 if let Some(error)=self.state.storage_error() {
                     c::status(ui,"storage-error",&error.to_string(),c::StatusKind::Error);
@@ -821,119 +828,59 @@ impl AuthenticatorApp {
             return;
         }
         match self.state.route {
-            Route::Codes | Route::BackupCodes => {
-                let backups = self.state.route == Route::BackupCodes;
-                if !backups {
-                    self.capture_controls(ui);
-                    // The opening pass itself also removes old query/count/
-                    // account widgets from ROOT's new visual + accessible tree.
-                    if self.capture_preparing.is_some() {
-                        return;
-                    }
+            Route::BackupCodes => self.backup_codes_content(ui),
+            Route::Codes => {
+                self.capture_controls(ui);
+                if self.capture_preparing.is_some() {
+                    return;
                 }
                 let search_error = (self.state.query.len() > CodesPreferences::MAX_QUERY_BYTES
                     || self.state.query.chars().any(char::is_control))
                 .then_some("Use at most 1024 UTF-8 bytes without control characters.");
-                let search = if !backups {
-                    c::labeled_search_field(ui, "search", &mut self.state.query, search_error)
-                } else {
-                    c::labeled_field(
-                        ui,
-                        "backup-search",
-                        "Search backup codes",
-                        &mut self.state.backup_query,
-                        "Search your unlocked vault.",
-                        None,
-                    )
-                };
+                let search =
+                    c::labeled_search_field(ui, "search", &mut self.state.query, search_error);
                 if self.focus_form {
                     search.request_focus();
                     self.focus_form = false;
                 }
-                if !backups {
-                    if search.changed() {
-                        // Bound native edits without silently accepting a truncated query.
-                        if self.state.query.len() <= CodesPreferences::MAX_QUERY_BYTES
-                            && !self.state.query.chars().any(char::is_control)
-                        {
-                            if let Some(preferences) = &mut self.codes_preferences {
-                                preferences.query = Zeroizing::new(self.state.query.clone());
-                            }
-                            self.preferences_changed();
-                        }
+                if search.changed()
+                    && self.state.query.len() <= CodesPreferences::MAX_QUERY_BYTES
+                    && !self.state.query.chars().any(char::is_control)
+                {
+                    if let Some(preferences) = &mut self.codes_preferences {
+                        preferences.query = Zeroizing::new(self.state.query.clone());
                     }
-                    self.codes_toolbar(ui);
-                    if self.state.query.len() > CodesPreferences::MAX_QUERY_BYTES
-                        || self.state.query.chars().any(char::is_control)
-                    {
-                        return;
-                    }
-                    if self.pending_mutation {
-                        c::progress(ui, "Saving encrypted changes…", None);
-                        return;
-                    }
+                    self.preferences_changed();
                 }
-                // Counts derive solely from the authenticated repository. No sample
-                // accounts or invented current codes exist in production UI.
+                self.codes_toolbar(ui);
+                if self.state.query.len() > CodesPreferences::MAX_QUERY_BYTES
+                    || self.state.query.chars().any(char::is_control)
+                {
+                    return;
+                }
+                if self.pending_mutation {
+                    c::progress(ui, "Saving encrypted changes…", None);
+                    return;
+                }
                 let count = self
                     .state
                     .vault()
                     .map(|v| {
-                        if backups {
-                            v.backup_sets().len()
-                        } else {
-                            v.accounts()
-                                .iter()
-                                .filter(|a| a.state().deletion == DeletionState::Active)
-                                .count()
-                        }
+                        v.accounts()
+                            .iter()
+                            .filter(|a| a.state().deletion == DeletionState::Active)
+                            .count()
                     })
                     .unwrap_or(0);
                 if count == 0 {
                     c::empty_state(
                         ui,
-                        if backups {
-                            c::Icon::Recovery
-                        } else {
-                            c::Icon::Key
-                        },
-                        if backups {
-                            "No backup codes yet"
-                        } else {
-                            "No accounts yet"
-                        },
-                        if backups {
-                            "Keep recovery codes with the account they belong to. Adding backup codes is a later development stage."
-                        } else {
-                            "Scan a QR code from another window, review the account, then save it securely."
-                        },
+                        c::Icon::Key,
+                        "No accounts yet",
+                        "Scan a QR code from another window, review the account, then save it securely.",
                     );
-                } else if backups {
-                    c::secondary(ui, "Backup-code management is the next development stage.");
                 } else {
                     self.code_cards(ui);
-                }
-                if !backups {
-                    return;
-                }
-                let action = c::button(
-                    ui,
-                    if backups {
-                        "Add Backup Codes"
-                    } else {
-                        "Manually Input"
-                    },
-                    c::ButtonStyle::Primary,
-                );
-                if action.clicked() {
-                    self.open_workflow(
-                        if backups {
-                            Workflow::AddBackupCodes
-                        } else {
-                            Workflow::AddAccount
-                        },
-                        action.id,
-                    );
                 }
             }
             Route::Settings => {
@@ -1003,6 +950,42 @@ impl AuthenticatorApp {
                     self.lock();
                 }
             }
+        }
+    }
+    fn backup_codes_content(&mut self, ui: &mut egui::Ui) {
+        if self.pending_mutation {
+            c::progress(ui, "Saving encrypted changes…", None);
+            return;
+        }
+        if self.focus_form {
+            self.backup_codes.focus = true;
+            self.focus_form = false;
+        }
+        let mut query = std::mem::take(&mut self.state.backup_query);
+        let action = match self.state.vault() {
+            Ok(vault) => backup_codes::content(ui, vault, &mut self.backup_codes, &mut query),
+            Err(_) => {
+                c::status(
+                    ui,
+                    "backup-vault-unavailable",
+                    "Unlock the vault to view backup-code sets.",
+                    c::StatusKind::Info,
+                );
+                backup_codes::Action::None
+            }
+        };
+        self.state.backup_query = query;
+        match action {
+            backup_codes::Action::Help(opener) => {
+                self.dialog = Some(c::Dialog::new("About backup codes", opener));
+                self.help_open = true;
+            }
+            backup_codes::Action::AddAccount => {
+                self.backup_codes.reset();
+                self.state.navigate(Route::Codes);
+                self.start_alternative(ScanAlternative::Manual);
+            }
+            backup_codes::Action::None => {}
         }
     }
     fn export_hub_content(&mut self, ui: &mut egui::Ui) {
@@ -1220,6 +1203,7 @@ impl AuthenticatorApp {
                     self.ordered_ids = None;
                     self.state.query.zeroize();
                     self.state.backup_query.zeroize();
+                    self.backup_codes.reset();
                     self.imported.clear();
                     self.show_imported = false;
                     self.review = None;
@@ -2496,6 +2480,11 @@ impl AuthenticatorApp {
             let workflow = self.state.pending();
             let close=dialog.show(ctx,|ui,first| {
                 if help {
+                    if self.state.route == Route::BackupCodes {
+                        c::body(ui,"Backup codes are issued by each service and may work only once. Keep an independent copy somewhere safe in case you lose access to this vault.");
+                        c::secondary(ui,"Add Backup Codes selects an existing 2FA account. Search by its service or account identifier and check the selected account before continuing. Existing sets, including sets in Trash, are identified before you continue.");
+                        c::secondary(ui,"Available and used totals include active codes only. Accounts and sets in Trash are hidden from the list. Copying a code does not mean the service accepted it. Code entry and code-management controls are unavailable in this build.");
+                    }
                     c::body(ui,"Authenticator keeps your vault on this device. Use the three tabs for verification codes, recovery codes and local settings.");
                     c::secondary(ui,"Your vault passphrase cannot be reset. Settings → Export & Import saves a local encrypted backup protected by a separate backup passphrase. Keep the file and passphrase separately. Screenshot to Scan and image/manual entry work locally. Review each account before saving.");
                     c::secondary(ui,"Keyboard: Tab and Shift+Tab move focus. Enter or Space activates buttons. Ctrl+L locks the vault. Escape cancels passphrase work or closes dialogs.");
@@ -2503,7 +2492,7 @@ impl AuthenticatorApp {
                     c::body(ui,match workflow {
                         Some(Workflow::VaultLifecycle)=>"Vault setup and unlock will be connected in the next development stage. The vault remains locked.",
                         Some(Workflow::AddAccount)=>"Use Screenshot to Scan on the 2FA Codes screen to select a QR in another window. Editable review, saving and manual entry are the next development stage. No account was added.",
-                        Some(Workflow::AddBackupCodes)=>"The account selector and backup-code editor are not available yet. No recovery codes were added.",
+                        Some(Workflow::AddBackupCodes)=>"Choose Add Backup Codes on the Backup Codes tab to select an account.",
                         None=>"No action is pending.",
                     });
                 }
@@ -2534,6 +2523,9 @@ impl eframe::App for AuthenticatorApp {
     }
 }
 
+#[cfg(all(test, windows))]
+#[path = "backup_codes_tests.rs"]
+mod backup_codes_tests;
 #[cfg(all(test, windows))]
 #[path = "backup_import_tests.rs"]
 mod backup_import_tests;
