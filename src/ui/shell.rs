@@ -30,6 +30,13 @@ enum CodeAction {
     Edit(AccountId),
     Delete(AccountId, RecordState, egui::Id),
 }
+struct PendingRecoveryCode {
+    account: AccountId,
+    set: crate::domain::records::BackupSetId,
+    code: crate::domain::records::BackupCodeId,
+    previous: Option<crate::domain::records::Timestamp>,
+    undoable: bool,
+}
 struct ImageJob {
     generation: u64,
     cancelled: Arc<AtomicBool>,
@@ -81,6 +88,7 @@ pub struct AuthenticatorApp {
     preferences_dirty: Option<Instant>,
     preferences_error: bool,
     pending_mutation: bool,
+    pending_recovery_code: Option<PendingRecoveryCode>,
     pending_preferences: bool,
     ordered_ids: Option<Vec<AccountId>>,
     delete: Option<(AccountId, RecordState, c::Dialog)>,
@@ -164,6 +172,7 @@ impl AuthenticatorApp {
             preferences_dirty: None,
             preferences_error: false,
             pending_mutation: false,
+            pending_recovery_code: None,
             pending_preferences: false,
             ordered_ids: None,
             delete: None,
@@ -201,6 +210,7 @@ impl AuthenticatorApp {
         self.preferences_dirty = None;
         self.preferences_error = false;
         self.pending_mutation = false;
+        self.pending_recovery_code = None;
         self.pending_preferences = false;
         self.ordered_ids = None;
         self.delete = None;
@@ -248,6 +258,7 @@ impl AuthenticatorApp {
         c::clear_sensitive_widget_memory(&self.context);
     }
     pub fn show(&mut self, root: &mut egui::Ui) {
+        self.backup_codes.detail.sensitive_rects.clear();
         #[cfg(debug_assertions)]
         self.evidence_code_bounds.clear();
         let ctx = root.ctx().clone();
@@ -314,6 +325,7 @@ impl AuthenticatorApp {
                 }
             } else if self.recovery_editor.as_ref().is_some_and(|e| e.saving) {
                 if outcome.is_ok() {
+                    self.backup_codes.detail.changed();
                     let editor = self.recovery_editor.take();
                     if let Some(editor) = editor {
                         self.backup_codes.screen = if editor.deleting {
@@ -345,6 +357,29 @@ impl AuthenticatorApp {
                 }
             } else if self.pending_mutation {
                 self.pending_mutation = false;
+                if outcome.is_ok() {
+                    self.backup_codes.detail.changed();
+                }
+                if let Some(pending) = self.pending_recovery_code.take()
+                    && outcome.is_ok()
+                    && let Ok(vault) = self.state.vault()
+                {
+                    self.backup_codes.detail.saved(
+                        vault,
+                        pending.account,
+                        pending.set,
+                        pending.code,
+                        pending.previous,
+                        pending.undoable,
+                    );
+                    self.backup_codes.focus = !vault.backup_sets().iter().any(|s| {
+                        s.id() == pending.set
+                            && s.codes()
+                                .iter()
+                                .any(|c| c.state().deletion == DeletionState::Active)
+                    });
+                    c::clear_sensitive_widget_memory(&ctx);
+                }
                 self.preferences_error = self.pending_preferences && outcome.is_err();
                 self.status = Some(if outcome.is_ok() {
                     "Changes saved in your encrypted vault."
@@ -1121,7 +1156,57 @@ impl AuthenticatorApp {
             }
         };
         self.state.backup_query = query;
+        #[cfg(debug_assertions)]
+        self.evidence_code_bounds
+            .extend(self.backup_codes.detail.sensitive_rects.iter().copied());
         match action {
+            backup_codes::Action::Copy { account, set, code } => {
+                let value =
+                    self.state.vault().ok().and_then(|vault| {
+                        if !vault.accounts().iter().any(|a| {
+                            a.id() == account && a.state().deletion == DeletionState::Active
+                        }) {
+                            return None;
+                        }
+                        vault
+                            .backup_sets()
+                            .iter()
+                            .find(|s| {
+                                s.id() == set
+                                    && s.account_id() == account
+                                    && s.state().deletion == DeletionState::Active
+                            })
+                            .and_then(|s| {
+                                s.codes().iter().find(|c| {
+                                    c.id() == code && c.state().deletion == DeletionState::Active
+                                })
+                            })
+                            .map(|c| Zeroizing::new(c.expose_value().to_owned()))
+                    });
+                if let Some(value) = value {
+                    self.copy_text(value);
+                }
+            }
+            backup_codes::Action::Save(intent) => {
+                if let SaveIntent::RecoveryCode { target, change } = &*intent {
+                    let pending = PendingRecoveryCode {
+                        account: target.account_id(),
+                        set: target.set_id(),
+                        code: target.code_id(),
+                        previous: target.used_at(),
+                        undoable: matches!(
+                            change,
+                            crate::domain::recovery_code::CodeChange::MarkUsed(_)
+                        ),
+                    };
+                    if self.begin_mutation(*intent) {
+                        self.pending_recovery_code = Some(pending);
+                        self.backup_codes.detail.conceal();
+                        c::clear_sensitive_widget_memory(&self.context);
+                        self.status = None;
+                    }
+                }
+            }
             backup_codes::Action::Help(opener) => {
                 self.dialog = Some(c::Dialog::new("About backup codes", opener));
                 self.help_open = true;
@@ -2197,6 +2282,7 @@ impl AuthenticatorApp {
             || self.backup_import.is_some()
             || self.backup_picker.is_some()
             || self.delete.is_some()
+            || self.backup_codes.detail.has_dialog()
             || self.state.capture_busy()
             || self.image.is_some()
             || self.capture_preparing.is_some()
@@ -2647,7 +2733,7 @@ impl AuthenticatorApp {
                     if self.state.route == Route::BackupCodes {
                         c::body(ui,"Backup codes are issued by each service and may work only once. Keep an independent copy somewhere safe in case you lose access to this vault.");
                         c::secondary(ui,"Add Backup Codes selects an existing 2FA account. Search by its service or account identifier and check the selected account before continuing. Existing sets, including sets in Trash, are identified before you continue.");
-                        c::secondary(ui,"Enter one service-issued code per line or read a local UTF-8 text file, then Preview changes before Save. Exact duplicates require review. Editing keeps exact matching used history; omitted codes move to Trash. Available and used totals include active codes only. Detail reveal, copy and used-state controls are not available in this build yet.");
+                        c::secondary(ui,"Enter one service-issued code per line or read a local UTF-8 text file, then Preview changes before Save. Exact duplicates require review. Editing keeps exact matching used history; omitted codes move to Trash. Available and used totals include active codes only. Detail has separate Reveal/Conceal, Copy, Mark used/available and one-step Undo actions. Copy never marks a code used.");
                     }
                     c::body(ui,"Authenticator keeps your vault on this device. Use the three tabs for verification codes, recovery codes and local settings.");
                     c::secondary(ui,"Your vault passphrase cannot be reset. Settings → Export & Import saves a local encrypted backup protected by a separate backup passphrase. Keep the file and passphrase separately. Screenshot to Scan and image/manual entry work locally. Review each account before saving.");
@@ -2696,6 +2782,9 @@ mod backup_import_tests;
 #[cfg(all(test, windows))]
 #[path = "export_tests.rs"]
 mod export_tests;
+#[cfg(all(test, windows))]
+#[path = "recovery_detail_tests.rs"]
+mod recovery_detail_tests;
 #[cfg(all(test, windows))]
 #[path = "recovery_editor_tests.rs"]
 mod recovery_editor_tests;

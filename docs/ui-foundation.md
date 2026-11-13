@@ -250,7 +250,9 @@ shared account identity, status, button and ROOT Dialog components. Preview is
 count-only; exact code values appear only after deliberate Reveal. Buttons retain
 explicit IDs across validation changes, and unsaved editor ownership hides tabs.
 Normal Delete Set is reversible Trash; permanent deletion in Task18 must explain
-irreversibility separately. Recovery copying/used/Undo detail controls belong to16.
+irreversibility separately. Task16 now supplies recovery copying/used/Undo detail
+controls, using separate two-column actions, a bounded value holder and explicit
+live-control focus/scroll. Native input/raster/clipboard gates remain open.
 
 Shared Dialog forces an initial sizing pass and title-specific, non-dragging
 scrolling, preventing a shorter prior confirmation from clipping a taller one's

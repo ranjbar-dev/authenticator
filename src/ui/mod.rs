@@ -7,6 +7,7 @@ pub mod codes;
 pub mod components;
 mod export;
 pub mod import_review;
+mod recovery_detail;
 mod recovery_editor;
 pub mod shell;
 pub mod state;

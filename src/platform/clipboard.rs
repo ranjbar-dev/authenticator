@@ -848,6 +848,8 @@ mod native {
 }
 
 #[cfg(all(test, windows))]
+pub(crate) use tests::{Observer as TestObserver, for_ui as test_fixture};
+#[cfg(all(test, windows))]
 mod tests {
     use super::*;
     use std::sync::{Mutex, atomic::AtomicBool};
@@ -857,6 +859,7 @@ mod tests {
         owned: bool,
         value: String,
         clears: usize,
+        copy_error: Option<ClipboardError>,
     }
     struct Fake {
         state: Arc<Mutex<FakeState>>,
@@ -884,6 +887,9 @@ mod tests {
                 let _ = release.recv_timeout(Duration::from_secs(5));
             }
             let mut state = self.state.lock().map_err(|_| ClipboardError::Unavailable)?;
+            if let Some(error) = state.copy_error.take() {
+                return Err(error);
+            }
             state.sequence += 1;
             state.owned = true;
             state.value = text.into();
@@ -931,6 +937,26 @@ mod tests {
             state,
             busy,
         )
+    }
+    /// Uses the real actor with the existing Fake; never WinSta0.
+    pub(crate) struct Observer(Arc<Mutex<FakeState>>);
+    impl Observer {
+        pub(crate) fn matches(&self, value: &str) -> bool {
+            self.0.lock().is_ok_and(|s| s.value == value)
+        }
+        pub(crate) fn fail_next_copy(&self, error: ClipboardError) {
+            self.0.lock().unwrap_or_else(|e| e.into_inner()).copy_error = Some(error);
+        }
+        pub(crate) fn external_copy(&self, value: &str) {
+            let mut s = self.0.lock().unwrap_or_else(|e| e.into_inner());
+            s.sequence += 1;
+            s.owned = false;
+            s.value = value.into();
+        }
+    }
+    pub(crate) fn for_ui() -> (Clipboard, Observer) {
+        let (clipboard, state, _) = fake(None);
+        (clipboard, Observer(state))
     }
     #[test]
     fn actor_expiry_hidden_lifecycle_lock_shutdown_and_newer_identical_external_copy()

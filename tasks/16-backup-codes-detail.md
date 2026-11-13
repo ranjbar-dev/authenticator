@@ -1,6 +1,6 @@
 # Task 16: Reveal/copy, used-state and delete recovery codes
 
-Status: todo
+Status: in_progress - detail source approved; native/clipboard and Task18 restore/permanent-delete gates open
 Priority: Required for complete v1
 Dependencies: 14, 15
 Requirements: FR-3.2–4; PRD §§7–9
@@ -11,10 +11,10 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Implementation
 
-- [ ] Implement a selected account's backup-code detail view with concealed codes, intentional reveal/copy, per-code used marking and undo.
-- [ ] Copy must not mark a code used; persist explicit used changes atomically with timestamps. Apply app-owned clipboard expiration/lock cleanup rules.
+- [x] Implement a selected account's backup-code detail view with concealed codes, intentional reveal/copy, per-code used marking and undo.
+- [x] Copy must not mark a code used; persist explicit used changes atomically with timestamps. Apply app-owned clipboard expiration/lock cleanup rules.
 - [ ] Support editing and confirmed deletion of the set, with service-issued/single-use guidance. Restore associated codes with account trash recovery; do not orphan them.
-- [ ] Conceal everything sensitive on lock/navigation where appropriate and keep changing/revealed code values out of status announcements/logs.
+- [x] Conceal everything sensitive on lock/navigation where appropriate and keep changing/revealed code values out of status announcements/logs.
 
 ## Screen checklist
 
@@ -48,5 +48,34 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 
 ## Evidence
 
-Not started. On execution record changed files, test commands/results, sanitized UI evidence paths where applicable, independent reviewer result and commit reference. If blocked, retain incomplete status and record exact cause, attempted remedies and resumption steps.
+Limited source approval by distinct review_16; no material defect found in reviewed
+source/isolated checks. Source boxes above do not close native or Task18 gates.
+Item3 remains open for actual account restoration/permanent cascade integration18;
+Edit and confirmed reversible set/code Trash already work through15/16.
+
+- [Author checklist, policies and exact checks](../docs/qa/task16/implementation-evidence.md).
+- [Independent security/UI review, commands and limits](../docs/qa/task16/independent-review.md).
+- Author final178 aggregate tests passed,4 parent-exercised helper entrypoints,
+  19 suites129.87s; strict Clippy/fmt/diff and production/lib/owned-example build pass.
+  Last Help copy-only correction was included in static/build checks after full run.
+- Independent domain2, detail7 (184.95s), direct DeleteSet-focus1 (40.67s), identity1,
+  actor expiry1/admission1, shared contrast1 and diff checks passed.
+- Full per-code/parent guards reject stale equal-time contents. Mark/available/Undo/
+  Trash atomically touch logical timestamps; exact old used dates and identities
+  survive encrypted reopen/portable preview. Failed writes preserve prior data/valid
+  Undo; adopted poststate supplies Undo. Copy alone changes neither used nor ciphertext.
+- Default concealed rows,20-row paging,4096-byte bounded value view, explicit two-column
+  actions, static feedback and normal340/600/960 Context input/AX/focus tested. Later
+  code20 and cross-page Undo restore visible live focus; reused-ID import success
+  conceals, failed nested Apply preserves unrelated state. Lock clears before held
+  admitted I/O; no late adoption. UI Clipboard uses cfg(test) Fake with real queue,
+  never interactive user clipboard. Production actor unchanged.
+- Task10 actual interactive Copy→Changed cause remains unknown; Fake/private-station
+  success is not actual Copy/expiry/Lock/exit proof. Two normal own preview launches
+  denied GetCursorPos0x80070005, no owned resources/screenshots. Native input/pixels/
+  DPI/Narrator/hardware/device/offline gates remain OPEN. Backend restore fixtures
+  reject orphans/preserve association, but do not implement18 Trash restore/delete UI.
+
+Parent integrates source then executes17. No real/default/reference data or
+unrelated preview changed; commit reference follows in parent checkpoint.
 

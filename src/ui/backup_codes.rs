@@ -1,4 +1,4 @@
-//! Concealed recovery metadata and ID-only navigation. Never reads code values.
+//! Recovery metadata and ID-only navigation. Detail owns explicit value reveal.
 use super::{codes, components as c, theme};
 use crate::domain::records::*;
 use eframe::egui;
@@ -117,6 +117,7 @@ impl Projection {
 
 #[derive(Default)]
 pub struct Session {
+    pub detail: super::recovery_detail::Detail,
     pub screen: Screen,
     pub selected: Option<AccountId>,
     pub sort: SortOrder,
@@ -162,6 +163,7 @@ impl Session {
         true
     }
     pub fn back(&mut self) {
+        self.detail.clear();
         self.screen = match self.screen {
             Screen::Editor(_)
             | Screen::Detail {
@@ -196,6 +198,7 @@ impl Session {
             _ => true,
         };
         if !valid {
+            self.detail.clear();
             self.screen = Screen::List;
             self.focus = true;
             self.invalidate();
@@ -203,13 +206,18 @@ impl Session {
     }
 }
 
-#[derive(Clone, Copy, Eq, PartialEq)]
 pub enum Action {
     None,
     Help(egui::Id),
     AddAccount,
     Edit(AccountId),
     Delete(AccountId),
+    Copy {
+        account: AccountId,
+        set: BackupSetId,
+        code: BackupCodeId,
+    },
+    Save(Box<super::state::SaveIntent>),
 }
 
 fn display_identity(account: &Account) -> (&str, &str) {
@@ -304,6 +312,11 @@ pub fn content(
                 )
             })
             .inner;
+        if session.focus && matches!(session.screen, Screen::Detail { .. }) {
+            back.request_focus();
+            back.scroll_to_me(Some(egui::Align::Min));
+            session.focus = false;
+        }
         if back.clicked() {
             session.back();
             return action;
@@ -342,7 +355,7 @@ pub fn content(
             );
         }
         Screen::Editor(id) | Screen::Detail { account: id, .. } => {
-            // Typed boundaries for Tasks15/16. Values never enter this page or AX.
+            // The shared header contains metadata only. Detail owns deliberate reveal.
             let Some(account) = vault.accounts().iter().find(|a| a.id() == id) else {
                 return action;
             };
@@ -357,15 +370,9 @@ pub fn content(
                 > 1;
             c::card(ui, |ui| {
                 c::icon_tile(ui, c::Icon::Recovery);
-                c::heading(
-                    ui,
-                    if matches!(session.screen, Screen::Editor(_)) {
-                        "Add Backup Codes"
-                    } else {
-                        "Backup-code set"
-                    },
-                    2,
-                );
+                if matches!(session.screen, Screen::Editor(_)) {
+                    c::heading(ui, "Add Backup Codes", 2);
+                }
                 identity(ui, account, duplicate);
                 if let Screen::Detail { set, .. } = session.screen {
                     if let Some(metadata) = vault
@@ -380,17 +387,19 @@ pub fn content(
                             if metadata.trashed {
                                 "This account already has a set in Trash. It must be restored or permanently removed before adding another set."
                             } else {
-                                "Code values are concealed. Revealing, copying and marking used are not available in this build yet. Edit or delete this set below."
+                                "Code values are concealed until you choose Reveal."
                             },
                         );
                         if !metadata.trashed {
                             if c::button(ui, "Edit backup codes", c::ButtonStyle::Primary).clicked()
                             {
+                                session.detail.clear();
                                 action = Action::Edit(id);
                             }
                             let delete =
                                 c::button(ui, "Delete backup-code set…", c::ButtonStyle::Secondary);
                             if delete.clicked() {
+                                session.detail.clear();
                                 action = Action::Delete(id);
                             }
                         }
@@ -400,6 +409,12 @@ pub fn content(
                     action = Action::Edit(id);
                 }
             });
+            if let Screen::Detail { account, set, .. } = session.screen {
+                let detail_action = session.detail.content(ui, vault, account, set);
+                if !matches!(detail_action, Action::None) {
+                    action = detail_action;
+                }
+            }
             c::body(
                 ui,
                 "Get backup codes from this service's security settings. Authenticator does not generate them or check whether the service has accepted a code.",
@@ -414,6 +429,7 @@ pub fn content(
                 session.focus = false;
             }
             if done.clicked() {
+                session.detail.clear();
                 session.screen = Screen::List;
                 session.focus = true;
             }

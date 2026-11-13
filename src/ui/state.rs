@@ -54,6 +54,10 @@ pub enum ScanAlternative {
 
 /// Explicit operation intent. An edit can only update its selected stable ID.
 pub enum SaveIntent {
+    RecoveryCode {
+        target: crate::domain::recovery_code::CodeTarget,
+        change: crate::domain::recovery_code::CodeChange,
+    },
     RecoverySave {
         target: crate::domain::recovery_edit::RecoveryTarget,
         values: Vec<Zeroizing<String>>,
@@ -91,7 +95,7 @@ impl SaveIntent {
                         .map_err(|_| AppError::InvalidBackupCodes)?;
                 }
             }
-            Self::RecoveryTrash(_) => {}
+            Self::RecoveryTrash(_) | Self::RecoveryCode { .. } => {}
             Self::CodesPreferences(value) => value.validate()?,
             Self::ClipboardTimeout(seconds) | Self::IdleTimeout(seconds) => {
                 if !(1..=86_400).contains(seconds) {
@@ -126,6 +130,10 @@ impl SaveIntent {
         at: Timestamp,
     ) -> Result<Vec<AccountId>, AppError> {
         match self {
+            Self::RecoveryCode { target, change } => {
+                vault.change_recovery_code(&target, change, at)?;
+                Ok(Vec::new())
+            }
             Self::RecoverySave { target, values } => {
                 vault.save_recovery_codes(&target, values, at)?;
                 Ok(Vec::new())

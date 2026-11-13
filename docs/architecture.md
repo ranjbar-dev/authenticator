@@ -684,3 +684,31 @@ actual Delete control renders, so cancellation returns to a live control.
 Independent Context probes cover safe first-visible focus and hit/scroll behavior
 at ordinary widths/heights; native input, picker, raster and restart gates remain
 open after denied normal launches. See `docs/qa/task15/` for exact scope and checks.
+
+## Recovery-code detail and guarded Undo (Task16)
+
+Detail renders20 active codes per page, with separate Reveal/Conceal, Copy and
+used/Trash actions. Revealed values use a bounded nonselectable BODY holder;
+session presentation retains IDs, not a plaintext set cache. Copy resolves the
+current active parent/set/code and sends one zeroizing static value through the
+existing clipboard actor without a TOTP time window. It never writes the vault,
+marks used or creates Undo. Production clipboard ownership logic is unchanged;
+the new UI test fixture is compiled only for Windows tests and uses the existing
+Fake with the real queue, never the interactive user clipboard.
+
+Per-code guards compare full selected account identity, parent-set state and code
+ID/value/state/used date, including equal-time changes. Atomic used/available,
+exact old-date Undo and Trash touch code/set/account/aggregate at logical time.
+One guarded Undo is captured from the actual adopted saved record. Failed writes
+retain earlier data and valid Undo; leaving or Lock clears it. Actual successful
+replacement import clears presentation even when IDs are reused, while nested
+Apply failure does not clear it merely because its worker returned normally.
+
+Programmatic focus explicitly scrolls a current control: header Back on entry,
+changed code's used control after Mark/Undo, remaining Reveal after code Trash,
+header when empty. Cross-page Undo selects the affected active page first.
+Presentation concealment/Lock does not promise complete framework/OS erasure.
+Reversible Trash preserves associations/history; actual restoration and permanent
+logical cascade remain Task18. Source/Context review passed; native pixels/input,
+assistive technology, hardware and interactive clipboard acceptance remain open.
+See `docs/qa/task16/` and the unresolved actual Task10 Copy ownership gate.
