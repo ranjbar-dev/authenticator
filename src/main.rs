@@ -7,6 +7,8 @@ fn install_private_panic_hook() {
 
 fn main() -> eframe::Result {
     install_private_panic_hook();
+    let icon = eframe::icon_data::from_png_bytes(include_bytes!("../assets/authenticator.png"))
+        .map_err(|error| eframe::Error::AppCreation(Box::new(error)))?;
     // The inert foundation gallery is a development tool, never a release route.
     #[cfg(debug_assertions)]
     let spike = std::env::args().any(|arg| arg == "--framework-spike");
@@ -15,6 +17,7 @@ fn main() -> eframe::Result {
         eframe::NativeOptions {
             viewport: eframe::egui::ViewportBuilder::default()
                 .with_title("Authenticator")
+                .with_icon(icon)
                 .with_inner_size([420.0, 680.0])
                 .with_min_inner_size([320.0, 460.0])
                 .with_resizable(true),
