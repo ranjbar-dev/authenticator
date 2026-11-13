@@ -1,0 +1,38 @@
+{
+  "tool": "cargo-audit 0.22.2",
+  "database": {
+    "advisory-count": 1490,
+    "last-commit": "af7b3ec33460b8e2de8d422e16d628518891a519",
+    "last-updated": "2026-11-12T15:21:59+01:00"
+  },
+  "lockfile": {
+    "dependency-count": 381
+  },
+  "lock_sha256": "bd456b9c7f2e164e48d4c569f5c07c0df81a65bd85652752642062a1ed9ea1f7",
+  "vulnerabilities": {
+    "found": false,
+    "count": 0,
+    "list": []
+  },
+  "warnings": [
+    {
+      "id": "RUSTSEC-2026-0371",
+      "package": "zbus_names",
+      "version": "4.3.5",
+      "kind": "unmaintained"
+    },
+    {
+      "id": "RUSTSEC-2026-0370",
+      "package": "zvariant",
+      "version": "5.15.1",
+      "kind": "unmaintained"
+    },
+    {
+      "id": "RUSTSEC-2026-0372",
+      "package": "zvariant_derive",
+      "version": "5.15.1",
+      "kind": "unmaintained"
+    }
+  ],
+  "ignored": []
+}

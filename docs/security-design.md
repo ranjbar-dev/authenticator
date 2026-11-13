@@ -1,5 +1,10 @@
 # Security design and limits
 
+This document includes historical implementation checkpoints. The current
+Task20 audit, actual tested boundaries and still-open acceptance gates are in
+[security-review.md](security-review.md); earlier task-stage wording below is not
+a claim that later workflows remain absent or that full acceptance has passed.
+
 Review09 corrected a responsive-lock defect: the old cancellation mutex could
 make UI Lock wait for an admitted native replace. Current cancellation is an
 atomic request competing with atomic action admission; it does not take the
@@ -51,8 +56,9 @@ Recoverable write failures retain edits and the unchanged committed session.
 Cancellation and lifecycle/idle guards run at final-action admission; a
 cancel that loses admission can leave the **complete encrypted batch**, then a
 locked session. No partial batch or claimed rollback after success is allowed.
-There is no overwrite import mode: duplicates require an explicit Save-as-new
-action and preserve all existing records. Errors contain fixed safe text only.
+Screenshot/manual credential batches do not overwrite existing entries:
+duplicates require explicit separate-entry intent. Portable encrypted backups
+have separately reviewed Merge/Replace decisions. Errors contain fixed safe text only.
 Current codes derive from real committed records and remain ordinary non-live
 accessibility text. Task08's source/transaction/UI evidence and independent-code
 comparison do not replace task20's wider security audit or hardware lock tests.
@@ -93,7 +99,7 @@ erasure claims. Listener registration failure blocks unlock instead of silently
 running without OS locking. Actual OS lock/suspend and fully populated future
 capture/recovery screens still require their later end-to-end checks.
 
-Task 03 implements the storage boundary described below; the original task 01 framework spike remains inert and has no usable credential flow. Independent task 03 review is pending, and task 20 owns the wider audit. The agent review required by the task plan is not external cryptographic certification.
+Task03 implemented the storage boundary below and received its focused independent review. The original task01 framework spike is inert and now has a debug-only application entry route. Task20 owns the wider audit. An agent review is not external cryptographic certification.
 
 ## Threats
 

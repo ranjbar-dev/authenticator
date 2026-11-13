@@ -565,6 +565,7 @@ fn failed_cancelled_invalid_and_panicking_transactions_are_rollback_safe() -> Te
     let before = codec::encode(store.vault()?)?;
     for fault in [
         files::WriteFault::AfterPartial,
+        files::WriteFault::StorageFull,
         files::WriteFault::BeforeReplace,
     ] {
         store.fault = fault;

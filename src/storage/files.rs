@@ -67,6 +67,8 @@ pub(super) enum WriteFault {
     #[cfg(test)]
     AfterPartial,
     #[cfg(test)]
+    StorageFull,
+    #[cfg(test)]
     BeforeReplace,
     #[cfg(test)]
     TerminateBeforeReplace,
@@ -140,6 +142,11 @@ fn atomic_guarded_at(
         file.write_all(&bytes[..bytes.len() / 2])
             .map_err(|_| AppError::StorageUnavailable)?;
         return Err(AppError::StorageUnavailable);
+    }
+    #[cfg(test)]
+    if matches!(fault, WriteFault::StorageFull) {
+        return super::test_gate::write_until_full(file, bytes)
+            .map_err(|_| AppError::StorageUnavailable);
     }
     let _ = fault;
     file.write_all(bytes)

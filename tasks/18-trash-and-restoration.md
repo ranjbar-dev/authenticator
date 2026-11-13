@@ -1,6 +1,6 @@
 # Task 18: Trash, restoration and permanent deletion
 
-Status: in_progress - independently reviewed source approved; hosted full/native gates open
+Status: in_progress - independently reviewed source/full suite validated; native gates open
 Priority: Required for complete v1
 Dependencies: 10–17
 Requirements: FR-1.5, FR-5; PRD §§5.4, 8–9, 12
@@ -54,4 +54,6 @@ Limited source approval by distinct review_18, with no material findings. Implem
 All20 new library cases passed individually; independently18 focused cases passed across11 bounded invocations, including all five own-Trash kinds, preserved OTP/used history, parent-first/collision consent, cascade union/final-code set disclosure, equal-time stale checks, failed writes/retry/latest preferences, held preparation/admitted Lock and shared Close. Production/lib/own-example build, strict Clippy, formatting and diff checks pass. The author full196-library/all-target run is INCOMPLETE; retained process identity/cause limitations are recorded, not diagnosed by focused success. Current-source hosted suite remains required.
 
 Native screenshots/input:0. Normal own preview launch failed GetCursorPos0x80070005 before resources; no bypass or unchanged retry. Real pointer/keyboard, raster quality, physical DPI/Narrator/offline/hardware and earlier interactive clipboard gates remain OPEN. Screen checklist remains unchecked for native acceptance. Coherent source checkpoint commit and hosted evidence follow in tasks/README.md; continue independent19 without declaring18done.
+
+Hosted follow-up: [CI43391082018](https://github.com/ranjbar-dev/authenticator/actions/runs/43391082018) SUCCESS at6264c54, library205passed/0failed/4directignored plus18other top-level tests, formatting/lint/app build pass. Includes all Task18 cases and independently reviewed corrections to the two previous CI18 failures. Full-suite source gate closes; native/manual acceptance remains open. See [exact follow-up](../docs/qa/task19/hosted-follow-up.md).
 

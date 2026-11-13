@@ -378,7 +378,11 @@ fn destination_consent_faults_and_cancellation_preserve_prior_ciphertext() -> Te
     );
     assert_eq!(fs::read(&path)?, different);
     fs::write(&path, &bytes)?;
-    for fault in [files::Fault::Partial, files::Fault::BeforeRename] {
+    for fault in [
+        files::Fault::Partial,
+        files::Fault::StorageFull,
+        files::Fault::BeforeRename,
+    ] {
         assert!(
             files::write(
                 Destination::overwrite_reviewed(&path)?,

@@ -109,12 +109,14 @@ impl Secret {
         if input.len() > Self::MAX_INPUT_BYTES {
             return Err(AppError::InvalidSecret);
         }
-        let normalized = Zeroizing::new(
+        // Filtering has no exact iterator length. Reserve the already bounded
+        // input once, rather than reallocating plaintext Base32 copies as it grows.
+        let mut normalized = Zeroizing::new(Vec::with_capacity(input.len()));
+        normalized.extend(
             input
                 .bytes()
                 .filter(|b| !matches!(b, b' ' | b'\t' | b'\r' | b'\n'))
-                .map(|b| b.to_ascii_uppercase())
-                .collect::<Vec<_>>(),
+                .map(|b| b.to_ascii_uppercase()),
         );
         if let Some(first_padding) = normalized.iter().position(|b| *b == b'=')
             && normalized[first_padding..].iter().any(|b| *b != b'=')

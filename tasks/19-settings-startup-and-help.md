@@ -1,6 +1,6 @@
 # Task 19: Settings, auto-start and contextual offline help
 
-Status: in_progress - corrected source independently approved; hosted full/native gates open
+Status: in_progress - corrected source/full suite validated; native/offline/logon gates open
 Priority: Required for complete v1
 Dependencies: 05, 10, 12–18
 Requirements: FR-7.2–4, FR-8; PRD §§5.4, 7, 12
@@ -59,4 +59,6 @@ Corrected source approved after distinct review_19 and focused re-review. The ch
 Author16 focused cases pass; independent15 original focused cases and two current correction checks pass. P2 Settings Lock triggering-frame metadata was fixed by consolidating Lock in the shared header before private content. The permanent all-present-actions regression checks release-frame AX and paint at340/600/960 with one/two-pass budgets; parent red8.44s, final green28.90s, independent28.92s. P3 startup claims now match UNC/prefix checks and disclose unresolved drive mappings. Both previous CI18 failures independently pass after meaningful test corrections; old hostedCI18 remains failed until a new full run passes.
 
 Current209library entries compile; final fmt/strict all-target/all-feature Clippy/diff and production/bin+lib build pass. No local full-suite result is claimed. Native screenshots/input0; actual offline-machine, pointer/keyboard/raster/DPI/Narrator/high-contrast/logon/OS-lock/suspend/clipboard/package gates stay OPEN. No taskdone, conformance, security certification or production-readiness claim. Commit/run reference follows in the parent checkpoint; continue20–24.
+
+[Hosted CI43391082018](https://github.com/ranjbar-dev/authenticator/actions/runs/43391082018) subsequently SUCCESS at6264c54:205library+18other top-level tests,0failures,4directignored helper entrypoints, format/lint/appbuild allpass. [Exact evidence](../docs/qa/task19/hosted-follow-up.md). This closes the hosted full-suite source gate, not native/offline/logon/manual acceptance or later Task20 changes.
 

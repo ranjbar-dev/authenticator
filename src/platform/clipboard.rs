@@ -402,7 +402,14 @@ mod native {
         if owner == 0 || text.len() > 1024 * 1024 || text.contains('\0') {
             return Err(ClipboardError::Unavailable);
         }
-        let expected = Zeroizing::new(text.encode_utf16().chain(Some(0)).collect::<Vec<_>>());
+        // UTF-16 uses at most one unit per UTF-8 byte. Reserve the bounded upper
+        // size before conversion, avoiding abandoned plaintext allocations.
+        let mut expected = Zeroizing::new(Vec::new());
+        expected
+            .try_reserve_exact(text.len() + 1)
+            .map_err(|_| ClipboardError::Unavailable)?;
+        expected.extend(text.encode_utf16());
+        expected.push(0);
         let mut marker = [0; 16];
         getrandom::fill(&mut marker).map_err(|_| ClipboardError::Unavailable)?;
         let format = register("Authenticator.LocalClipboardLease.v1")?;

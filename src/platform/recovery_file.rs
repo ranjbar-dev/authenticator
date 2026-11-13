@@ -127,13 +127,28 @@ pub fn read(path: &Path) -> Result<Zeroizing<String>, AppError> {
             return Err(AppError::BackupFileUnavailable);
         }
     }
-    let mut bytes = Zeroizing::new(Vec::new());
-    file.take((MAX_TEXT_BYTES + 1) as u64)
-        .read_to_end(&mut bytes)
+    // Reserve the bounded read once so growth cannot abandon earlier plaintext
+    // recovery-code allocations before the zeroizing owner is dropped.
+    let mut bytes = Vec::new();
+    bytes
+        .try_reserve_exact(MAX_TEXT_BYTES + 1)
         .map_err(|_| AppError::BackupFileUnavailable)?;
-    if bytes.len() > MAX_TEXT_BYTES {
+    bytes.resize(MAX_TEXT_BYTES + 1, 0);
+    let mut bytes = Zeroizing::new(bytes);
+    let mut reader = file.take((MAX_TEXT_BYTES + 1) as u64);
+    let mut used = 0;
+    while used < bytes.len() {
+        match reader.read(&mut bytes[used..]) {
+            Ok(0) => break,
+            Ok(count) => used += count,
+            Err(error) if error.kind() == std::io::ErrorKind::Interrupted => continue,
+            Err(_) => return Err(AppError::BackupFileUnavailable),
+        }
+    }
+    if used > MAX_TEXT_BYTES {
         return Err(AppError::BackupFileTooLarge);
     }
+    bytes.truncate(used);
     let text = std::str::from_utf8(&bytes).map_err(|_| AppError::InvalidBackupEncoding)?;
     Ok(Zeroizing::new(text.to_owned()))
 }

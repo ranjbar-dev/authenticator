@@ -169,6 +169,8 @@ pub(super) enum Fault {
     #[cfg(test)]
     Partial,
     #[cfg(test)]
+    StorageFull,
+    #[cfg(test)]
     BeforeRename,
     #[cfg(test)]
     Terminate,
@@ -214,6 +216,11 @@ pub(super) fn write_at(
         f.write_all(&bytes[..bytes.len() / 2])
             .map_err(|_| BackupError::Unavailable)?;
         return Err(BackupError::Unavailable);
+    }
+    #[cfg(test)]
+    if matches!(fault, Fault::StorageFull) {
+        return crate::storage::test_gate::write_until_full(f, bytes)
+            .map_err(|_| BackupError::Unavailable);
     }
     let _ = fault;
     f.write_all(bytes).map_err(|_| BackupError::Unavailable)?;

@@ -1,6 +1,6 @@
 # Task 20: Failure resilience and independent security audit
 
-Status: todo
+Status: in_progress - source audit independently approved; hosted/native/offline gates open
 Priority: Required for complete v1
 Dependencies: 01–19
 Requirements: PRD §§8–11; all FR cross-cutting guarantees
@@ -11,18 +11,18 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Implementation
 
-- [ ] Perform a separate-agent code/security review of encryption, KDF bounds, nonce lifecycle, key wrapping, lock state, import transactions, screen capture and clipboard ownership. This is an agent review, not a claim of external cryptographic certification.
-- [ ] Exercise fault injection for disk full/access denied/interrupted writes, corrupt vaults, migrations/rollback, concurrent instances, cancellation and lock during background operations. Remove panic paths reachable from untrusted input.
+- [x] Perform a separate-agent code/security review of encryption, KDF bounds, nonce lifecycle, key wrapping, lock state, import transactions, screen capture and clipboard ownership. This is an agent review, not a claim of external cryptographic certification.
+- [x] Exercise fault injection for disk full/access denied/interrupted writes, corrupt vaults, migrations/rollback, concurrent instances, cancellation and lock during background operations. Remove panic paths reachable from untrusted input.
 - [ ] Inspect runtime network behavior offline, plaintext filesystem artifacts, logs, crash output and Debug formatting with disposable sentinel values. Limit diagnostics and document OS crash-dump/memory limitations honestly.
-- [ ] Review dependencies/licenses/advisories with current official tooling and guidance; remedy material findings. Verify source/build/test assets contain no production credentials.
-- [ ] Produce docs/security-review.md with findings, fixes, residual limitations and reproducible evidence. Do not mark unresolved material vulnerabilities as accepted just to finish.
+- [x] Review dependencies/licenses/advisories with current official tooling and guidance; remedy material findings. Verify source/build/test assets contain no production credentials.
+- [x] Produce docs/security-review.md with findings, fixes, residual limitations and reproducible evidence. Do not mark unresolved material vulnerabilities as accepted just to finish.
 
 ## Acceptance and verification
 
-- [ ] No material security or data-loss finding remains unresolved; independent reviewer rechecks fixes.
-- [ ] Fault-injection/adversarial tests preserve the last committed vault and never produce partial imports.
+- [x] No material security or data-loss finding remains unresolved; independent reviewer rechecks fixes.
+- [x] Fault-injection/adversarial tests preserve the last committed vault and never produce partial imports.
 - [ ] Sentinel scan finds no user data in logs/temp/journals; runtime performs no required network operations.
-- [ ] Security documentation distinguishes agent review, tested guarantees and endpoint/clipboard/backup/secure-erasure limitations.
+- [x] Security documentation distinguishes agent review, tested guarantees and endpoint/clipboard/backup/secure-erasure limitations.
 
 ## Handoff and completion
 
@@ -34,5 +34,13 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Evidence
 
-Not started. On execution record changed files, test commands/results, sanitized UI evidence paths where applicable, independent reviewer result and commit reference. If blocked, retain incomplete status and record exact cause, attempted remedies and resumption steps.
+Limited source approval by distinct review_20, no material source security/data-loss findings. Minor exact-command transcription corrected to `--format-version 1`; reviewer independently executed that correct command. No external certification, native/offline-machine or production-readiness claim.
+
+- [Current audit report](../docs/security-review.md).
+- [Author paths/commands/57 unique focused cases/cleanup](../docs/qa/task20/implementation-evidence.md).
+- [Independent source review/25 focused cases/core probe/dependency verification](../docs/qa/task20/independent-review.md).
+
+Release demo entry is debug-only; bounded plaintext conversions avoid avoidable reallocations; explicit StorageFull rollback and attested panic-output checks pass. Independent core restore/sentinel probe passed with62 own-PID TCP/UDP samples showing0 observed entries; adapters stayed enabled and sampling can miss transients. Cargo audit found0 known matches and3 unsuppressed Unix-only maintenance notices; Windows normal/build license inventory185entries independently matched. Actual notice distribution remains23.
+
+Current-source formatting/strict lint/release configuration/prod-bin+lib+own-example build and targeted tests pass; new hosted full suite is required. Native screenshots/input0, interactive Copy→Changed cause unknown, disconnected-machine/full native/physical/Narrator/OS-lock/suspend/logon/package checks remain OPEN. Checked boxes describe bounded source/fault/probe evidence, not those missing gates. Continue21–24 and record commit/hosted result in parent checkpoint.
 

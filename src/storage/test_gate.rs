@@ -1,4 +1,4 @@
-//! Per-token test-only actual save admission gate; absent from production builds.
+//! Test-only save admission and bounded I/O fault instruments; absent in production.
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::{Duration, Instant};
 #[derive(Default)]
@@ -49,4 +49,38 @@ impl Drop for ReleaseOnDrop {
     fn drop(&mut self) {
         self.0.release();
     }
+}
+
+/// Writes a bounded ciphertext prefix through the real writer, then makes its
+/// next write return StorageFull. No volume is filled or OS setting changed.
+pub(crate) fn write_until_full(
+    writer: &mut impl std::io::Write,
+    bytes: &[u8],
+) -> std::io::Result<()> {
+    struct FullAfter<'a, W> {
+        inner: &'a mut W,
+        remaining: usize,
+    }
+    impl<W: std::io::Write> std::io::Write for FullAfter<'_, W> {
+        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+            if self.remaining == 0 {
+                return Err(std::io::ErrorKind::StorageFull.into());
+            }
+            let count = bytes.len().min(self.remaining);
+            let written = self.inner.write(&bytes[..count])?;
+            self.remaining -= written;
+            Ok(written)
+        }
+        fn flush(&mut self) -> std::io::Result<()> {
+            self.inner.flush()
+        }
+    }
+    use std::io::Write;
+    FullAfter {
+        inner: writer,
+        remaining: bytes.len() / 2,
+    }
+    .write_all(bytes)?;
+    // Even an empty injected write cannot accidentally report a committed save.
+    Err(std::io::ErrorKind::StorageFull.into())
 }
