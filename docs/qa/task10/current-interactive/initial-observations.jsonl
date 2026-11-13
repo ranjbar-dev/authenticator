@@ -1,0 +1,11 @@
+{"stage":"poll","unix":1794574060,"unlocked":true,"has_unicode":true,"owner_is_app":false,"lease_present":false,"matches_fixture_code":false,"subsequent_copy_intact":false}
+{"stage":"poll","unix":1794574094,"unlocked":true,"has_unicode":true,"owner_is_app":true,"lease_present":true,"matches_fixture_code":true,"subsequent_copy_intact":false}
+{"stage":"poll","unix":1794574124,"unlocked":true,"has_unicode":false,"owner_is_app":false,"lease_present":false,"matches_fixture_code":false,"subsequent_copy_intact":false}
+{"stage":"poll","unix":1794574157,"unlocked":true,"has_unicode":true,"owner_is_app":true,"lease_present":true,"matches_fixture_code":true,"subsequent_copy_intact":false}
+{"stage":"subsequent_writer","unix":1794574175,"unlocked":true,"has_unicode":true,"owner_is_app":false,"lease_present":false,"matches_fixture_code":false,"subsequent_copy_intact":false}
+{"stage":"poll","unix":1794574175,"unlocked":true,"has_unicode":true,"owner_is_app":false,"lease_present":false,"matches_fixture_code":false,"subsequent_copy_intact":true}
+{"stage":"manual","unix":1794574216,"unlocked":true,"has_unicode":true,"owner_is_app":false,"lease_present":false,"matches_fixture_code":false,"subsequent_copy_intact":true}
+{"stage":"poll","unix":1794574319,"unlocked":true,"has_unicode":true,"owner_is_app":true,"lease_present":true,"matches_fixture_code":true,"subsequent_copy_intact":false}
+{"stage":"poll","unix":1794574331,"unlocked":false,"has_unicode":true,"owner_is_app":true,"lease_present":true,"matches_fixture_code":false,"subsequent_copy_intact":false}
+{"stage":"manual","unix":1794574337,"unlocked":false,"has_unicode":true,"owner_is_app":true,"lease_present":true,"matches_fixture_code":false,"subsequent_copy_intact":false}
+{"stage":"after_exit_cleanup","unix":1794574470,"unlocked":false,"has_unicode":true,"owner_is_app":true,"lease_present":true,"matches_fixture_code":false,"subsequent_copy_intact":false}

@@ -20,6 +20,48 @@ pub enum ClipboardError {
     Expired,
     Changed,
 }
+/// Fixed-size development evidence only. No handles, nonce bytes, text or digest.
+#[cfg(all(windows, debug_assertions))]
+#[derive(Clone, Copy, Debug, Default)]
+pub struct CopyProofForEvidence {
+    pub attempt: u8,
+    pub text_published: bool,
+    pub post_close_open: bool,
+    pub owner_matches: Option<bool>,
+    pub marker_handle: Option<bool>,
+    pub marker_bounds: Option<bool>,
+    pub marker_lock: Option<bool>,
+    pub marker_matches: Option<bool>,
+    pub unicode_handle: Option<bool>,
+    pub unicode_bounds: Option<bool>,
+    pub unicode_lock: Option<bool>,
+    pub digest_matches: Option<bool>,
+    pub admitted: bool,
+    pub written_sequence: u32,
+    pub post_close_sequence: u32,
+    pub proof_sequence_before: u32,
+    pub proof_sequence_after: u32,
+    pub sequence_matches: Option<bool>,
+}
+#[cfg(all(windows, debug_assertions))]
+pub fn take_copy_proof_for_evidence() -> Option<CopyProofForEvidence> {
+    native::COPY_PROOF
+        .lock()
+        .ok()
+        .and_then(|mut values| values.iter_mut().find_map(Option::take))
+}
+struct CopyFailure<L> {
+    error: ClipboardError,
+    cleanup: Option<L>,
+}
+impl<L> From<ClipboardError> for CopyFailure<L> {
+    fn from(error: ClipboardError) -> Self {
+        Self {
+            error,
+            cleanup: None,
+        }
+    }
+}
 #[derive(Clone, Copy)]
 pub struct CodeWindow {
     pub counter: u64,
@@ -40,7 +82,7 @@ trait Backend: Send + 'static {
         owner: usize,
         text: &str,
         admitted: &dyn Fn() -> bool,
-    ) -> Result<Self::Lease, ClipboardError>;
+    ) -> Result<Self::Lease, CopyFailure<Self::Lease>>;
     fn clear(&mut self, lease: &Self::Lease) -> Result<(), ClipboardError>;
 }
 struct Native;
@@ -51,8 +93,8 @@ impl Backend for Native {
         owner: usize,
         text: &str,
         admitted: &dyn Fn() -> bool,
-    ) -> Result<Self::Lease, ClipboardError> {
-        native::copy(owner, text, admitted)
+    ) -> Result<Self::Lease, CopyFailure<Self::Lease>> {
+        native::attempt(owner, text, admitted)
     }
     fn clear(&mut self, lease: &Self::Lease) -> Result<(), ClipboardError> {
         native::clear(lease)
@@ -142,15 +184,25 @@ impl Clipboard {
                                     clear_deadline = None;
                                     clear_warned = false;
                                 }
-                                Err(ClipboardError::Cancelled) => {
-                                    if session() && !valid() {
-                                        let _ = result_sender
-                                            .send((generation, Err(ClipboardError::Expired)));
+                                Err(failure) => {
+                                    // A failed post-publication proof must never
+                                    // report success or lose its guarded cleanup
+                                    // descriptor. It contains only nonce/digest
+                                    // evidence, with no plaintext. Failure before
+                                    // publication preserves any prior lease.
+                                    if failure.error == ClipboardError::Cancelled {
+                                        if session() && !valid() {
+                                            let _ = result_sender
+                                                .send((generation, Err(ClipboardError::Expired)));
+                                        }
+                                    } else if admitted() {
+                                        let _ =
+                                            result_sender.send((generation, Err(failure.error)));
                                     }
-                                }
-                                Err(error) => {
-                                    if admitted() {
-                                        let _ = result_sender.send((generation, Err(error)));
+                                    if let Some(value) = failure.cleanup {
+                                        lease = Some((value, Instant::now(), generation, watch));
+                                        clear_deadline = None;
+                                        clear_warned = false;
                                     }
                                 }
                             }
@@ -307,6 +359,20 @@ mod native {
         System::{DataExchange::*, Memory::*},
     };
     const UNICODE: u32 = 13;
+    #[cfg(debug_assertions)]
+    pub(super) static COPY_PROOF: std::sync::Mutex<[Option<CopyProofForEvidence>; 8]> =
+        std::sync::Mutex::new([None; 8]);
+    #[cfg(debug_assertions)]
+    fn record_proof(proof: CopyProofForEvidence) {
+        if let Ok(mut values) = COPY_PROOF.lock() {
+            if let Some(slot) = values.iter_mut().find(|v| v.is_none()) {
+                *slot = Some(proof);
+            } else {
+                values.rotate_left(1);
+                values[7] = Some(proof);
+            }
+        }
+    }
     pub(super) struct Lease {
         owner: usize,
         sequence: u32,
@@ -386,19 +452,130 @@ mod native {
     fn bytes(values: &[u16]) -> &[u8] {
         unsafe { std::slice::from_raw_parts(values.as_ptr().cast(), values.len() * 2) }
     }
-    pub(super) fn copy(
+    #[cfg(test)]
+    fn copy(
         owner: usize,
         text: &str,
         admitted: &dyn Fn() -> bool,
     ) -> Result<Lease, ClipboardError> {
-        copy_after_close(owner, text, admitted, || {})
+        attempt(owner, text, admitted).map_err(|failure| failure.error)
     }
+    #[cfg(test)]
     fn copy_after_close(
         owner: usize,
         text: &str,
         admitted: &dyn Fn() -> bool,
         after_close: impl FnOnce(),
     ) -> Result<Lease, ClipboardError> {
+        attempt_after_close(owner, text, admitted, || {}, after_close)
+            .map_err(|failure| failure.error)
+    }
+    pub(super) fn attempt(
+        owner: usize,
+        text: &str,
+        admitted: &dyn Fn() -> bool,
+    ) -> Result<Lease, CopyFailure<Lease>> {
+        attempt_after_close(owner, text, admitted, || {}, || {})
+    }
+    fn attempt_after_close(
+        owner: usize,
+        text: &str,
+        admitted: &dyn Fn() -> bool,
+        mut between_attempts: impl FnMut(),
+        after_close: impl FnOnce(),
+    ) -> Result<Lease, CopyFailure<Lease>> {
+        let (mut lease, _written_sequence) = publish(owner, text, admitted, after_close)?;
+        let _post_close_sequence = lease.sequence;
+        let mut error = ClipboardError::Busy;
+        for attempt in 0..4 {
+            if !admitted() {
+                error = ClipboardError::Cancelled;
+                break;
+            }
+            #[cfg(debug_assertions)]
+            let mut proof = CopyProofForEvidence {
+                attempt,
+                text_published: true,
+                admitted: admitted(),
+                written_sequence: _written_sequence,
+                post_close_sequence: _post_close_sequence,
+                ..Default::default()
+            };
+            match Open::acquire(0) {
+                Ok(open) => {
+                    let sequence = unsafe { GetClipboardSequenceNumber() };
+                    #[cfg(debug_assertions)]
+                    {
+                        proof.post_close_open = true;
+                        proof.proof_sequence_before = sequence;
+                        proof.sequence_matches = Some(sequence == lease.sequence && sequence != 0);
+                    }
+                    if sequence == 0 || sequence != lease.sequence {
+                        #[cfg(debug_assertions)]
+                        record_proof(proof);
+                        error = ClipboardError::Changed;
+                        break;
+                    }
+                    let checked = check_owned_content(
+                        &lease,
+                        #[cfg(debug_assertions)]
+                        Some(&mut proof),
+                    );
+                    #[cfg(debug_assertions)]
+                    {
+                        proof.proof_sequence_after = unsafe { GetClipboardSequenceNumber() };
+                        record_proof(proof);
+                    }
+                    match checked {
+                        Ok(true) => {
+                            // A sequence is adopted only inside this exclusive
+                            // interval AFTER exact HWND+nonce+digest proof. An
+                            // intervening later writer across opens is rejected.
+                            lease.sequence = unsafe { GetClipboardSequenceNumber() };
+                            return Ok(lease);
+                        }
+                        Ok(false) => {
+                            error = ClipboardError::Changed;
+                            break;
+                        }
+                        Err(ClipboardError::Busy) => {
+                            error = ClipboardError::Busy;
+                        }
+                        Err(other) => {
+                            error = other;
+                            break;
+                        }
+                    }
+                    drop(open);
+                }
+                Err(ClipboardError::Busy) => {
+                    #[cfg(debug_assertions)]
+                    record_proof(proof);
+                    error = ClipboardError::Busy;
+                }
+                Err(other) => {
+                    error = other;
+                    break;
+                }
+            }
+            if attempt < 3 {
+                between_attempts();
+                // At most150ms on the worker, never on the UI thread. Allow
+                // a Windows input/render message to complete before retrying.
+                std::thread::sleep(Duration::from_millis(50));
+            }
+        }
+        Err(CopyFailure {
+            error,
+            cleanup: Some(lease),
+        })
+    }
+    fn publish(
+        owner: usize,
+        text: &str,
+        admitted: &dyn Fn() -> bool,
+        after_close: impl FnOnce(),
+    ) -> Result<(Lease, u32), ClipboardError> {
         if owner == 0 || text.len() > 1024 * 1024 || text.contains('\0') {
             return Err(ClipboardError::Unavailable);
         }
@@ -451,7 +628,7 @@ mod native {
             return Err(ClipboardError::Unavailable);
         }
         let expected_digest = digest(&marker, bytes(&expected));
-        let mut lease = Lease {
+        let lease = Lease {
             owner,
             sequence,
             marker,
@@ -459,21 +636,7 @@ mod native {
             expected_digest,
             expected_bytes: expected.len() * 2,
         };
-        match Open::acquire(0) {
-            Ok(_open) => {
-                if !owned_content(&lease)? {
-                    return Err(ClipboardError::Changed);
-                }
-                lease.sequence = unsafe { GetClipboardSequenceNumber() };
-            }
-            // Keep provisional evidence for cleanup when the clipboard becomes
-            // available. Never rebase this sequence later: an intervening write
-            // invalidates it even if text is identical. Every clear still needs
-            // exact HWND+nonce+digest proof in one exclusive open interval.
-            Err(ClipboardError::Busy) => {}
-            Err(error) => return Err(error),
-        }
-        Ok(lease)
+        Ok((lease, written_sequence))
     }
     fn digest(marker: &[u8; 16], bytes: &[u8]) -> [u8; 32] {
         let mut hash = Sha256::new();
@@ -481,26 +644,74 @@ mod native {
         hash.update(bytes);
         hash.finalize().into()
     }
+    #[cfg(test)]
     fn matches(format: u32, expected: &[u8]) -> bool {
-        let handle = unsafe { GetClipboardData(format) };
+        check_marker(
+            format,
+            expected,
+            #[cfg(debug_assertions)]
+            None,
+        )
+        .unwrap_or(false)
+    }
+    #[cfg(test)]
+    static UNAVAILABLE_MARKER_READS: std::sync::atomic::AtomicUsize =
+        std::sync::atomic::AtomicUsize::new(0);
+    fn marker_handle(format: u32) -> HANDLE {
+        #[cfg(test)]
+        if UNAVAILABLE_MARKER_READS
+            .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |n| n.checked_sub(1))
+            .is_ok()
+        {
+            return std::ptr::null_mut();
+        }
+        unsafe { GetClipboardData(format) }
+    }
+    fn check_marker(
+        format: u32,
+        expected: &[u8],
+        #[cfg(debug_assertions)] mut proof: Option<&mut CopyProofForEvidence>,
+    ) -> Result<bool, ClipboardError> {
+        let handle = marker_handle(format);
+        #[cfg(debug_assertions)]
+        if let Some(value) = proof.as_deref_mut() {
+            value.marker_handle = Some(!handle.is_null());
+        }
         if handle.is_null() {
-            return false;
+            return if unsafe { IsClipboardFormatAvailable(format) } != 0 {
+                Err(ClipboardError::Busy)
+            } else {
+                Ok(false)
+            };
         }
         // Exact expected-size bounds before dereferencing; no unrelated data allocation.
         let size = unsafe { GlobalSize(handle) };
-        if size < expected.len() || size > expected.len().saturating_add(64) {
-            return false;
+        let bounded = size >= expected.len() && size <= expected.len().saturating_add(64);
+        #[cfg(debug_assertions)]
+        if let Some(value) = proof.as_deref_mut() {
+            value.marker_bounds = Some(bounded);
+        }
+        if !bounded {
+            return Ok(false);
         }
         let ptr = unsafe { GlobalLock(handle) };
+        #[cfg(debug_assertions)]
+        if let Some(value) = proof.as_deref_mut() {
+            value.marker_lock = Some(!ptr.is_null());
+        }
         if ptr.is_null() {
-            return false;
+            return Err(ClipboardError::Busy);
         }
         let equal =
             unsafe { std::slice::from_raw_parts(ptr.cast::<u8>(), expected.len()) } == expected;
         unsafe {
             GlobalUnlock(handle);
         }
-        equal
+        #[cfg(debug_assertions)]
+        if let Some(value) = proof {
+            value.marker_matches = Some(equal);
+        }
+        Ok(equal)
     }
     #[cfg(test)]
     #[test]
@@ -644,6 +855,138 @@ mod native {
                 let _open = Open::acquire(0).map_err(|_| "open")?;
                 assert_eq!(IsClipboardFormatAvailable(UNICODE), 0);
             }
+            // Reproduce the observed GetClipboardData(NULL) proof branch on
+            // this private station, then require the actual later native read
+            // and digest to succeed before reporting a successful copy.
+            UNAVAILABLE_UNICODE_READS.store(1, Ordering::SeqCst);
+            let delayed = attempt(owner, "123456", &|| true).map_err(|_| "delayed native read")?;
+            assert_eq!(UNAVAILABLE_UNICODE_READS.load(Ordering::SeqCst), 0);
+            clear(&delayed).map_err(|_| "delayed clear")?;
+            {
+                let _open = Open::acquire(0).map_err(|_| "open")?;
+                assert_eq!(IsClipboardFormatAvailable(UNICODE), 0);
+            }
+            // Advertised-but-unavailable private marker cannot authorize a
+            // Unicode read. Its later exact match may then encounter the same
+            // independently delayed Unicode branch before a real digest proof.
+            UNAVAILABLE_MARKER_READS.store(1, Ordering::SeqCst);
+            UNAVAILABLE_UNICODE_READS.store(1, Ordering::SeqCst);
+            let delayed_marker =
+                attempt(owner, "123456", &|| true).map_err(|_| "delayed marker proof")?;
+            assert_eq!(UNAVAILABLE_MARKER_READS.load(Ordering::SeqCst), 0);
+            assert_eq!(UNAVAILABLE_UNICODE_READS.load(Ordering::SeqCst), 0);
+            clear(&delayed_marker).map_err(|_| "delayed marker cleanup")?;
+            UNAVAILABLE_MARKER_READS.store(4, Ordering::SeqCst);
+            UNAVAILABLE_UNICODE_READS.store(1, Ordering::SeqCst);
+            let failure = match attempt(owner, "123456", &|| true) {
+                Err(value) => value,
+                Ok(_) => return Err("persistent unavailable marker falsely succeeded".into()),
+            };
+            assert_eq!(failure.error, ClipboardError::Busy);
+            assert_eq!(UNAVAILABLE_MARKER_READS.load(Ordering::SeqCst), 0);
+            assert_eq!(
+                UNAVAILABLE_UNICODE_READS.load(Ordering::SeqCst),
+                1,
+                "Unicode read before marker proof"
+            );
+            UNAVAILABLE_UNICODE_READS.store(0, Ordering::SeqCst);
+            clear(&failure.cleanup.ok_or("marker failure lost cleanup")?)
+                .map_err(|_| "marker unavailable cleanup")?;
+            UNAVAILABLE_UNICODE_READS.store(4, Ordering::SeqCst);
+            let failure = match attempt(owner, "123456", &|| true) {
+                Err(value) => value,
+                Ok(_) => return Err("persistent missing read falsely succeeded".into()),
+            };
+            assert_eq!(failure.error, ClipboardError::Busy);
+            assert_eq!(UNAVAILABLE_UNICODE_READS.load(Ordering::SeqCst), 0);
+            let rejected = failure.cleanup.ok_or("published failure lost cleanup")?;
+            clear(&rejected).map_err(|_| "rejected attempt clear")?;
+            {
+                let _open = Open::acquire(0).map_err(|_| "open")?;
+                assert_eq!(IsClipboardFormatAvailable(UNICODE), 0);
+            }
+            // A later writer, even with identical text, invalidates the fixed
+            // candidate sequence across opens. It must never be adopted/cleared.
+            for marker_fault in [false, true] {
+                UNAVAILABLE_MARKER_READS.store(usize::from(marker_fault), Ordering::SeqCst);
+                UNAVAILABLE_UNICODE_READS.store(usize::from(!marker_fault), Ordering::SeqCst);
+                let mut replacement = None;
+                let failure = match attempt_after_close(
+                    owner,
+                    "123456",
+                    &|| true,
+                    || {
+                        replacement = copy(other, "123456", &|| true).ok();
+                    },
+                    || {},
+                ) {
+                    Err(value) => value,
+                    Ok(_) => return Err("later identical writer was adopted".into()),
+                };
+                assert_eq!(failure.error, ClipboardError::Changed);
+                let rejected = failure.cleanup.ok_or("missing rejected descriptor")?;
+                clear(&rejected).map_err(|_| "rejected later-writer clear")?;
+                let replacement = replacement.ok_or("later copy failed")?;
+                {
+                    let _open = Open::acquire(0).map_err(|_| "open")?;
+                    assert_eq!(GetClipboardOwner() as usize, other);
+                    assert_eq!(GetClipboardSequenceNumber(), replacement.sequence);
+                    assert!(matches(
+                        UNICODE,
+                        &[b'1', 0, b'2', 0, b'3', 0, b'4', 0, b'5', 0, b'6', 0, 0, 0]
+                    ));
+                }
+            }
+            // A marker mismatch must short-circuit before the Unicode read,
+            // both on confirmation and on rejected-attempt cleanup.
+            UNAVAILABLE_UNICODE_READS.store(1, Ordering::SeqCst);
+            let mut marker_result = Err(ClipboardError::Unavailable);
+            let failure = match attempt_after_close(
+                owner,
+                "123456",
+                &|| true,
+                || {},
+                || {
+                    marker_result = (|| {
+                        let _open = Open::acquire(owner)?;
+                        let format = register("Authenticator.LocalClipboardLease.v1")?;
+                        Global::new(&[9; 16])?.publish(format)?;
+                        Ok(())
+                    })();
+                },
+            ) {
+                Err(value) => value,
+                Ok(_) => return Err("corrupt marker accepted".into()),
+            };
+            assert!(marker_result.is_ok());
+            assert_eq!(failure.error, ClipboardError::Changed);
+            assert_eq!(UNAVAILABLE_UNICODE_READS.load(Ordering::SeqCst), 1);
+            clear(
+                &failure
+                    .cleanup
+                    .ok_or("missing marker-rejected descriptor")?,
+            )
+            .map_err(|_| "marker clear")?;
+            assert_eq!(UNAVAILABLE_UNICODE_READS.load(Ordering::SeqCst), 1);
+            UNAVAILABLE_UNICODE_READS.store(0, Ordering::SeqCst);
+            // Cancellation while waiting for proof likewise retains only the
+            // rejected attempt's guarded descriptor, never a success result.
+            let admitted = AtomicBool::new(true);
+            UNAVAILABLE_UNICODE_READS.store(1, Ordering::SeqCst);
+            let failure = match attempt_after_close(
+                owner,
+                "123456",
+                &|| admitted.load(Ordering::SeqCst),
+                || {
+                    admitted.store(false, Ordering::SeqCst);
+                },
+                || {},
+            ) {
+                Err(value) => value,
+                Ok(_) => return Err("cancelled delayed attempt succeeded".into()),
+            };
+            assert_eq!(failure.error, ClipboardError::Cancelled);
+            clear(&failure.cleanup.ok_or("cancel lost cleanup")?).map_err(|_| "cancel cleanup")?;
             let old = copy(owner, "123456", &|| true).map_err(|_| "copy")?;
             let newer = copy(owner, "123456", &|| true).map_err(|_| "copy")?;
             assert_ne!(old.sequence, newer.sequence);
@@ -824,25 +1167,79 @@ mod native {
         }
     }
     fn owned_content(lease: &Lease) -> Result<bool, ClipboardError> {
-        if unsafe { GetClipboardOwner() } as usize != lease.owner
-            || !matches(lease.format, &lease.marker)
+        check_owned_content(
+            lease,
+            #[cfg(debug_assertions)]
+            None,
+        )
+    }
+    #[cfg(test)]
+    static UNAVAILABLE_UNICODE_READS: std::sync::atomic::AtomicUsize =
+        std::sync::atomic::AtomicUsize::new(0);
+    fn unicode_handle() -> HANDLE {
+        #[cfg(test)]
+        if UNAVAILABLE_UNICODE_READS
+            .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |n| n.checked_sub(1))
+            .is_ok()
         {
+            return std::ptr::null_mut();
+        }
+        unsafe { GetClipboardData(UNICODE) }
+    }
+    fn check_owned_content(
+        lease: &Lease,
+        #[cfg(debug_assertions)] mut proof: Option<&mut CopyProofForEvidence>,
+    ) -> Result<bool, ClipboardError> {
+        let owner_matches = unsafe { GetClipboardOwner() } as usize == lease.owner;
+        #[cfg(debug_assertions)]
+        if let Some(value) = proof.as_deref_mut() {
+            value.owner_matches = Some(owner_matches);
+        }
+        if !owner_matches {
             return Ok(false);
         }
-        let handle = unsafe { GetClipboardData(UNICODE) };
-        if handle.is_null() {
+        if !check_marker(
+            lease.format,
+            &lease.marker,
+            #[cfg(debug_assertions)]
+            proof.as_deref_mut(),
+        )? {
             return Ok(false);
+        }
+        let handle = unicode_handle();
+        #[cfg(debug_assertions)]
+        if let Some(value) = proof.as_deref_mut() {
+            value.unicode_handle = Some(!handle.is_null());
+        }
+        if handle.is_null() {
+            // A published format can be temporarily unavailable even after
+            // exact owner+marker proof (observed on the interactive desktop).
+            // This is retryable; absence of the format means there is no text
+            // left for cleanup. Neither case authorizes a Unicode read.
+            return if unsafe { IsClipboardFormatAvailable(UNICODE) } != 0 {
+                Err(ClipboardError::Busy)
+            } else {
+                Ok(false)
+            };
         }
         let size = unsafe { GlobalSize(handle) };
-        if size < lease.expected_bytes
-            || size > lease.expected_bytes.saturating_add(64)
-            || lease.expected_bytes > 2 * (1024 * 1024 + 1)
-        {
+        let bounded = size >= lease.expected_bytes
+            && size <= lease.expected_bytes.saturating_add(64)
+            && lease.expected_bytes <= 2 * (1024 * 1024 + 1);
+        #[cfg(debug_assertions)]
+        if let Some(value) = proof.as_deref_mut() {
+            value.unicode_bounds = Some(bounded);
+        }
+        if !bounded {
             return Ok(false);
         }
         let ptr = unsafe { GlobalLock(handle) };
+        #[cfg(debug_assertions)]
+        if let Some(value) = proof.as_deref_mut() {
+            value.unicode_lock = Some(!ptr.is_null());
+        }
         if ptr.is_null() {
-            return Err(ClipboardError::Unavailable);
+            return Err(ClipboardError::Busy);
         }
         let actual = digest(&lease.marker, unsafe {
             std::slice::from_raw_parts(ptr.cast::<u8>(), lease.expected_bytes)
@@ -850,7 +1247,12 @@ mod native {
         unsafe {
             GlobalUnlock(handle);
         }
-        Ok(actual == lease.expected_digest)
+        let equal = actual == lease.expected_digest;
+        #[cfg(debug_assertions)]
+        if let Some(value) = proof {
+            value.digest_matches = Some(equal);
+        }
+        Ok(equal)
     }
 }
 
@@ -867,6 +1269,7 @@ mod tests {
         value: String,
         clears: usize,
         copy_error: Option<ClipboardError>,
+        reject_after_publish: bool,
     }
     struct Fake {
         state: Arc<Mutex<FakeState>>,
@@ -880,14 +1283,14 @@ mod tests {
             _: usize,
             text: &str,
             admitted: &dyn Fn() -> bool,
-        ) -> Result<u64, ClipboardError> {
+        ) -> Result<u64, CopyFailure<u64>> {
             let gate = self.gate.take();
             if let Some((entered, release, false)) = &gate {
                 let _ = entered.send(());
                 let _ = release.recv_timeout(Duration::from_secs(5));
             }
             if !admitted() {
-                return Err(ClipboardError::Cancelled);
+                return Err(ClipboardError::Cancelled.into());
             }
             if let Some((entered, release, true)) = &gate {
                 let _ = entered.send(());
@@ -895,11 +1298,17 @@ mod tests {
             }
             let mut state = self.state.lock().map_err(|_| ClipboardError::Unavailable)?;
             if let Some(error) = state.copy_error.take() {
-                return Err(error);
+                return Err(error.into());
             }
             state.sequence += 1;
             state.owned = true;
             state.value = text.into();
+            if state.reject_after_publish {
+                return Err(CopyFailure {
+                    error: ClipboardError::Changed,
+                    cleanup: Some(state.sequence),
+                });
+            }
             Ok(state.sequence)
         }
         fn clear(&mut self, lease: &u64) -> Result<(), ClipboardError> {
@@ -964,6 +1373,53 @@ mod tests {
     pub(crate) fn for_ui() -> (Clipboard, Observer) {
         let (clipboard, state, _) = fake(None);
         (clipboard, Observer(state))
+    }
+    #[test]
+    fn rejected_published_copy_is_not_success_and_retains_guarded_cleanup()
+    -> Result<(), crate::error::AppError> {
+        let lifecycle = super::super::lifecycle::Lifecycle::start(|| {})?;
+        for external in [false, true] {
+            let (mut clipboard, state, busy) = fake(None);
+            state
+                .lock()
+                .map_err(|_| crate::error::AppError::StorageUnavailable)?
+                .reject_after_publish = true;
+            busy.store(true, Ordering::SeqCst);
+            assert!(clipboard.copy(
+                Zeroizing::new("public-rejected-copy".into()),
+                60,
+                lifecycle.watch()
+            ));
+            wait(|| state.lock().is_ok_and(|s| s.owned));
+            assert_eq!(
+                clipboard.results.recv_timeout(Duration::from_secs(2)),
+                Ok((0, Err(ClipboardError::Changed)))
+            );
+            assert_eq!(clipboard.poll(), None, "rejection must not publish Copied");
+            if external {
+                let mut value = state
+                    .lock()
+                    .map_err(|_| crate::error::AppError::StorageUnavailable)?;
+                value.sequence += 1;
+                value.owned = false;
+                // Even an identical later copy must be preserved.
+            }
+            busy.store(false, Ordering::SeqCst);
+            if external {
+                clipboard.clear();
+                wait(|| !clipboard.cleanup_pending());
+            } else {
+                wait(|| state.lock().is_ok_and(|s| s.clears == 1));
+            }
+            let value = state
+                .lock()
+                .map_err(|_| crate::error::AppError::StorageUnavailable)?;
+            assert_eq!(value.clears, usize::from(!external));
+            assert_eq!(value.value.is_empty(), !external);
+            drop(value);
+            clipboard.shutdown();
+        }
+        Ok(())
     }
     #[test]
     fn actor_expiry_hidden_lifecycle_lock_shutdown_and_newer_identical_external_copy()
@@ -1171,8 +1627,12 @@ mod tests {
 mod native {
     use super::*;
     pub(super) struct Lease;
-    pub(super) fn copy(_: usize, _: &str, _: &dyn Fn() -> bool) -> Result<Lease, ClipboardError> {
-        Err(ClipboardError::Unavailable)
+    pub(super) fn attempt(
+        _: usize,
+        _: &str,
+        _: &dyn Fn() -> bool,
+    ) -> Result<Lease, CopyFailure<Lease>> {
+        Err(ClipboardError::Unavailable.into())
     }
     pub(super) fn clear(_: &Lease) -> Result<(), ClipboardError> {
         Err(ClipboardError::Unavailable)

@@ -1,6 +1,6 @@
 # Task 10: Complete 2FA list, search, sort, views and copy
 
-Status: in_progress - reviewed source accepted; core interactive Copy acceptance open
+Status: in_progress - repaired clipboard source/native paths reviewed; hardware clock/full QA gates open
 Priority: Required for complete v1
 Dependencies: 02–09
 Requirements: FR-1; PRD §§5.1, 7, 11
@@ -14,7 +14,7 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 - [x] Build real account cards showing local icon/fallback, service, optional account identifier, formatted code and accurate remaining-time progress.
 - [x] Refresh at exact configured boundaries, time changes and resume; suspend unnecessary repainting while hidden/locked. Treat implausible clock shifts as actionable guidance without claiming remote verification.
 - [x] Implement live service/account search, no-results state, all six reference sort modes, persistent list/grid preference and stable tie-breaking.
-- [ ] Implement explicit copy with confirmation and configurable default 30-second clearing. Clear only if the clipboard still contains the app-owned copy; use ownership/sequence metadata when available. Do not overwrite subsequent external copies.
+- [x] Implement explicit copy with confirmation and configurable default 30-second clearing. Clear only if the clipboard still contains the app-owned copy; use ownership/sequence metadata when available. Do not overwrite subsequent external copies.
 - [x] Expose edit and confirmed delete-to-trash actions; code copy must not navigate/edit/delete. Use local icons without network requests.
 
 ## Screen checklist
@@ -36,7 +36,7 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 
 - [ ] Cards match independent TOTP values at boundaries and after sleep/resume/clock jumps; no stale code remains.
 - [x] Search, every sort mode and both views persist correctly through restart.
-- [ ] Clipboard timeout/lock clearing works without overwriting newer user clipboard content, including race cases.
+- [x] Clipboard timeout/lock clearing works without overwriting newer user clipboard content, including race cases.
 - [ ] Real pointer clicks and keyboard shortcuts reach copy/edit/delete/search/sort/view without drag scrolling stealing clicks.
 
 ## Handoff and completion
@@ -48,6 +48,17 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 5. Keep at most one child agent active; children must not spawn children, commit, push, change PRD scope or silently skip requirements. Return changed paths, checks, findings and remaining risks to the parent.
 
 ## Evidence
+
+Current follow-up supersedes the earlier unknown Changed cause for the reproduced
+availability path: exact owner/marker proof passed while an advertised format
+temporarily returned no handle. Bounded fixed-sequence retries and rejected-copy
+cleanup were implemented and independently re-reviewed without weakening ownership
+guards. [Implementation/native evidence](../docs/qa/task10/clipboard-availability-fix.md)
+and [independent re-review](../docs/qa/task10/availability-independent-review.md).
+Six focused clipboard cases passed independently; actual keyboard Copy/Lock and
+pointer Copy/normal-exit cleanup, default30-second expiry and later harmless-copy
+preservation are evidenced. Earlier failures remain historical evidence below.
+Physical sleep/clock delivery and full21 gates are still open; Task10 is not done.
 
 Reviewed source is accepted after distinct review_10 and focused re-review resolved
 P2 shared route-query desynchronization and P3 stale corrected-search feedback.

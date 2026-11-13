@@ -1,0 +1,6 @@
+{"stage":"poll","unix":1794576312,"unlocked":true,"sequence":108,"has_unicode":false,"owner_is_app":false,"lease_present":false,"matches_fixture_code":false,"subsequent_copy_intact":false}
+{"stage":"poll","unix":1794576348,"unlocked":true,"sequence":116,"has_unicode":true,"owner_is_app":true,"lease_present":true,"matches_fixture_code":true,"subsequent_copy_intact":false}
+{"stage":"poll","unix":1794576355,"unlocked":false,"sequence":117,"has_unicode":false,"owner_is_app":false,"lease_present":false,"matches_fixture_code":false,"subsequent_copy_intact":false}
+{"stage":"poll","unix":1794576395,"unlocked":true,"sequence":117,"has_unicode":false,"owner_is_app":false,"lease_present":false,"matches_fixture_code":false,"subsequent_copy_intact":false}
+{"stage":"poll","unix":1794576404,"unlocked":true,"sequence":125,"has_unicode":true,"owner_is_app":true,"lease_present":true,"matches_fixture_code":true,"subsequent_copy_intact":false}
+{"stage":"after_exit_cleanup","unix":1794576411,"unlocked":false,"sequence":126,"has_unicode":false,"owner_is_app":false,"lease_present":false,"matches_fixture_code":false,"subsequent_copy_intact":false}

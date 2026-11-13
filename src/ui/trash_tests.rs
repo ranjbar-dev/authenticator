@@ -1080,13 +1080,33 @@ fn trash_permanent_scope_fault_retry_latest_preferences_and_encrypted_restart() 
     let mut app = app(v, dir.path())?;
     let size = [600., 800.];
     settle(&mut app, size);
+    // Establish the subpage before injecting the pending display projection.
+    // Otherwise Settings frames can legitimately finish its 500ms autosave,
+    // so an assertion about *pending* preferences would depend on host speed.
+    open(&mut app, size)?;
     app.state.query = "latest intent before Trash".into();
     let preferences = app.codes_preferences.as_mut().ok_or("preferences")?;
     preferences.query = Zeroizing::new(app.state.query.clone());
     preferences.sort = SortOrder::AccountDescending;
     preferences.view = ViewMode::Grid;
     app.preferences_changed();
-    open(&mut app, size)?;
+    // Cross the real debounce deadline deliberately: Trash must retain the
+    // pending intent until its reviewed atomic mutation succeeds.
+    std::thread::sleep(Duration::from_millis(600));
+    settle(&mut app, size);
+    assert!(app.preferences_dirty.is_some());
+    assert_eq!(
+        app.state.vault()?.preferences().codes().query.as_str(),
+        original.preferences().codes().query.as_str()
+    );
+    assert_eq!(
+        app.state.vault()?.preferences().codes().sort,
+        original.preferences().codes().sort
+    );
+    assert_eq!(
+        app.state.vault()?.preferences().codes().view,
+        original.preferences().codes().view
+    );
     click(
         &mut app,
         size,

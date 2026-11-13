@@ -1,5 +1,27 @@
 # Architecture and concrete decisions
 
+## Native clipboard availability and rejected-copy cleanup
+
+Actual native keyboard input exposed advertised clipboard formats whose handles
+were temporarily unavailable immediately after publication. Confirmation now
+allows four worker-side attempts separated by50ms (150ms scheduled waiting,
+excluding OS-call latency). Every reopened interval requires the unchanged
+initial post-close candidate sequence and owner. Exact bounded random-marker
+proof precedes any Unicode read; bounded text/digest proof precedes Copied.
+Missing formats, invalid bounds and mismatches never become success. The OS
+clipboard is released between attempts and admission is checked again.
+
+Confirmation-stage failure with a nonzero candidate retains a descriptor solely
+for immediate guarded cleanup; failure is still reported. Cleanup requires the
+same sequence/owner/nonce/digest proof and preserves later writers, including
+identical text. No descriptor contains plaintext. Failure without a valid OS
+sequence and bounded shutdown remain explicit limits. Debug-only fixed-size
+proof snapshots record booleans/public sequence metadata, excluded from release.
+Independent source/native-helper/actor review and actual keyboard/Lock/exit
+evidence: [Task10 correction](qa/task10/clipboard-availability-fix.md) and
+[re-review](qa/task10/availability-independent-review.md). This does not certify
+every clipboard manager, physical OS lifecycle event or recovery-code UI path.
+
 ## Task14 concealed recovery list and selection
 
 `ui::backup_codes` derives set metadata using associated active account IDs,

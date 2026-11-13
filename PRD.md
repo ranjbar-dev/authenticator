@@ -256,6 +256,16 @@ Plan generation does not constitute implementation. Initial task status is todo,
 
 ### Current implementation checkpoint (13 November 2026)
 
+Current Task10 follow-up repaired native advertised-but-unavailable clipboard
+reads using bounded ownership-preserving confirmation retries and guarded cleanup
+of rejected published copies. Independent re-review passed six clipboard cases,
+the corrected pending-preference Trash regression and release checks. Actual
+keyboard Copy→Lock and pointer Copy→normal exit cleared the copied disposable
+value; default30-second expiry and later-copy preservation are also evidenced.
+See docs/qa/task10/clipboard-availability-fix.md. Full recovery-code/native QA,
+offline-machine, physical DPI/Narrator/OS lifecycle and packaging gates remain
+open. Earlier failed hosted checks are retained; new current-source CI is required.
+
 Task01 selected eframe/egui 0.37 with AccessKit and Glow for the native Rust UI, Rust MSRV1.95 (tested1.98). The intended Windows distribution is an x64 portable ZIP; actual packaging remains task23. Root accessibility, real pointer/key input, resizing and an inert region viewport spike are evidenced; actual capture, storage and TOTP were not implemented at the task01 checkpoint. Secondary egui viewport accessibility is limited, so task07 must implement and verify a native accessible Windows capture overlay. Full details and unresolved hardware/reference limits are in docs/architecture.md and docs/qa/task01/implementation-evidence.md. Task01 hosted Windows checks passed on commit7502fa4; at that foundation checkpoint the product was not yet usable as an authenticator.
 
 Task02 now implements the validated in-memory schema, deterministic OTP engine and strict bounded URI/Base32 validation. Native TOTP supports SHA1/256/512,6/8digits,15/30/60/120seconds;18 RFC6238 vectors and all24 parameter combinations pass. Domain records and secret wrappers redact Debug; seed duplicates are compared only in unlocked memory. Serialization, encrypted vault and UI integration remain subsequent tasks. See docs/architecture.md for concrete parser/field bounds and issuer policy.
