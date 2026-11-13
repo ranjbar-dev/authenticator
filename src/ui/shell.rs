@@ -222,8 +222,9 @@ impl AuthenticatorApp {
             self.close_cleanup_deadline
                 .get_or_insert(Instant::now() + Duration::from_millis(300));
         }
-        #[cfg(debug_assertions)]
-        self.evidence_code_bounds.clear();
+        // Geometry belongs to the painted frame, not the unlocked session.
+        // Keep its masks if Lock occurs after sensitive shapes were emitted;
+        // the next show pass resets them before painting the locked frame.
         let restore_capture = self.capture_preparing.is_some() || self.state.capture_busy();
         self.clipboard.clear();
         self.clipboard_feedback = None;
@@ -2692,6 +2693,10 @@ impl AuthenticatorApp {
                     }
                 });
             });
+            #[cfg(debug_assertions)]
+            if let Some(rect) = editor.sensitive_rect {
+                self.evidence_code_bounds.push(rect);
+            }
             if matches!(review.mode, super::import_review::ReviewMode::Create) {
                 if c::button(
                     ui,
@@ -2715,6 +2720,8 @@ impl AuthenticatorApp {
                         &mut review.backup_text,
                         review.backup_reveal,
                     );
+                    #[cfg(debug_assertions)]
+                    self.evidence_code_bounds.push(response.rect);
                     if response.changed() || review.backup_review.is_none() {
                         if response.changed() {
                             review.error = None;
@@ -3467,6 +3474,104 @@ mod trash_tests;
 mod capture_privacy_tests {
     use super::*;
     use crate::domain::records::{Timestamp, Vault};
+    #[test]
+    fn account_evidence_masks_revealed_seed_and_creation_backup_through_lock()
+    -> Result<(), Box<dyn std::error::Error>> {
+        const SEED: &str = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
+        const RECOVERY: &str = "disposable-evidence-recovery";
+        fn private_shapes(
+            shape: &egui::epaint::Shape,
+            clip: egui::Rect,
+            result: &mut Vec<egui::Rect>,
+        ) {
+            match shape {
+                egui::epaint::Shape::Vec(shapes) => {
+                    for child in shapes {
+                        private_shapes(child, clip, result);
+                    }
+                }
+                egui::epaint::Shape::Text(text)
+                    if text.galley.job.text.contains(SEED)
+                        || text.galley.job.text.contains(RECOVERY) =>
+                {
+                    let rect = text
+                        .galley
+                        .rect
+                        .translate(text.pos.to_vec2())
+                        .intersect(clip);
+                    if rect.is_positive() {
+                        result.push(rect);
+                    }
+                }
+                _ => {}
+            }
+        }
+        let directory = tempfile::tempdir()?;
+        let pass = || Zeroizing::new("disposable-evidence-passphrase".into());
+        let mut store = VaultStore::open_directory(directory.path())?;
+        store.create(pass(), Vault::new(Timestamp(1)))?;
+        let context = egui::Context::default();
+        let mut app = AuthenticatorApp::with_context(context.clone(), Ok(store), 0);
+        app.state.repository_mut()?.unlock(pass())?;
+        for (width, zoom) in [(340., 1.), (600., 1.5), (960., 2.)] {
+            context.set_zoom_factor(zoom);
+            for import in [false, true] {
+                let mut review = ImportReview::manual();
+                review.editors[0].service.push_str("Disposable evidence");
+                review.editors[0].secret.push_str(SEED);
+                review.editors[0].reveal = true;
+                if import {
+                    review.mode = super::super::import_review::ReviewMode::Import;
+                }
+                review.backup_enabled = true;
+                review.backup_reveal = true;
+                review.backup_text.push_str(RECOVERY);
+                app.review = Some(review);
+                let mut last_bounds = Vec::new();
+                for _ in 0..2 {
+                    let mut frame = context.run_ui(
+                        egui::RawInput {
+                            screen_rect: Some(egui::Rect::from_min_size(
+                                egui::Pos2::ZERO,
+                                egui::vec2(width, 2400.),
+                            )),
+                            ..Default::default()
+                        },
+                        |root| app.show(root),
+                    );
+                    frame.textures_delta.clear();
+                    let mut visible = Vec::new();
+                    for shape in &frame.shapes {
+                        private_shapes(&shape.shape, shape.clip_rect, &mut visible);
+                    }
+                    assert!(
+                        !visible.is_empty(),
+                        "revealed fixture must actually be painted"
+                    );
+                    let bounds = app.code_bounds_for_evidence();
+                    assert!(
+                        visible
+                            .iter()
+                            .all(|rect| bounds.iter().any(|b| b.expand(4.).contains_rect(*rect))),
+                        "every painted revealed value must fall inside an evidence mask"
+                    );
+                    if !import {
+                        assert!(bounds.len() >= 2);
+                    }
+                    last_bounds = bounds;
+                }
+                app.review = None;
+                assert_eq!(app.code_bounds_for_evidence(), last_bounds);
+            }
+        }
+        let before_lock = app.code_bounds_for_evidence();
+        app.lock();
+        assert_eq!(app.code_bounds_for_evidence(), before_lock);
+        let mut locked = context.run_ui(egui::RawInput::default(), |root| app.show(root));
+        locked.textures_delta.clear();
+        assert!(app.code_bounds_for_evidence().is_empty());
+        Ok(())
+    }
     fn labels(output: &egui::FullOutput) -> Vec<String> {
         output
             .platform_output

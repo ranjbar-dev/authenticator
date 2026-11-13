@@ -1,6 +1,6 @@
 # Task 21: Full offline workflow, accessibility and visual QA
 
-Status: todo
+Status: in_progress - resumed native QA; prior stopped-turn checkpoint preserved
 Priority: Required for complete v1
 Dependencies: 01–20
 Requirements: PRD §§2, 6–7, 11; all UI checklists
@@ -35,5 +35,11 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Evidence
 
-Not started. On execution record changed files, test commands/results, sanitized UI evidence paths where applicable, independent reviewer result and commit reference. If blocked, retain incomplete status and record exact cause, attempted remedies and resumption steps.
+Current source mask repair and two new locked/error frames received distinct [independent review](../docs/qa/task21/current-independent-review.md), with one exact painted-shape/frame-lifetime regression passing. This resolves the QA-only revealed-account-field capture gap. Prior [native milestones](../docs/qa/task21/resume-implementation.md) record screenshot import/HMAC/Copy feedback and one-account export/fresh Merge restore as attributed author evidence. Complete recovery/folder/Trash, clipboard lifecycle, full-graph/Replace and all-page/environment gates remain open; this is not full21 acceptance.
+
+New execution request resumed native work on 13 November 2026. Earliest unfinished Task05 received sequential implementation/review: disposable Create → empty Codes → Lock succeeded, limited evidence independently approved. Its reviewer found a QA-capture redaction gap for revealed Account fields (no leaking capture created). Task21 now owns correcting and independently reviewing that helper before populated workflow captures. See [resumed review](../docs/qa/task05/resume-independent-review.md); previous stop below remains historical.
+
+Interrupted by the user's physical Escape stop during native QA; all Computer Use stopped immediately. No successful native vault creation/capture/import/Copy was observed. Initialization and an isolated clean-setup app launch worked after C: cache recovery, but launch is not workflow acceptance. Five current focused framework checks passed, source harness/build and one clean setup frame are attributed evidence only. No independent21 review or completion claim.
+
+Exact outcome, uncommitted paths, open owned app/root, reported test PIDs, cleanup limits and later-resume instructions: [checkpoint](../docs/qa/task21/implementation-evidence.md). [Environment recovery](../docs/qa/task21/environment-recovery.md) records the preserved public Cargo archive cache on D:. Leave all acceptance boxes unchecked. Do not resume Computer Use in the stopped turn or terminate the app as a bypass; retain owned resources for a later authorized resume. Tasks22–24 remain unexecuted.
 

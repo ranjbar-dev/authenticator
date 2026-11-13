@@ -22,6 +22,8 @@ pub struct Editor {
     pub selected: bool,
     pub advanced: bool,
     pub replace_secret: bool,
+    #[cfg(debug_assertions)]
+    pub sensitive_rect: Option<eframe::egui::Rect>,
 }
 impl Editor {
     pub fn blank() -> Self {
@@ -37,6 +39,8 @@ impl Editor {
             selected: true,
             advanced: false,
             replace_secret: true,
+            #[cfg(debug_assertions)]
+            sensitive_rect: None,
         }
     }
     fn from_draft(d: AccountDraft, selected: bool) -> Self {
@@ -59,6 +63,8 @@ impl Editor {
             selected,
             advanced: false,
             replace_secret: true,
+            #[cfg(debug_assertions)]
+            sensitive_rect: None,
         }
     }
     pub fn validate(&self) -> Result<AccountDraft, AppError> {
@@ -87,6 +93,10 @@ impl Editor {
         show_errors: bool,
     ) -> bool {
         use super::{components as c, theme};
+        #[cfg(debug_assertions)]
+        {
+            self.sensitive_rect = None;
+        }
         let error = if show_errors {
             let metadata =
                 crate::domain::validation::text(&self.service, 256, AppError::MissingService)
@@ -154,8 +164,8 @@ impl Editor {
                 changed = true;
             }
         } else {
-            if self.reveal {
-                changed |= c::labeled_revealed_secret_field(
+            let secret_response = if self.reveal {
+                c::labeled_revealed_secret_field(
                     ui,
                     "review-secret",
                     "Secret key · visible",
@@ -163,9 +173,8 @@ impl Editor {
                     "Keep this key private.",
                     field_error(AppError::InvalidSecret).as_deref(),
                 )
-                .changed();
             } else {
-                changed |= c::labeled_secret_field(
+                c::labeled_secret_field(
                     ui,
                     "review-secret",
                     "Secret key",
@@ -173,7 +182,11 @@ impl Editor {
                     "Base32 secret from the service. Concealed by default.",
                     field_error(AppError::InvalidSecret).as_deref(),
                 )
-                .changed();
+            };
+            changed |= secret_response.changed();
+            #[cfg(debug_assertions)]
+            {
+                self.sensitive_rect = Some(secret_response.rect);
             }
             if c::button(
                 ui,
