@@ -738,6 +738,8 @@ impl Vault {
         at: Timestamp,
     ) -> Result<BackupSetId, AppError> {
         let at = self.mutation_time(at);
+        let mut code_ids = BTreeSet::new();
+        let mut code_values = BTreeSet::new();
         if self.backup_sets.len() >= Self::MAX_RECORDS
             || codes.is_empty()
             || codes.len()
@@ -752,11 +754,9 @@ impl Vault {
             || codes
                 .iter()
                 .any(|c| c.state.created_at > at || c.state.updated_at > at)
-            || codes.iter().enumerate().any(|(i, c)| {
-                codes[..i]
-                    .iter()
-                    .any(|p| p.value == c.value || p.id == c.id)
-            })
+            || codes
+                .iter()
+                .any(|c| !code_ids.insert(c.id) || !code_values.insert(c.expose_value()))
         {
             return Err(AppError::InvalidRecord);
         }

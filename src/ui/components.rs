@@ -1024,7 +1024,12 @@ impl Dialog {
         let first = self.first_frame;
         let modal = egui::Modal::new(Id::unique("shared-dialog"))
             .area(
-                egui::Modal::default_area(Id::unique("shared-dialog")).accessible_name(self.title),
+                egui::Modal::default_area(Id::unique("shared-dialog"))
+                    // Reusing the shared Area after a shorter confirmation must
+                    // remeasure it; otherwise its ScrollArea can retain a clip
+                    // smaller than the new final action's hit rectangle.
+                    .sizing_pass(first)
+                    .accessible_name(self.title),
             )
             .backdrop_color(theme::SCRIM)
             .show(ctx, |ui| {
@@ -1036,6 +1041,11 @@ impl Dialog {
                 );
                 heading(ui, self.title, 2);
                 egui::ScrollArea::vertical()
+                    .id_salt(("dialog-content", self.title))
+                    .scroll_source(egui::scroll_area::ScrollSource {
+                        drag: egui::scroll_area::DragScroll::Never,
+                        ..Default::default()
+                    })
                     .max_height((ctx.content_rect().height() - 120.0).max(theme::CONTROL_HEIGHT))
                     .show(ui, |ui| content(ui, first))
                     .inner

@@ -4,7 +4,7 @@
 pub fn choose(
     cancelled: &dyn Fn() -> bool,
 ) -> Result<Option<std::path::PathBuf>, crate::backup::BackupError> {
-    choose_dialog(cancelled, false)
+    choose_dialog(cancelled, false, false)
 }
 /// Select an existing local file. Recognition is by authenticated native bytes,
 /// never extension. Reference-app and local vault files are not portable backups.
@@ -12,12 +12,20 @@ pub fn choose(
 pub fn choose_import(
     cancelled: &dyn Fn() -> bool,
 ) -> Result<Option<std::path::PathBuf>, crate::backup::BackupError> {
-    choose_dialog(cancelled, true)
+    choose_dialog(cancelled, true, false)
+}
+/// Plaintext service-issued recovery input; read-only selection, never stored.
+#[cfg(windows)]
+pub fn choose_text(
+    cancelled: &dyn Fn() -> bool,
+) -> Result<Option<std::path::PathBuf>, crate::backup::BackupError> {
+    choose_dialog(cancelled, true, true)
 }
 #[cfg(windows)]
 fn choose_dialog(
     cancelled: &dyn Fn() -> bool,
     importing: bool,
+    text: bool,
 ) -> Result<Option<std::path::PathBuf>, crate::backup::BackupError> {
     use crate::backup::BackupError;
     use std::os::windows::ffi::OsStringExt;
@@ -60,17 +68,25 @@ fn choose_dialog(
     if !importing {
         buffer[..default.len()].copy_from_slice(&default);
     }
-    let filter: Vec<u16> = "Encrypted Authenticator backup\0*.authpbk\0All files\0*.*\0\0"
-        .encode_utf16()
-        .collect();
-    let title: Vec<u16> = (if importing {
+    let filter: Vec<u16> = (if text {
+        "UTF-8 text file\0*.txt\0All files\0*.*\0\0"
+    } else {
+        "Encrypted Authenticator backup\0*.authpbk\0All files\0*.*\0\0"
+    })
+    .encode_utf16()
+    .collect();
+    let title: Vec<u16> = (if text {
+        "Read backup codes from UTF-8 file\0"
+    } else if importing {
         "Choose encrypted backup to import\0"
     } else {
         "Choose encrypted backup destination\0"
     })
     .encode_utf16()
     .collect();
-    let extension: Vec<u16> = "authpbk\0".encode_utf16().collect();
+    let extension: Vec<u16> = (if text { "txt\0" } else { "authpbk\0" })
+        .encode_utf16()
+        .collect();
     // SAFETY: all buffers/pointers outlive this bounded synchronous call. No
     // owner keeps ROOT available for Lock; cancellation is checked by the hook.
     unsafe {
@@ -119,6 +135,12 @@ fn choose_dialog(
         return Err(BackupError::Unavailable);
     }
     Ok(Some(path))
+}
+#[cfg(not(windows))]
+pub fn choose_text(
+    _: &dyn Fn() -> bool,
+) -> Result<Option<std::path::PathBuf>, crate::backup::BackupError> {
+    Err(crate::backup::BackupError::Unavailable)
 }
 #[cfg(not(windows))]
 pub fn choose_import(

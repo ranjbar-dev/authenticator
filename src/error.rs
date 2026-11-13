@@ -28,6 +28,10 @@ pub enum AppError {
     InvalidBackupCodes,
     ReviewBackupDuplicates,
     StaleAccount,
+    StaleBackupCodes,
+    BackupFileUnavailable,
+    BackupFileTooLarge,
+    InvalidBackupEncoding,
 }
 
 impl fmt::Display for AppError {
@@ -62,6 +66,10 @@ impl fmt::Display for AppError {
             Self::InvalidBackupCodes => "Enter one backup code per line: up to 1 MiB, 10,000 nonblank lines and 4096 bytes per code. Internal control characters are not allowed.",
             Self::ReviewBackupDuplicates => "Review and acknowledge removal of exact duplicate backup codes before saving.",
             Self::StaleAccount => "This account changed or is no longer active. Cancel and reopen the account to edit it safely.",
+            Self::StaleBackupCodes => "This backup-code set changed or is in Trash. Cancel and reopen it before making changes.",
+            Self::BackupFileUnavailable => "The local text file could not be read. Choose a regular local UTF-8 file or enter codes manually. Your input is kept.",
+            Self::BackupFileTooLarge => "Choose a UTF-8 text file no larger than 1 MiB. Your input and stored codes are kept.",
+            Self::InvalidBackupEncoding => "This file is not valid UTF-8. Save it as UTF-8 text, with an optional BOM, and retry. Your input is kept.",
         })
     }
 }

@@ -642,3 +642,45 @@ Framework event/geometry checks and full graph roundtrips do not establish nativ
 input or raster quality. Two normal isolated Task13 launches were denied by Sky
 GetCursorPos (0x80070005); real native picker/pointer, framebuffer, visual/DPI and
 Task12→13 interactive cross-flow remain open. See Task13 implementation evidence.
+
+## Recovery text editing and local file input (Task15)
+
+Account creation and standalone editing share `RecoveryInput`: at most1MiB raw
+UTF-8, optional initial BOM, LF/CRLF, whitespace trimming, physical blank removal,
+case-sensitive exact duplicate review,10,000 nonblank lines and4096 bytes per code.
+A terminal LF terminates a line without adding a phantom blank. Preview and
+duplicate acknowledgement bind to the current complete input. The shared masked
+multiline clears undo history per pass; deliberate Reveal exposes visual/AX text.
+
+`RecoveryTarget` guards the full selected account/set contents, including code
+IDs, values, states and used dates; timestamps alone are insufficient after clock
+correction. Existing values retain identity and used history. Newly added values
+start unused. Omitted active values move to encrypted Trash; exact re-added Trash
+values restore their previous identity/history. Total record limits include Trash.
+Delete Set trashes the set without deleting its account or child history; permanent
+deletion is a separate Task18 operation. A valid existing set over the1MiB active
+joined-text editor limit is refused intact as read-only, with Delete Set available.
+No silent truncation is accepted. No storage schema/envelope change was needed.
+
+Preview matching and native picker/file reading use cancellable workers. The local
+reader rejects remote namespaces, ADS, devices, traversal and ambiguous ordinary
+names. Windows directory and leaf handles are opened without following reparse
+points; retained root-to-leaf directory handles deny write/delete sharing during
+the read. Actual reads are bounded to MAX+1 and UTF-8 validated, without writing a
+copy or retaining the source path in the vault. User source files are preserved.
+This is not certification against administrator/kernel/drive-namespace changes or
+every filesystem. Parsing failures/cancellation keep the previous draft/preview.
+
+Typed recovery save/trash intents use the existing sole repository worker and
+atomic encrypted transaction. New recovery children use logical metadata time;
+OTP generation continues to use actual wall time. Lock drops UI-owned input,
+previews, guards and widget memory before waiting for admitted I/O. An admitted
+complete write may finish; stale results cannot unlock or announce success.
+Worker/dependency/OS copies are not claimed immediately or completely erased.
+
+Shared ROOT dialogs remeasure on opening and scope non-dragging scroll state by
+title. Direct Delete from detail binds its confirmation only after the editor's
+actual Delete control renders, so cancellation returns to a live control.
+Independent Context probes cover safe first-visible focus and hit/scroll behavior
+at ordinary widths/heights; native input, picker, raster and restart gates remain
+open after denied normal launches. See `docs/qa/task15/` for exact scope and checks.

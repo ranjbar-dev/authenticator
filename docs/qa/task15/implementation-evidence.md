@@ -1,0 +1,64 @@
+# Task 15 implementation evidence
+
+Author implementation handoff, 13 November 2026. Independent UI/security/data-loss review is pending. Task status, PRD, coverage and parent-owned commits are not certified here.
+
+## Design basis and checklist
+
+The implementation uses PRD sections 5, 7–9 and 12, `tasks/15-backup-codes-editor.md`, the current Task09 account review, Task14 account selector/detail handoffs, and `docs/reference-ui.md`. Safe original reference pixels remain unavailable. No reference-app credentials, vault or data were opened.
+
+The ui-consistency finding-patterns, values, decisions, planning and implementing instructions and their called words/joining/checklist/plan-file references were read. The running parent process owns the existing task plan and a distinct reviewer; no second plan or child agent was created. The brief already authorizes implementation. Task04's detached TITLE600→400 source calibration applies only to source typography checking; it does not establish native or pixel sensitivity.
+
+The refreshed checklist was sent to the parent before UI implementation:
+
+1. ROOT's shared scroll holder; selected account identity and ambiguity use the same Task14 `display_identity` helper, including None versus literal placeholder collisions.
+2. Shared `labeled_sensitive_multiline`, associated label, concealed by default; deliberate Reveal/Conceal. No new private field style.
+3. Shared action for Read Backup Codes from File; local UTF-8/BOM/CRLF/LF and 1 MiB guidance; picker/read/preview worker.
+4. Explicit count-only Preview before Save: unique valid, physical blank and exact duplicate lines. Editing invalidates preview/acknowledgement.
+5. Exact retained/new/removed/restored/used/Trash preview, explained before explicit replacement confirmation.
+6. Shared Save/Cancel/Delete actions and shared in-ROOT confirmation with a safe initial action. Tabs are hidden while the form owns unsaved input.
+7. Stable error holder and explicit action IDs; fixed safe errors retain edits and permit retry. No secret/path interpolation.
+8. Shared theme, focus, scroll and narrow layout; Lock drops form/review/job, widget history and navigation data before admitted I/O can complete.
+
+Reference family: account review (import_review plus shell), export form and backup-code handoff. All three use shared buttons/status; confirmations use shared Dialog. Account creation is the sole pre-existing multiline recovery editor, so its mask/control mechanism is reused rather than claimed as a measured majority. Theme values come from `src/ui/theme.rs`: Noto Sans 400/600 whole roles TITLE24/32, SECTION18/24, BODY/LABEL14/20, CAPTION13/20; four-point spacing; opaque Blue/OnBlue icons; shared foreground/surface pairs. No private font/color/size rules were added. Project-read/search cost is approximately 25 source/docs files and 55 grouped searches; skill references and runtime documentation add approximately 15 reads. Exact visual fidelity and native raster contrast are unverified.
+
+## Implemented behavior
+
+- `src/domain/recovery_input.rs` remains the single text normalization boundary for creation and standalone editing. It accepts optional initial UTF-8 BOM, trims whitespace, accepts LF/CRLF, drops physical blank lines, detects case-sensitive exact duplicates and enforces 1 MiB/10,000 nonblank lines/4096 bytes per normalized code. A terminal LF is a line terminator, not an extra blank line. Preview and duplicate consent are bound to exact current input.
+- `src/domain/recovery_edit.rs` captures an immutable selected-account/set snapshot. Mutation guards compare full account credential metadata/settings/seed identity and full set IDs, values, states and used timestamps; equal timestamps do not bypass stale detection. Successful mutations use logical metadata time and touch the set, account and vault. Account creation now constructs recovery children after logical-time clamping too.
+- Editing retains exact matching code IDs/states/used history. New values are unused. Omitted active codes move to encrypted Trash; previously trashed omitted codes stay there. Explicitly re-added exact Trash codes regain Active state while preserving ID and used history; the preview reports restored and restored-used counts. Nothing is permanently removed by this editor. Borrowed BTreeMap/BTreeSet indexes avoid quadratic preview/replacement matching and duplicate checking in `add_backup_set`.
+- One existing set per account remains enforced, including a set in Trash. Such a set cannot be silently restored or overwritten here. Its detail explains the conflict. Restoration/permanent removal remain Task18. A valid imported set whose active joined text exceeds 1 MiB opens with an intact read-only explanation and no prefilled/truncated text. Delete Set remains possible for an active large set.
+- `src/ui/recovery_editor.rs` holds only unsaved text, immutable guards, an input-bound preview and worker state. Parsing/preview matching and native picker/file reading run on a worker. Worker cancellation and result publication use an atomic flag, lifecycle/idle/generation checks and nonblocking UI `try_lock`; a stale result cannot replace input. Failed/cancelled reads retain prior input and preview. No source path is retained in form or vault state.
+- `src/ui/state.rs` has explicit RecoverySave/RecoveryTrash intents. The existing sole-owner worker and encrypted repository transaction perform validation, graph cloning, serialization, encryption and atomic file I/O; no second mutable vault/store or key clone was added. Recoverable failure retains unsaved form and previous committed ciphertext; retry is explicit. A write admitted before Lock may finish encrypted; it cannot reopen the UI or publish late success.
+- `src/platform/recovery_file.rs` opens only ordinary absolute local-drive regular files. It rejects traversal, UNC/devices/ADS/ambiguous names and mapped remote drive types. Windows root-to-leaf directory handles use OPEN_REPARSE_POINT and deny write/delete sharing while retained; leaf open is no-follow, with handle metadata validation. This avoids following a final or ancestor reparse point during the bounded read. It reads at most MAX+1 bytes regardless of metadata length, validates UTF-8, and never writes or caches the source file. This does not claim protection against a compromised kernel/administrator/OS or every filesystem implementation.
+- `src/platform/backup_picker.rs` reuses the native bounded/cancellable no-recent/no-change-directory/no-dereference dialog with a text-specific title/filter/default extension. ROOT stays available for Lock; the UI never joins native work.
+- `src/ui/shell.rs` integrates typed recovery completion before account-import completion, so a recovery Save does not claim an account import. Successful save returns to this account's concealed detail, and successful Delete Set returns to the refreshed list. Adopted approved backup import clears the new editor/job; failed imports do not clear unrelated state. Cancel, Discard, Escape, Lock and route boundaries clear owned sensitive widget memory as appropriate.
+
+## Shared Dialog repair
+
+The Context pointer regression changed from the shorter Save confirmation to Delete Set. The cached shared Area retained a smaller height: the final button's visible/AX rectangle extended below its actual clipped interactive rectangle. A center press/release therefore could not submit it. `components::Dialog::show` now requests a sizing pass on each opening, scopes scroll state by dialog title and disables drag scrolling. The regression now submits through pointer press/release events. Initial focus remains on Keep editing; Escape preserves input and returns to the actual Cancel opener ID, tested separately.
+
+Shared reach: Offline help/About backup codes, export overwrite confirmation (Task12), import collection replacement (Task13), account Trash confirmation (Task10), account discard confirmation (Task09), and the four new editor confirmations. All share `components::Dialog`; no colors, fonts or other controls changed. The complete all-target suite is rerun because of this shared repair. Context hit testing does not prove OS pointer input or actual pixels.
+
+## Verification
+
+Owned generated fixtures only: Rust TempDir encrypted vaults, generated public UTF-8/invalid/oversized source files, public code/seed test strings, and portable encrypted round trips. No real/default/reference vault, clipboard, sign-in, runtime network or system-setting changes.
+
+- `rtk cargo check --locked --all-targets --all-features`: passed during implementation.
+- `rtk cargo test --locked --lib recovery_ -- --nocapture`: final focused run passed 19 tests, 136 filtered, 28.99 s. Covers text/file BOM/newlines/blanks/Unicode/duplicates and exact consent, 1 MiB and 4096-byte boundaries, 10,000 dense prefix code paths, total counts including Trash, linked paths/ADS/devices/traversal rejection, file failure/cancel/stale publication, equal-timestamp stale guards, retained IDs/used states/new unused/removed Trash/restored codes, shared creation equivalence, confirmations/fault/retry/encrypted restart/portable used states, masked AX and 340/600/960 widths, oversize existing-set preservation, admitted-save Lock/no late adoption, modal safe focus/Escape/actual opener return.
+- An initial full suite found that a Task14 test forcibly reopened selection while a now-real unsaved Task15 form remained active. The test now exits through the real Cancel→Discard flow between cases, retaining all prior placeholder-collision/UUID assertions. It no longer bypasses the editor owner.
+- `rtk cargo test --locked --all-targets --all-features`: passed 167 tests, 4 ignored subprocess helper entry points, 154 filtered subprocess cases, 18 suites, 104.34 s. The parent tests continue to exercise their isolated helpers. This is after the shared Dialog repair and Task14 test cleanup. A subsequent Help text-only correction removed the old entry-unavailable wording and is checked with the focused existing Help test.
+- `rtk cargo clippy --locked --all-targets --all-features -- -D warnings`: passed. The recovery action payload was boxed after the initial strict check identified a large enum variant.
+- `rtk cargo fmt --all -- --check` and `rtk git diff --check`: passed.
+- `rtk cargo build --locked --bin Authenticator --lib --example recovery_editor --all-features`: passed (3.95 s). No all-target standalone build or unrelated process termination was used.
+
+The final existing route/Help/Lock regression after the Help copy correction passed: `rtk cargo test --locked --lib backup_root_empty_populated_no_match_selection_back_help_and_lock` — 1 passed, 154 filtered, 21.03 s. The corrected help explains actual text/file Preview/Save/edit behavior and keeps Task16 detail controls honestly pending.
+
+Reveal intentionally exposes code text to the rendered UI and AccessKit text runs. Conceal/reconceal use the shared mask/password implementation and block unowned CopyText; Lock drops form-owned zeroizing strings, previews and snapshots and clears editor history. Native/egui/allocator/OS copies and buffers in an active worker until it returns are not claimed erased.
+
+## Native evidence and remaining gates
+
+Read the Computer Use skill and its guidance/API/confirmation documentation, initialized documented `@oai/sky`, then used fresh returned inventory. Two normal argument-free launches of the owned `target/debug/examples/recovery_editor.exe` each failed with `GetCursorPos failed: Access is denied. (0x80070005)`. Fresh window inventory after each found no owned window. A subsequent exact-name process check and `authenticator-task15-*` directory check found no owned process or temporary directory. Cause is unknown; this is not proof of OS lock. No bypass/elevation/settings change was attempted. No screenshot was captured or invented, and no cleanup target existed. The unrelated lifecycle preview/process/data was untouched.
+
+`examples/recovery_editor.rs` is the reproducible argument-free harness: fresh owned TempDir backend, public service/code fixtures and public UTF-8 source file; F6/F7/F8 select 340×780/600×800/960×900. F10 requests a real framebuffer only and redacts all OTP and the entire editor text rectangle before disk writing, including deliberate Reveal. No image exists from this session because no window rendered.
+
+Native pointer/keyboard/scroll/focus, local picker/cancel/Lock, actual 340/600/960 pixels and complete 14→15→encrypted-save/native-restart acceptance remain open. Context/AX checks establish deterministic source behavior, not these native gates. Detail Reveal/Copy/Mark used/Undo/per-code deletion remain Task16; no clipboard capability is claimed here. Task18 restore remains unavailable and deletion confirmation says so. Independent review must assess this evidence and the shared Dialog reach before parent acceptance.

@@ -226,11 +226,11 @@ an unlocked repository; the lifecycle intent may be opened while locked.
 drops the repository session, zeroizes the query, clears pending intent and
 advances a generation token for later asynchronous integration.
 
-Task 05 must connect setup/unlock and lifecycle behavior through this owner.
-Tasks 07–10 and 14–19 supply capture, entry, lists and settings. Current intent
-handlers explicitly say these workflows are not available and do not pretend
-to add a record. Search input is retained for those later list modules; the
-shared shell does not claim to implement a complete search or credential list.
+At the Task04 foundation checkpoint, Task05 had yet to connect setup/unlock and
+lifecycle, and Tasks07–10/14–19 had yet to supply workflows. Its original intent
+handlers explicitly reported unavailable work. Subsequent task evidence records
+the actual capture, account lists, backup flows and recovery editor now implemented;
+the current task index and source supersede that historical placeholder scope.
 No sample business records exist in production. The separate UI gallery creates
 an encrypted empty vault in a disposable temporary directory and never opens
 the default user vault.
@@ -242,3 +242,19 @@ primary dark-on-blue text/strokes are 5.85:1. The focus border on its actual
 dark holders ranges from 6.47:1 to 9.49:1. Disabled controls are separately dimmed
 by the framework. These calculations are not a claim of complete WCAG or
 screen-reader conformance; see the task 04 interaction/visual evidence.
+
+## Recovery editor and shared confirmations (Task15)
+
+Recovery entry reuses the account-creation masked multiline and whole BODY role,
+shared account identity, status, button and ROOT Dialog components. Preview is
+count-only; exact code values appear only after deliberate Reveal. Buttons retain
+explicit IDs across validation changes, and unsaved editor ownership hides tabs.
+Normal Delete Set is reversible Trash; permanent deletion in Task18 must explain
+irreversibility separately. Recovery copying/used/Undo detail controls belong to16.
+
+Shared Dialog forces an initial sizing pass and title-specific, non-dragging
+scrolling, preventing a shorter prior confirmation from clipping a taller one's
+last action. Safe first-visible focus/scroll/pointer Context probes cover340x780,
+600x800 and960x900. Direct detail Delete cancels back to the actual editor Delete
+button rather than its replaced detail ID, including read-only large sets. These
+are source/Context results; no Task15 native raster or OS-input pass is claimed.

@@ -54,6 +54,11 @@ pub enum ScanAlternative {
 
 /// Explicit operation intent. An edit can only update its selected stable ID.
 pub enum SaveIntent {
+    RecoverySave {
+        target: crate::domain::recovery_edit::RecoveryTarget,
+        values: Vec<Zeroizing<String>>,
+    },
+    RecoveryTrash(crate::domain::recovery_edit::RecoveryTarget),
     CodesPreferences(CodesPreferences),
     ClipboardTimeout(u32),
     IdleTimeout(u32),
@@ -77,6 +82,16 @@ pub enum SaveIntent {
 impl SaveIntent {
     fn validate(&self) -> Result<(), AppError> {
         match self {
+            Self::RecoverySave { values, .. } => {
+                if values.is_empty() || values.len() > Vault::MAX_RECORDS {
+                    return Err(AppError::InvalidBackupCodes);
+                }
+                for value in values {
+                    BackupCode::normalized_value(value)
+                        .map_err(|_| AppError::InvalidBackupCodes)?;
+                }
+            }
+            Self::RecoveryTrash(_) => {}
             Self::CodesPreferences(value) => value.validate()?,
             Self::ClipboardTimeout(seconds) | Self::IdleTimeout(seconds) => {
                 if !(1..=86_400).contains(seconds) {
@@ -111,6 +126,14 @@ impl SaveIntent {
         at: Timestamp,
     ) -> Result<Vec<AccountId>, AppError> {
         match self {
+            Self::RecoverySave { target, values } => {
+                vault.save_recovery_codes(&target, values, at)?;
+                Ok(Vec::new())
+            }
+            Self::RecoveryTrash(target) => {
+                vault.trash_recovery_set(&target, at)?;
+                Ok(Vec::new())
+            }
             Self::CodesPreferences(value) => {
                 vault.set_codes_preferences(value, at)?;
                 Ok(Vec::new())
@@ -133,6 +156,7 @@ impl SaveIntent {
                 .map(|draft| vault.add_account(draft, at))
                 .collect(),
             Self::Create { draft, codes } => {
+                let at = vault.mutation_time(at);
                 let codes = codes
                     .iter()
                     .map(|value| BackupCode::new(value, at))

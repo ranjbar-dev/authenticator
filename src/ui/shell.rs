@@ -4,6 +4,7 @@ use super::backup_import::{self, Busy as ImportBusy, ImportForm};
 use super::codes;
 use super::export::{self, ExportForm, Picker};
 use super::import_review::ImportReview;
+use super::recovery_editor::{self, Editor as RecoveryEditor};
 use super::{
     components as c,
     state::{AppState, CaptureEvent, Route, SaveIntent, ScanAlternative, VaultAction, Workflow},
@@ -71,6 +72,7 @@ pub struct AuthenticatorApp {
     backup_import: Option<ImportForm>,
     backup_picker: Option<backup_import::Picker>,
     backup_codes: BackupSession,
+    recovery_editor: Option<RecoveryEditor>,
     image: Option<ImageJob>,
     imported: Vec<AccountId>,
     show_imported: bool,
@@ -151,6 +153,7 @@ impl AuthenticatorApp {
             backup_import: None,
             backup_picker: None,
             backup_codes: BackupSession::default(),
+            recovery_editor: None,
             image: None,
             imported: Vec::new(),
             show_imported: false,
@@ -178,6 +181,7 @@ impl AuthenticatorApp {
         }
     }
     pub fn lock(&mut self) {
+        self.recovery_editor = None;
         self.backup_codes.reset();
         #[cfg(debug_assertions)]
         {
@@ -249,6 +253,7 @@ impl AuthenticatorApp {
         let ctx = root.ctx().clone();
         if self.state.route != Route::BackupCodes || !self.state.session_active() {
             self.backup_codes.reset();
+            self.recovery_editor = None;
         }
         let now = Instant::now();
         let close_requested = ctx.input(|i| i.viewport().close_requested());
@@ -307,6 +312,37 @@ impl AuthenticatorApp {
                 if let Some(form) = &mut self.export_form {
                     form.complete(exported, &ctx);
                 }
+            } else if self.recovery_editor.as_ref().is_some_and(|e| e.saving) {
+                if outcome.is_ok() {
+                    let editor = self.recovery_editor.take();
+                    if let Some(editor) = editor {
+                        self.backup_codes.screen = if editor.deleting {
+                            backup_codes::Screen::List
+                        } else {
+                            match self.state.vault().ok().and_then(|v| {
+                                v.backup_sets()
+                                    .iter()
+                                    .find(|s| s.account_id() == editor.target.account_id())
+                                    .map(|s| s.id())
+                            }) {
+                                Some(set) => backup_codes::Screen::Detail {
+                                    account: editor.target.account_id(),
+                                    set,
+                                    from_selection: false,
+                                },
+                                None => backup_codes::Screen::List,
+                            }
+                        };
+                    }
+                    self.backup_codes.focus = true;
+                    c::clear_sensitive_widget_memory(&ctx);
+                    self.status = Some("Backup-code changes saved in your encrypted vault.");
+                } else if let Some(editor) = &mut self.recovery_editor {
+                    editor.saving = false;
+                    editor.deleting = false;
+                    editor.error = Some("Changes could not be saved. Your input and previous set are kept. Retry Save or cancel.".into());
+                    editor.focus = true;
+                }
             } else if self.pending_mutation {
                 self.pending_mutation = false;
                 self.preferences_error = self.pending_preferences && outcome.is_err();
@@ -362,6 +398,13 @@ impl AuthenticatorApp {
             && !self.state.session_active()
         {
             self.lock();
+        }
+        if let Some(editor) = &mut self.recovery_editor {
+            let had_job = editor.job.is_some();
+            editor.poll(self.state.generation(), self.state.is_unlocked(), &ctx);
+            if had_job && editor.job.is_none() {
+                self.state.finish_image();
+            }
         }
         if let Some(picker) = &self.backup_picker
             && let Some(selection) = picker.poll()
@@ -496,7 +539,11 @@ impl AuthenticatorApp {
             && ctx.memory(|m| m.top_modal_layer().is_none())
             && !egui::Popup::is_any_open(&ctx)
         {
-            self.backup_codes.back();
+            if let Some(editor) = &mut self.recovery_editor {
+                editor.request_cancel();
+            } else {
+                self.backup_codes.back();
+            }
         }
         if ctx.input(|i| i.key_pressed(egui::Key::Escape))
             && (self.review.is_some() || self.image.is_some())
@@ -619,14 +666,14 @@ impl AuthenticatorApp {
                 let codes_home=self.state.session_active() && self.state.route==Route::Codes && self.review.is_none() && self.backup_import.is_none() && self.capture_preparing.is_none() && !self.state.capture_busy();
                 if !codes_home { c::secondary(ui,"AUTHENTICATOR · LOCAL VAULT"); }
                 c::toolbar(ui,|ui| {
-                    c::heading(ui,if self.backup_import.is_some() {"Import backup"} else if self.export_form.is_some() {"Export encrypted backup"} else if self.export_hub {"Export & Import"} else if self.pending_mutation {self.state.route.title()} else if self.state.importing() {"Saving accounts"} else if self.review.as_ref().is_some_and(|r| !r.mode.is_import()) {"Account"} else if self.state.is_unlocked() && (self.capture_preparing.is_some() || self.state.capture_busy()) {"Screenshot to Scan"} else if self.state.session_active() {self.state.route.title()} else if self.exists {"Unlock vault"} else {"Create vault"},1);
+                    c::heading(ui,if self.backup_import.is_some() {"Import backup"} else if self.export_form.is_some() {"Export encrypted backup"} else if self.export_hub {"Export & Import"} else if self.recovery_editor.is_some() {"Backup Codes"} else if self.pending_mutation {self.state.route.title()} else if self.state.importing() {"Saving accounts"} else if self.review.as_ref().is_some_and(|r| !r.mode.is_import()) {"Account"} else if self.state.is_unlocked() && (self.capture_preparing.is_some() || self.state.capture_busy()) {"Screenshot to Scan"} else if self.state.session_active() {self.state.route.title()} else if self.exists {"Unlock vault"} else {"Create vault"},1);
                     let help=c::icon_button(ui,c::Icon::Help,"Help for this screen");
                     if help.clicked() {self.dialog=Some(c::Dialog::new("Offline help",help.id)); self.help_open=true;}
                     if self.state.session_active() && c::icon_button(ui,c::Icon::Lock,"Lock vault").clicked() {self.lock();}
                 });
                 if !codes_home { c::secondary(ui,if self.state.session_active() {"Vault unlocked on this device"} else {"Vault locked · credentials hidden"}); }
                 ui.add_space(theme::SMALL_GAP);
-                if !self.export_hub && self.backup_import.is_none() && self.export_form.is_none() && self.review.is_none() && self.image.is_none() && self.capture_preparing.is_none() && !self.state.capture_busy() && let Some(route)=c::tabs(ui,self.state.route) { if route != self.state.route { self.backup_codes.reset(); self.focus_form=true; } self.state.navigate(route); self.status=None; }
+                if self.recovery_editor.is_none() && !self.export_hub && self.backup_import.is_none() && self.export_form.is_none() && self.review.is_none() && self.image.is_none() && self.capture_preparing.is_none() && !self.state.capture_busy() && let Some(route)=c::tabs(ui,self.state.route) { if route != self.state.route { self.backup_codes.reset(); self.focus_form=true; } self.state.navigate(route); self.status=None; }
                 ui.add_space(theme::SMALL_GAP);
                 if let Some(error)=self.state.storage_error() {
                     c::status(ui,"storage-error",&error.to_string(),c::StatusKind::Error);
@@ -634,6 +681,7 @@ impl AuthenticatorApp {
                 } else if self.backup_import.is_some() && self.state.session_active() { self.backup_import_content(ui);
                 } else if self.export_form.is_some() && self.state.session_active() { self.export_content(ui);
                 } else if self.pending_mutation { self.unlocked_content(ui);
+                } else if self.recovery_editor.is_some() && self.state.session_active() { self.backup_codes_content(ui);
                 } else if self.state.importing() { self.review_content(ui);
                 } else if !self.state.is_unlocked() {
                     self.locked_content(ui);
@@ -953,6 +1001,104 @@ impl AuthenticatorApp {
         }
     }
     fn backup_codes_content(&mut self, ui: &mut egui::Ui) {
+        if let Some(mut editor) = self.recovery_editor.take() {
+            let had_job = editor.job.is_some();
+            let action = if editor.saving {
+                c::progress(ui, "Saving encrypted backup-code changes…", None);
+                if c::button(ui, "Cancel and lock", c::ButtonStyle::Secondary).clicked() {
+                    recovery_editor::Action::Lock
+                } else {
+                    recovery_editor::Action::None
+                }
+            } else if let Ok(vault) = self.state.vault() {
+                editor.content(ui, vault)
+            } else {
+                recovery_editor::Action::Lock
+            };
+            #[cfg(debug_assertions)]
+            if !editor.saving
+                && let Some(rect) = editor.sensitive_rect
+            {
+                self.evidence_code_bounds.push(rect);
+            }
+            if had_job && editor.job.is_none() {
+                self.state.finish_image();
+            }
+            let mut keep = true;
+            match action {
+                recovery_editor::Action::None => {}
+                recovery_editor::Action::Lock => {
+                    self.lock();
+                    keep = false;
+                }
+                recovery_editor::Action::Cancel => {
+                    if editor.job.is_some() {
+                        self.state.finish_image();
+                    }
+                    keep = false;
+                    if matches!(self.backup_codes.screen, backup_codes::Screen::Editor(_)) {
+                        self.backup_codes.back();
+                    }
+                    self.backup_codes.focus = true;
+                    c::clear_sensitive_widget_memory(&self.context);
+                }
+                recovery_editor::Action::Preview | recovery_editor::Action::ReadFile => {
+                    if let (Ok(()), Some(watch), Ok(deadline)) = (
+                        self.state.begin_image(),
+                        self.lifecycle.as_ref().ok().map(|l| l.watch()),
+                        self.state.idle_deadline(),
+                    ) {
+                        editor.job = Some(recovery_editor::Job::start(
+                            self.state.generation(),
+                            watch,
+                            deadline,
+                            self.context.clone(),
+                            editor.target.clone(),
+                            if matches!(action, recovery_editor::Action::Preview) {
+                                Some(editor.text.clone())
+                            } else {
+                                None
+                            },
+                        ));
+                    } else {
+                        self.state.finish_image();
+                        editor.error = Some(
+                            "Finish the active operation before reading or previewing codes."
+                                .into(),
+                        );
+                    }
+                }
+                recovery_editor::Action::Save(intent) => {
+                    if let Some(watch) = self.lifecycle.as_ref().ok().map(|l| l.watch()) {
+                        let repaint = self.context.clone();
+                        match self
+                            .state
+                            .begin_save(*intent, watch, move || repaint.request_repaint())
+                        {
+                            Ok(()) => {
+                                editor.saving = true;
+                                editor.reveal = false;
+                                editor.error = None;
+                                c::clear_sensitive_widget_memory(&self.context);
+                            }
+                            Err(error) => {
+                                editor.deleting = false;
+                                editor.error = Some(error.to_string());
+                            }
+                        }
+                    } else {
+                        editor.error = Some(
+                            "Windows lifecycle protection is unavailable. Restart before saving."
+                                .into(),
+                        );
+                    }
+                }
+            }
+            if keep {
+                self.recovery_editor = Some(editor);
+            }
+            return;
+        }
         if self.pending_mutation {
             c::progress(ui, "Saving encrypted changes…", None);
             return;
@@ -986,6 +1132,22 @@ impl AuthenticatorApp {
                 self.start_alternative(ScanAlternative::Manual);
             }
             backup_codes::Action::None => {}
+            backup_codes::Action::Edit(id) | backup_codes::Action::Delete(id) => {
+                match self.state.vault().and_then(|v| RecoveryEditor::new(v, id)) {
+                    Ok(mut editor) => {
+                        if let backup_codes::Action::Delete(_) = action {
+                            editor.request_delete_on_open();
+                        }
+                        self.recovery_editor = Some(editor);
+                        self.status = None;
+                        c::clear_sensitive_widget_memory(&self.context);
+                    }
+                    Err(_) => {
+                        self.status =
+                            Some("This account changed. Reopen it before editing backup codes.")
+                    }
+                }
+            }
         }
     }
     fn export_hub_content(&mut self, ui: &mut egui::Ui) {
@@ -1204,6 +1366,7 @@ impl AuthenticatorApp {
                     self.state.query.zeroize();
                     self.state.backup_query.zeroize();
                     self.backup_codes.reset();
+                    self.recovery_editor = None;
                     self.imported.clear();
                     self.show_imported = false;
                     self.review = None;
@@ -2028,6 +2191,7 @@ impl AuthenticatorApp {
             || self.state.busy()
             || !self.state.is_unlocked()
             || self.review.is_some()
+            || self.recovery_editor.is_some()
             || self.export_form.is_some()
             || self.export_picker.is_some()
             || self.backup_import.is_some()
@@ -2483,7 +2647,7 @@ impl AuthenticatorApp {
                     if self.state.route == Route::BackupCodes {
                         c::body(ui,"Backup codes are issued by each service and may work only once. Keep an independent copy somewhere safe in case you lose access to this vault.");
                         c::secondary(ui,"Add Backup Codes selects an existing 2FA account. Search by its service or account identifier and check the selected account before continuing. Existing sets, including sets in Trash, are identified before you continue.");
-                        c::secondary(ui,"Available and used totals include active codes only. Accounts and sets in Trash are hidden from the list. Copying a code does not mean the service accepted it. Code entry and code-management controls are unavailable in this build.");
+                        c::secondary(ui,"Enter one service-issued code per line or read a local UTF-8 text file, then Preview changes before Save. Exact duplicates require review. Editing keeps exact matching used history; omitted codes move to Trash. Available and used totals include active codes only. Detail reveal, copy and used-state controls are not available in this build yet.");
                     }
                     c::body(ui,"Authenticator keeps your vault on this device. Use the three tabs for verification codes, recovery codes and local settings.");
                     c::secondary(ui,"Your vault passphrase cannot be reset. Settings → Export & Import saves a local encrypted backup protected by a separate backup passphrase. Keep the file and passphrase separately. Screenshot to Scan and image/manual entry work locally. Review each account before saving.");
@@ -2532,6 +2696,9 @@ mod backup_import_tests;
 #[cfg(all(test, windows))]
 #[path = "export_tests.rs"]
 mod export_tests;
+#[cfg(all(test, windows))]
+#[path = "recovery_editor_tests.rs"]
+mod recovery_editor_tests;
 #[cfg(all(test, windows))]
 mod capture_privacy_tests {
     use super::*;

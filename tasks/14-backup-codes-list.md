@@ -1,6 +1,6 @@
 # Task 14: Backup Codes tab and account selection
 
-Status: in_progress - corrected list/selector/handoff source approved; Task15/16 bodies and native gates open
+Status: in_progress - corrected list/selector/editor routes reviewed; Task16 detail controls and native gates open
 Priority: Required for complete v1
 Dependencies: 04, 05, 10–13
 Requirements: FR-3.1; PRD §§5.3, 7
@@ -13,7 +13,7 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 - [x] Implement the Backup Codes tab listing real sets by associated account without exposing code contents.
 - [x] Create an empty state with concise explanation, Add Backup Codes and local learn-more help.
-- [ ] Add the searchable/sortable account-selection screen, excluding trashed accounts and making existing sets clear. Route to the editor/detail actions.
+- [x] Add the searchable/sortable account-selection screen, excluding trashed accounts and making existing sets clear. Route to the editor/detail actions.
 - [x] Compute available/used counts from real vault state and refresh after changes/import/restore/lock.
 
 ## Screen checklist
@@ -50,7 +50,9 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 
 Corrected list/selector/typed metadata handoff source approved by distinct review_14
 and focused re-review. Account selection and exact-ID routes are implemented;
-item3 remains open for the actual editor/detail bodies in15/16. Source boxes above
+Task15 now supplies the actual editor/Edit/Delete Set actions and verifies the
+existing identity assertions through real Cancel/Discard ownership. Task16 detail
+Reveal/Copy/used/Undo controls remain pending. Source boxes above
 do not certify native rendering or the full task.
 
 - [Author checklist, policy and exact checks](../docs/qa/task14/implementation-evidence.md).
@@ -65,13 +67,13 @@ do not certify native rendering or the full task.
 - Real active parent/set/code counts, existing trashed-set identity, Unicode six sorts,
   stable paging, same-timestamp invalidation, encrypted export/reopen/import and
   failed-import selection preservation are tested. No code values are read by the list.
-- Task15 text/file/save and16 reveal/copy/used/edit/delete bodies remain pending;
-  current routes expose concealed metadata and honest capability text, no fake Save.
+- Task15 text/file/preview/save/edit/delete-set source is now reviewed;16 detail
+  Reveal/Copy/used/Undo/per-code deletion remains pending. Native routes stay open.
 - Author2 normal Sky launches denied GetCursorPos0x80070005, no owned window/process/
   fixture remained. Actual pointer/keyboard, screenshots, rendered quality, physical
   DPI/Narrator and earlier hardware/offline/Copy/GUI-recovery gates remain OPEN.
   Synthetic normal-viewport keyboard and tall AX checks do not replace them.
 
-Parent integrates source, then immediately executes15. No real/default/reference
+Parent integrated14 and reviewed15, then continues16. No real/default/reference
 data or unrelated preview changed; commit reference follows in parent checkpoint.
 

@@ -1,6 +1,6 @@
 # Task 15: Add/edit backup codes from text and file
 
-Status: todo
+Status: in_progress - corrected editor source approved; native input/picker/visual/restart gates open
 Priority: Required for complete v1
 Dependencies: 09, 14
 Requirements: FR-3.1/3/4, FR-2.5; PRD §§7–9, 12
@@ -11,10 +11,10 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Implementation
 
-- [ ] Implement the account-linked editor with one-code-per-line text input, local UTF-8 text-file reading and a preview before save.
-- [ ] Default file limit is 1 MiB; accept UTF-8 BOM and CRLF/LF, trim surrounding whitespace and discard blank lines. Detect exact duplicate lines, show a safe count and require review before deduplication/save. Reject invalid encoding and over-limit data without altering the set.
-- [ ] Share normalization with account creation. Never infer used state from copying or silently merge/overwrite an existing set.
-- [ ] Support explicit edit/save/cancel/delete-set confirmation. On replacement preserve used state only for exact retained codes and document the preview behavior. Keep raw files out of storage.
+- [x] Implement the account-linked editor with one-code-per-line text input, local UTF-8 text-file reading and a preview before save.
+- [x] Default file limit is 1 MiB; accept UTF-8 BOM and CRLF/LF, trim surrounding whitespace and discard blank lines. Detect exact duplicate lines, show a safe count and require review before deduplication/save. Reject invalid encoding and over-limit data without altering the set.
+- [x] Share normalization with account creation. Never infer used state from copying or silently merge/overwrite an existing set.
+- [x] Support explicit edit/save/cancel/delete-set confirmation. On replacement preserve used state only for exact retained codes and document the preview behavior. Keep raw files out of storage.
 
 ## Screen checklist
 
@@ -48,5 +48,37 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 
 ## Evidence
 
-Not started. On execution record changed files, test commands/results, sanitized UI evidence paths where applicable, independent reviewer result and commit reference. If blocked, retain incomplete status and record exact cause, attempted remedies and resumption steps.
+Corrected source/Context behavior approved by distinct review_15 and focused
+re-review. Implementation boxes record source/engine/framework evidence; actual
+native screen/acceptance gates remain open.
+
+- [Author checklist, policy and exact checks](../docs/qa/task15/implementation-evidence.md).
+- [Independent security/UI review and focused verdict](../docs/qa/task15/independent-review.md).
+- [Parent focus correction and final checks](../docs/qa/task15/parent-fixes.md).
+- Final168 tests passed,4 direct helper entrypoints exercised by parents,18 suites
+  110.19s; strict all-target/all-feature Clippy, fmt/diff and production/lib/owned
+  editor-example all-feature build pass. Author19 recovery tests and independent19
+  passed; focused direct-delete1/36.66s and original Cancel-focus1/9.37s passed.
+- Shared parser handles BOM/line endings/physical blanks/exact duplicates/byte limits.
+  Worker file reads reject unsafe paths and actual leaf/parent links, retain failed
+  input and never copy/delete the user source. Full-content stale guards handle equal
+  timestamps. Exact retained and re-added values retain IDs/used history; new values
+  are unused; omitted active codes move to encrypted Trash. Delete Set moves the set
+  to Trash, preserving account/children; restoration is Task18.
+- Existing active joined text over1MiB is refused intact as read-only, with Delete
+  Set still available; no accepted truncation. Input-bound Preview/duplicate consent,
+  replacement and discard confirmations, fault/retry/reopen/portable states and
+  admitted-write Lock/no late adoption are tested. Raw values are masked by default.
+- Shared Dialog now remeasures on opening and uses title-specific non-dragging
+  scrolling. Reviewer ordinary-size safe-focus/hit tests and prior export/import/
+  Help/identity regressions pass. P2 direct detail Delete cancel focus fixed by
+  binding the confirmation to the actual rendered editor Delete control.
+- Both normal own native launches denied GetCursorPos0x80070005 with no owned
+  window/process/fixture. No native screenshot/input/picker/restart or raster-quality
+  pass is claimed. Context events/AX, including normal-sized focus tests, remain
+  distinct from native proof. Earlier hardware/offline/Copy/GUI-recovery gates stay open.
+
+Parent integrates then executes16; no Task16 reveal/copy/used/undo claim here.
+No real/default/reference data or unrelated preview changed. Commit reference
+follows in parent checkpoint.
 

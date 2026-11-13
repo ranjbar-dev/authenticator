@@ -9,6 +9,7 @@ pub const MAX_TEXT_BYTES: usize = 1024 * 1024;
 pub struct RecoveryInput {
     pub values: Vec<Zeroizing<String>>,
     pub duplicates: usize,
+    pub blanks: usize,
 }
 impl RecoveryInput {
     pub fn parse(text: &str) -> Result<Self, AppError> {
@@ -20,11 +21,14 @@ impl RecoveryInput {
         let mut values = Vec::new();
         let mut duplicates = 0;
         let mut count = 0;
-        for line in text.split('\n') {
+        let mut blanks = 0;
+        // A final newline terminates the last line; it is not an extra blank.
+        for line in text.split_terminator('\n') {
             // Trim BEFORE domain validation: surrounding tabs are whitespace,
             // internal controls are invalid. CRLF and LF have the same result.
             let value = line.trim();
             if value.is_empty() {
+                blanks += 1;
                 continue;
             }
             count += 1;
@@ -42,7 +46,11 @@ impl RecoveryInput {
         if values.is_empty() {
             return Err(AppError::InvalidBackupCodes);
         }
-        Ok(Self { values, duplicates })
+        Ok(Self {
+            values,
+            duplicates,
+            blanks,
+        })
     }
     pub fn approved(self, deduplicate: bool) -> Result<Vec<Zeroizing<String>>, AppError> {
         if self.duplicates > 0 && !deduplicate {
@@ -85,6 +93,30 @@ mod tests {
         assert_eq!(
             RecoveryInput::parse(&"a\n".repeat(Vault::MAX_RECORDS))?.duplicates,
             Vault::MAX_RECORDS - 1
+        );
+        Ok(())
+    }
+    #[test]
+    fn exact_byte_boundary_unicode_and_physical_blank_counts() -> Result<(), AppError> {
+        let text = format!("{}{}", " ".repeat(MAX_TEXT_BYTES - 5), "code\n");
+        assert_eq!(text.len(), MAX_TEXT_BYTES);
+        let parsed = RecoveryInput::parse(&text)?;
+        assert_eq!((parsed.values.len(), parsed.blanks), (1, 0));
+        assert_eq!(
+            RecoveryInput::parse(&(text + " ")).err(),
+            Some(AppError::InvalidBackupCodes)
+        );
+        assert_eq!(
+            RecoveryInput::parse("\u{feff}\u{2003}é\u{2003}\r\n \r\n\n")?.blanks,
+            2
+        );
+        assert_eq!(
+            RecoveryInput::parse(&"é".repeat(2048))?.values[0].len(),
+            4096
+        );
+        assert_eq!(
+            RecoveryInput::parse(&"é".repeat(2049)).err(),
+            Some(AppError::InvalidBackupCodes)
         );
         Ok(())
     }

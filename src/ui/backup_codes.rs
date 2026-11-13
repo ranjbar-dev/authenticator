@@ -208,6 +208,8 @@ pub enum Action {
     None,
     Help(egui::Id),
     AddAccount,
+    Edit(AccountId),
+    Delete(AccountId),
 }
 
 fn display_identity(account: &Account) -> (&str, &str) {
@@ -228,6 +230,21 @@ fn identity(ui: &mut egui::Ui, account: &Account, ambiguous: bool) {
     }
     if ambiguous {
         c::secondary(ui, &format!("Account ID: {}", account.id().as_uuid()));
+    }
+}
+
+pub(super) fn selected_identity(ui: &mut egui::Ui, vault: &Vault, id: AccountId) {
+    if let Some(account) = vault.accounts().iter().find(|a| a.id() == id) {
+        let ambiguous = vault
+            .accounts()
+            .iter()
+            .filter(|a| {
+                a.state().deletion == DeletionState::Active
+                    && display_identity(a) == display_identity(account)
+            })
+            .count()
+            > 1;
+        identity(ui, account, ambiguous);
     }
 }
 
@@ -363,16 +380,24 @@ pub fn content(
                             if metadata.trashed {
                                 "This account already has a set in Trash. It must be restored or permanently removed before adding another set."
                             } else {
-                                "Code values are concealed. Viewing, copying, marking used, editing and deleting a set are unavailable in this build."
+                                "Code values are concealed. Revealing, copying and marking used are not available in this build yet. Edit or delete this set below."
                             },
                         );
+                        if !metadata.trashed {
+                            if c::button(ui, "Edit backup codes", c::ButtonStyle::Primary).clicked()
+                            {
+                                action = Action::Edit(id);
+                            }
+                            let delete =
+                                c::button(ui, "Delete backup-code set…", c::ButtonStyle::Secondary);
+                            if delete.clicked() {
+                                action = Action::Delete(id);
+                            }
+                        }
                     }
                 } else {
                     c::body(ui, "No backup-code set is stored for this account.");
-                    c::secondary(
-                        ui,
-                        "Entering codes, reading a text file and saving a set are unavailable in this build.",
-                    );
+                    action = Action::Edit(id);
                 }
             });
             c::body(

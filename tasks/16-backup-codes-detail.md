@@ -25,7 +25,7 @@ Planning snapshot, 12 November 2026: no existing application source, screen fami
 - [ ] Rows conceal codes by default with clear available/used state. — PRD/reference structure; shared implementation from task 04.
 - [ ] Reveal and Copy are separate labeled intentional actions. — PRD/reference structure; shared implementation from task 04.
 - [ ] Mark used and Undo expose their current state accessibly. — PRD/reference structure; shared implementation from task 04.
-- [ ] Delete set has clear irreversible confirmation; account data is preserved. — PRD/reference structure; shared implementation from task 04.
+- [ ] Delete set clearly confirms its move to Trash; permanent deletion in Trash is explicitly irreversible and account data is preserved. — PRD12.5 and Task15 reversible deletion policy; permanent deletion belongs to18.
 - [ ] Empty/error/copy-confirmation states never echo a code. — PRD/reference structure; shared implementation from task 04.
 - [ ] Shared theme, focus and narrow layouts apply; lock removes revealed content and accessibility values. — PRD/reference structure; shared implementation from task 04.
 

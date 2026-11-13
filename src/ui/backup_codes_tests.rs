@@ -258,6 +258,13 @@ fn backup_display_placeholder_collision_has_exact_ids_in_list_summary_and_both_h
                     .all(|(target, _)| !labels.contains(&label(*target)))
             );
         }
+        // Task15 turns the former editor handoff into a real unsaved form.
+        // Leave it through its explicit discard flow before selecting another.
+        if app.recovery_editor.is_some() {
+            click(&mut app, "Cancel", 0)?;
+            click(&mut app, "Discard edits", 0)?;
+            assert!(app.recovery_editor.is_none());
+        }
     }
     Ok(())
 }

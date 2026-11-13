@@ -4,3 +4,4 @@ pub mod capture;
 pub mod clipboard;
 pub mod image_picker;
 pub mod lifecycle;
+pub mod recovery_file;
