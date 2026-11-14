@@ -1,0 +1,38 @@
+{
+  "source": "8ac9f38d9ced3bbf148a31c14647b2e09da90f8f",
+  "scope": "Windows Sandbox servicing prerequisite; no app acceptance run",
+  "before": {
+    "time_utc": "2026-11-14T18:32:24.1048643Z",
+    "sandbox_feature": "Disabled",
+    "restart_required_metadata": "Possible",
+    "cbs_reboot_pending": false,
+    "windows_update_reboot_required": false,
+    "pending_xml": false
+  },
+  "enable": {
+    "command": "Enable-WindowsOptionalFeature -Online -FeatureName Containers-DisposableClientVM -NoRestart -LimitAccess -ScratchDirectory <owned-scratch> -LogPath <owned-scratch>/dism.log -ErrorAction Stop",
+    "completed_utc": "2026-11-14T18:32:56.5471323Z",
+    "online": true,
+    "restart_needed": true,
+    "sandbox_feature": "Enabled",
+    "cbs_reboot_pending": true,
+    "pending_xml": true
+  },
+  "rollback": {
+    "command": "Disable-WindowsOptionalFeature -Online -FeatureName Containers-DisposableClientVM -NoRestart -ScratchDirectory <owned-scratch> -LogPath <owned-scratch>/rollback-dism.log -ErrorAction Stop",
+    "completed_utc": "2026-11-14T18:33:59.6504100Z",
+    "online": true,
+    "restart_needed": true,
+    "sandbox_feature": "Disabled",
+    "hyper_v_all": "Enabled",
+    "hyper_v_hypervisor": "Enabled",
+    "virtual_machine_platform": "Enabled",
+    "cbs_reboot_pending": true,
+    "windows_update_reboot_required": false,
+    "pending_xml": true
+  },
+  "owned_scratch": "target/task05-sandbox-d9830dfe1640408fa77306dc7a931d21",
+  "host_restarted": false,
+  "sandbox_launched": false,
+  "acceptance_gates_closed": []
+}
