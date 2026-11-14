@@ -1,5 +1,7 @@
 # PRD coverage and evidence
 
+14 November resume: [fresh prerequisite inspection](../docs/qa/task05/resume-2026-11-14.md) and [current main/CI/package checks](../docs/qa/resume-2026-11-14.md) preserve all 48 rows and their acceptance boundaries. Hyper-V availability is distinguished from a ready isolated Windows guest. No blocked runtime/OS/speech requirement gained a passing result.
+
 Current checkpoint: scoped focus/packaging repairs and actual native follow-up are independently reviewed. All five bounded required state cases are independently closed. Final integration and genuine environment/tool-limited acceptance remain separate. Evidence is not a full Cartesian pass. [Current audit](../docs/completion-report.md); [final state re-review](../docs/qa/task24/state-gaps/independent-review.md). Normative requirements remain in PRD.md.
 
 | Requirement | Owning tasks | Required evidence | State |

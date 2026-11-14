@@ -2,7 +2,7 @@
 
 Windows-first desktop authenticator written in Rust. Work is tracked in [tasks/README.md](tasks/README.md).
 
-Implementation is in progress. The repository now includes an encrypted local vault, TOTP and QR entry, portable encrypted backups, recovery-code management and folders. Current source repairs and unverified acceptance checks are tracked in [the audit report](docs/completion-report.md) and [task checkpoint](tasks/README.md). Actual native scan, copy, encrypted recovery, folders and Trash journeys are evidenced; complete state/scale, mixed-monitor capture, deterministic packaging and clean-machine/offline checks remain open. Use disposable test data while required acceptance remains open; no production-readiness claim is made.
+The implementation has independent source and native workflow reviews; release acceptance remains incomplete. The app includes an encrypted local vault, TOTP and QR entry, portable encrypted backups, recovery-code management and folders. Reviewed evidence covers native scan, copy, recovery, folders, Trash, measured mixed-monitor capture, deterministic packaging and the required feasible page states. [The audit report](docs/completion-report.md) records the exact tested sizes/states and remaining offline installation, separate-user recovery, Windows lifecycle/logon and heard screen-reader checks. [The task checkpoint](tasks/README.md) retains all acceptance requirements. Use disposable test data while required acceptance remains open; no production-readiness claim is made.
 
 ## Development on Windows
 
