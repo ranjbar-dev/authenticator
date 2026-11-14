@@ -1,11 +1,13 @@
 """Regression checks for portable archive and license validation (stdlib only)."""
 import hashlib
 import json
+import os
 from pathlib import Path
 import shutil
 import tempfile
 import unittest
 import zipfile
+from unittest.mock import patch
 
 import package_windows as package
 
@@ -111,8 +113,13 @@ class PackageValidation(unittest.TestCase):
         repo.mkdir()
         shutil.copytree(package.ROOT / "assets/notices", repo / "assets/notices")
         shutil.copyfile(package.ROOT / ".gitattributes", repo / ".gitattributes")
+        inputs = ["Cargo.lock", "assets/windows.manifest", "assets/fonts/OFL.txt", "LICENSE-MIT", "LICENSE-APACHE", "docs/package-readme.md", "docs/user-guide.md", "docs/security-limits.md"]
+        for name in inputs:
+            destination = repo / name
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(package.ROOT / name, destination)
         package.command("git", "init", "--quiet", str(repo))
-        package.command("git", "-C", str(repo), "-c", "core.autocrlf=true", "add", "--", ".gitattributes", "assets/notices")
+        package.command("git", "-C", str(repo), "-c", "core.autocrlf=true", "add", "--", ".gitattributes", "assets/notices", *inputs)
         exported = repo / "exported"
         exported.mkdir()
         package.command("git", "-C", str(repo), "-c", "core.autocrlf=true", "checkout-index", "--all", "--prefix="+exported.as_posix()+"/")
@@ -122,6 +129,8 @@ class PackageValidation(unittest.TestCase):
                 self.assertEqual(package.sha(provenance.parent / item["file"]),item["sha256"])
                 checked += 1
         self.assertGreater(checked,0)
+        for name in inputs:
+            self.assertEqual(package.sha(package.ROOT / name), package.sha(exported / name), name)
         # The same public LF text without an attribute really is converted.
         control = self.scratch / "notice-control"
         control.mkdir()
@@ -134,6 +143,57 @@ class PackageValidation(unittest.TestCase):
         package.command("git", "-C", str(control), "-c", "core.autocrlf=true", "checkout-index", "--all", "--prefix="+destination.as_posix()+"/")
         self.assertNotEqual(package.sha(public),package.sha(destination / "LICENSE"))
         self.assertIn(b"\r\n",(destination / "LICENSE").read_bytes())
+
+    def test_archive_ignores_file_mtimes_modes_and_creation_order(self):
+        first, second = self.scratch / "stage-first", self.scratch / "stage-second"
+        first.mkdir()
+        second.mkdir()
+        for folder, names in ((first, ("b", "a")), (second, ("a", "b"))):
+            for name in names:
+                path = folder / name
+                path.write_bytes((name+" public fixture\n").encode())
+                os.utime(path, (1000000000 if folder == first else 1700000000,)*2)
+        one, two = self.scratch / "deterministic-first.zip", self.scratch / "deterministic-second.zip"
+        package.write_archive(first,"fixture",one,1700000001)
+        package.write_archive(second,"fixture",two,1700000001)
+        self.assertEqual(one.read_bytes(),two.read_bytes())
+        with zipfile.ZipFile(one) as archive:
+            self.assertEqual(archive.namelist(),["fixture/a","fixture/b"])
+            for entry in archive.infolist():
+                self.assertEqual(entry.date_time,(2023,11,14,22,13,20))
+                self.assertEqual(entry.external_attr,0o100644 << 16)
+                self.assertEqual(entry.create_system,3)
+
+    def test_epoch_defaults_to_source_and_preserves_explicit_value(self):
+        with patch.dict(os.environ, {}, clear=True), patch.object(package,"command",return_value="1700000001") as command:
+            self.assertEqual(package.source_epoch(),1700000001)
+            command.assert_called_once_with("git","log","-1","--format=%ct")
+        for value in ("0","1700000001"):
+            with patch.dict(os.environ,{"SOURCE_DATE_EPOCH":value}), patch.object(package,"command") as command:
+                self.assertEqual(package.source_epoch(),int(value))
+                command.assert_not_called()
+        for value in ("-1","1.5"," 1","999999999999"):
+            with patch.dict(os.environ,{"SOURCE_DATE_EPOCH":value}), self.assertRaises(RuntimeError):
+                package.source_epoch()
+
+    def test_notice_numbering_uses_relative_identity(self):
+        identities = []
+        # Reverse absolute root ordering; the relative notice identity is equal.
+        for base, registry, vendor in (("layout-one","z-registry","a-vendor"),("layout-two","a-registry","z-vendor")):
+            root = self.scratch / base
+            folder = root / registry
+            vendored = root / vendor / "assets/notices/public-1.0"
+            folder.mkdir(parents=True)
+            vendored.mkdir(parents=True)
+            (folder / "LICENSE").write_bytes(b"public crate license\n")
+            (folder / "Cargo.toml").write_bytes(b"public")
+            (vendored / "LICENSE-VENDORED").write_bytes(b"public vendored license\n")
+            (vendored / "provenance.json").write_text(json.dumps({"files":[{"file":"LICENSE-VENDORED","sha256":package.sha(vendored / "LICENSE-VENDORED")}]}))
+            with patch.object(package,"ROOT",root / vendor):
+                files = package.license_files({"name":"public","version":"1.0","manifest_path":str(folder / "Cargo.toml")})
+                identities.append([p.name for p in files])
+        self.assertEqual(identities[0],["LICENSE","LICENSE-VENDORED"])
+        self.assertEqual(identities[0],identities[1])
 
 
 if __name__ == "__main__":

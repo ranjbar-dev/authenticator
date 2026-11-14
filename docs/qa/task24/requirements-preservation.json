@@ -1,0 +1,9 @@
+{
+  "baseline_commit": "2e2da2cba35e99d6d6d218471a12f48d67e7abc0",
+  "scope": "Entire normative PRD sections1–12, from ##1 Product overview through settled decision10, ending before Concrete implementation record",
+  "normalization": "CRLF to LF only before UTF8 SHA256",
+  "sha256": "6d28a5ca846517d3a4519f048d2fae7352c774c5165f84f8dc2172423622fcf7",
+  "characters": 28322,
+  "result": "Current normative text matches baseline exactly; current status/concrete implementation/evidence chronology remain editable to reflect actual results.",
+  "limits": "This preservation check does not independently prove implementation, acceptance or earlier baseline completeness."
+}

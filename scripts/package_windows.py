@@ -13,10 +13,43 @@ import sys
 import tempfile
 from datetime import datetime, timezone
 import zipfile
+import zlib
 
 ROOT = Path(__file__).resolve().parents[1]
 TARGET = "x86_64-pc-windows-msvc"
 APP = "Authenticator"
+RELEASE_RUSTFLAGS = "-C target-feature=+crt-static -C link-arg=/Brepro"
+
+
+def source_epoch() -> int:
+    """Use the source timestamp, never the build's wall clock."""
+    value = os.environ.get("SOURCE_DATE_EPOCH")
+    if value is None:
+        value = command("git", "log", "-1", "--format=%ct")
+    if not re.fullmatch(r"[0-9]{1,12}", value):
+        raise RuntimeError("SOURCE_DATE_EPOCH must be an unsigned integer timestamp")
+    epoch = int(value)
+    if epoch > 4354819199:  # ZIP's last representable UTC year is 2107.
+        raise RuntimeError("SOURCE_DATE_EPOCH exceeds the supported ZIP timestamp range")
+    return epoch
+
+
+def write_json(path: Path, value: object) -> None:
+    path.write_text(json.dumps(value, indent=2)+"\n", encoding="utf-8", newline="\n")
+
+
+def write_archive(stage: Path, name: str, path: Path, epoch: int) -> None:
+    # ZIP stores UTC-derived DOS timestamps at two-second precision. Fix all
+    # platform attributes instead of inheriting copy-time mtimes/host permissions.
+    stamp = datetime.fromtimestamp(max(epoch, 315532800), timezone.utc)
+    date = (stamp.year, stamp.month, stamp.day, stamp.hour, stamp.minute, stamp.second // 2 * 2)
+    with zipfile.ZipFile(path, "x", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+        for source in sorted((p for p in stage.rglob("*") if p.is_file()), key=lambda p: p.relative_to(stage).as_posix()):
+            entry = zipfile.ZipInfo(f"{name}/{source.relative_to(stage).as_posix()}", date)
+            entry.create_system = 3
+            entry.external_attr = 0o100644 << 16
+            entry.compress_type = zipfile.ZIP_DEFLATED
+            archive.writestr(entry, source.read_bytes(), compresslevel=9)
 
 def command(*args: str) -> str:
     result = subprocess.run(args, cwd=ROOT, text=True, encoding="utf-8", capture_output=True)
@@ -66,7 +99,11 @@ def license_files(package: dict) -> list[Path]:
             if not notice.resolve().is_relative_to(vendored.resolve()) or sha(notice) != item["sha256"]:
                 raise RuntimeError(f"Vendored upstream notice failed verification: {package['name']}-{package['version']}/{item['file']}")
             files.append(notice)
-    return sorted(set(files))
+    # Absolute registry/vendored root names differ between machines. The same
+    # relative source identities must determine notice numbering everywhere.
+    def identity(path: Path) -> str:
+        return "crate/"+path.relative_to(folder).as_posix() if path.is_relative_to(folder) else "vendored/"+path.name
+    return sorted(set(files), key=identity)
 
 def license_choice(expression: str, files: list[Path]) -> list[str] | None:
     """Check every AND clause/one OR choice against full known text families.
@@ -299,8 +336,10 @@ def build(replace: bool, skip_build: bool) -> Path:
     os.environ["CARGO_TARGET_DIR"] = str(target_root.resolve())
     # Fixed only for this packaging process and its children; no global config.
     os.environ.pop("CARGO_ENCODED_RUSTFLAGS", None)
-    os.environ["RUSTFLAGS"] = "-C target-feature=+crt-static"
+    os.environ["RUSTFLAGS"] = RELEASE_RUSTFLAGS
     os.environ.setdefault("CARGO_BUILD_JOBS", "2")
+    epoch = source_epoch()
+    os.environ.setdefault("SOURCE_DATE_EPOCH", str(epoch))
     own, packages = metadata()
     version = own["version"]
     if not re.fullmatch(r"[0-9A-Za-z.+-]+", version):
@@ -338,18 +377,15 @@ def build(replace: bool, skip_build: bool) -> Path:
     for dest, source in files.items():
         shutil.copyfile(ROOT / source, stage / dest)
     inventory = notices(packages, stage / "licenses")
-    (stage / "THIRD-PARTY-NOTICES.json").write_text(json.dumps(inventory, indent=2)+"\n", encoding="utf-8")
+    write_json(stage / "THIRD-PARTY-NOTICES.json", inventory)
     (stage / "NOTICE.txt").write_text("Authenticator's own source is licensed under MIT OR Apache-2.0.\nOriginal icon: Authenticator contributors.\nBundled dependency, Rust runtime and font declarations/notice texts are indexed\nin THIRD-PARTY-NOTICES.json and licenses/. Both alternatives are retained where supplied;\nAND obligations and font licenses are not collapsed into an MIT-only claim.\nBuild-tool licenses are included conservatively, even when not runtime components.\nMicrosoft Windows system libraries are platform components; no system DLL is shipped.\n",encoding="utf-8")
-    record = {"application":APP,"version":version,"target":TARGET,"source_commit":command("git","rev-parse","HEAD"),"source_dirty":bool(command("git","status","--porcelain")),"cargo_lock_sha256":sha(ROOT/"Cargo.lock"),"rustc":command("rustc","--version","--verbose"),"cargo":command("cargo","--version"),"python":sys.version.split()[0],"rustflags":"-C target-feature=+crt-static","built_utc":datetime.now(timezone.utc).isoformat(),"unsigned":True,"pe":info,"files":[]}
+    record = {"application":APP,"version":version,"target":TARGET,"source_commit":command("git","rev-parse","HEAD"),"source_dirty":bool(command("git","status","--porcelain")),"cargo_lock_sha256":sha(ROOT/"Cargo.lock"),"rustc":command("rustc","--version","--verbose"),"cargo":command("cargo","--version"),"python":sys.version.split()[0],"zlib":zlib.ZLIB_RUNTIME_VERSION,"rustflags":RELEASE_RUSTFLAGS,"source_date_epoch":epoch,"source_timestamp_utc":datetime.fromtimestamp(epoch,timezone.utc).isoformat(),"unsigned":True,"pe":info,"files":[]}
     for path in sorted(stage.rglob("*")):
         if path.is_file():
             record["files"].append({"path":path.relative_to(stage).as_posix(),"sha256":sha(path),"bytes":path.stat().st_size})
-    (stage / "build-info.json").write_text(json.dumps(record,indent=2)+"\n",encoding="utf-8")
+    write_json(stage / "build-info.json", record)
     temporary = dist / f".{name}-{os.urandom(8).hex()}.zip.tmp"
-    with zipfile.ZipFile(temporary,"x",compression=zipfile.ZIP_DEFLATED,compresslevel=9) as zipped:
-        for path in sorted(stage.rglob("*")):
-            if path.is_file():
-                zipped.write(path, f"{name}/{path.relative_to(stage).as_posix()}")
+    write_archive(stage, name, temporary, epoch)
     validate(temporary)
     os.replace(temporary, archive)
     digest_file.write_text(f"{sha(archive)}  {archive.name}\n",encoding="ascii")

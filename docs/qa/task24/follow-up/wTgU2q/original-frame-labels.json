@@ -1,0 +1,192 @@
+[
+  {
+    "name": "sanitized-frame-001.png",
+    "label": "manual-empty width340 zoom100",
+    "sha256": "9ccd30ec4b339d9ebdd43cc664798f59bc3e22c64001a5775f7ab2027661bf04",
+    "bytes": 101302,
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-002.png",
+    "label": "manual-empty width600 zoom100",
+    "sha256": "ddf8e5bfc6167b0d85e4a710e1323edcae9671a5c0db9bfb92de1ea81c530205",
+    "bytes": 147579,
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-003.png",
+    "label": "manual-empty width960 zoom100",
+    "sha256": "cacd88d5a04094d5b06b56b5cb086bc2e85c934c128ad4e7c0bb31aeee3643cc",
+    "bytes": 208922,
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-004.png",
+    "label": "manual-empty width340 zoom150",
+    "sha256": "7c0bfa9d47437bf6546ed00bbfafb7003f528aa65a2c5224cd2649af457a9e3b",
+    "bytes": 185605,
+    "pixels_per_point": 1.5,
+    "app_zoom": 1.5,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-005.png",
+    "label": "manual-empty width600 zoom150",
+    "sha256": "aabddc91bf2aec7e22c73c16ce2c65458fee4ff86904d3e93e31f03aca7eec09",
+    "bytes": 265501,
+    "pixels_per_point": 1.5,
+    "app_zoom": 1.5,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-006.png",
+    "label": "manual-empty width960 zoom150",
+    "sha256": "457f5e7ba0677f737dbbabdd0fe92653bd0191fbd343f0e886771cbbebd37ecd",
+    "bytes": 341818,
+    "pixels_per_point": 1.5,
+    "app_zoom": 1.5,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-007.png",
+    "label": "manual-empty width340 zoom200",
+    "sha256": "e8526d99321ef13cb3c9e39d25ccb6a826c23159d112ee8d40bc6081a7a0becf",
+    "bytes": 215999,
+    "pixels_per_point": 2,
+    "app_zoom": 2,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-008.png",
+    "label": "manual-empty width600 zoom200",
+    "sha256": "fd2b70981bf17c90252187697a2b73df1c788e443e385e737f6e249708d6d4c9",
+    "bytes": 306791,
+    "pixels_per_point": 2,
+    "app_zoom": 2,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-009.png",
+    "label": "manual-empty width960 zoom200",
+    "sha256": "7593372eb9c0993458cd653b32ccc7d1523098bca5d977e3d86046699c4b1525",
+    "bytes": 406626,
+    "pixels_per_point": 2,
+    "app_zoom": 2,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-010.png",
+    "label": "manual-empty width960 zoom200 keyboard Save focus",
+    "sha256": "97fa15d6b142c6588677fb827da1d300c6ce49be9322e57058d695de85c74a5e",
+    "bytes": 435568,
+    "pixels_per_point": 2,
+    "app_zoom": 2,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-011.png",
+    "label": "manual-empty invalid Save error width960 zoom200",
+    "sha256": "3c13c6fda92558abf4894dcb13876bcc92688eb388a83a0237f78a1db25de327",
+    "bytes": 333849,
+    "pixels_per_point": 2,
+    "app_zoom": 2,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-012.png",
+    "label": "manual advanced options open width600 zoom100",
+    "sha256": "4107d77f524ff83541387e23e41e96c197c301fdb23ab2a109aed52792b0c523",
+    "bytes": 159527,
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-013.png",
+    "label": "manual actual Algorithm dropdown open width600 zoom100",
+    "sha256": "65a9d8ec51d43962c1d3c6a2b18081c6e70cd4f616478c57e032fd23d5613cef",
+    "bytes": 144757,
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-014.png",
+    "label": "manual optional backup input empty expanded width600 zoom100",
+    "sha256": "703f67d069b053f4c4e77a9a7d9c82bcf0d33e13a8f893f55187a67747983b9b",
+    "bytes": 146007,
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-015.png",
+    "label": "manual optional backup input focused and masked width600 zoom100",
+    "sha256": "feb83735fee1d980d4875a7d7b5dcdaaa181f58ee65e00d060f905bce446b4dd",
+    "bytes": 119107,
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-016.png",
+    "label": "manual changed options discard dialog width600 zoom100",
+    "sha256": "7ead77a2c865bc991ef61c68560789dbabdbc0791d02ce26912370f519a83890",
+    "bytes": 104955,
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-017.png",
+    "label": "mixed primary144 left96 real negative QR decoded concealed review before Save",
+    "sha256": "ba209e16285b9a4add5d3a5abafdd851f44376c681cd752682414cd016f59b86",
+    "bytes": 319068,
+    "pixels_per_point": 1.5,
+    "app_zoom": 1,
+    "physical_dpi": 144,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-018.png",
+    "label": "mixed negative monitor saved exact one Public Fixture record HMAC verified",
+    "sha256": "779feb7975f75ef60529c12375b1229e14ab9d787dd98f757072ebb76dcb3c9c",
+    "bytes": 289802,
+    "pixels_per_point": 1.5,
+    "app_zoom": 1,
+    "physical_dpi": 144,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-019.png",
+    "label": "real capture CtrlL returned Locked private AX absent ciphertext unchanged",
+    "sha256": "76cdc78118f74b3ff806ca4cfbf177cb50ee7ccbc947bbe8b7cdd0a3816a647b",
+    "bytes": 274083,
+    "pixels_per_point": 1.5,
+    "app_zoom": 1,
+    "physical_dpi": 144,
+    "sanitized": true
+  }
+]

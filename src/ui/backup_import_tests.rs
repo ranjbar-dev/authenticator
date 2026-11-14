@@ -309,7 +309,7 @@ fn keyboard_reaches(
                 .ok_or("focused bounds")?;
             assert!(
                 bounds.y0 >= 0. && bounds.y1 <= f64::from(height),
-                "focused primary action must scroll into the normal viewport"
+                "focused primary action {label:?} must scroll into {width}x{height} viewport: {bounds:?}"
             );
             assert!(
                 bounds.x0 >= 0. && bounds.x1 <= f64::from(width),

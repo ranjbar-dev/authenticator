@@ -29,8 +29,8 @@
       "file": "05-vault-setup-and-lock-screen.md",
       "status": "Status: in_progress — implementation reviewed; hardware/integration QA pending",
       "open": [
-        "- [ ] Create/unlock/relock/relaunch a disposable vault without internet; wrong passphrase cannot disclose state.\r",
-        "- [ ] Idle, OS lock, suspend and lock during capture/review/import conceal and discard sensitive state.\r"
+        "- [ ] Create/unlock/relock/relaunch a disposable vault without internet; wrong passphrase cannot disclose state.",
+        "- [ ] Idle, OS lock, suspend and lock during capture/review/import conceal and discard sensitive state."
       ],
       "checked": 14
     },
@@ -42,17 +42,15 @@
     },
     {
       "file": "07-windows-region-capture.md",
-      "status": "Status: in_progress — implementation independently reviewed; hardware QA open",
-      "open": [
-        "- [ ] Exercise multiple monitors (including negative coordinates), 100/150/200% scale and mixed DPI where available; record hardware coverage honestly and use adapter tests for unavailable layouts.\r"
-      ],
-      "checked": 16
+      "status": "Status: done — implementation and measured monitor/DPI categories independently reviewed",
+      "open": [],
+      "checked": 17
     },
     {
       "file": "08-screenshot-review-and-import.md",
       "status": "Status: in_progress — functional implementation independently approved; disconnected-machine QA open",
       "open": [
-        "- [ ] With networking disabled, capture a disposable QR in another app, review it, save and compare the resulting TOTP to an independent implementation.\r"
+        "- [ ] With networking disabled, capture a disposable QR in another app, review it, save and compare the resulting TOTP to an independent implementation."
       ],
       "checked": 16
     },
@@ -66,8 +64,8 @@
       "file": "10-codes-list-and-clipboard.md",
       "status": "Status: in_progress - repaired clipboard source/native paths reviewed; hardware clock/full QA gates open",
       "open": [
-        "- [ ] Cards match independent TOTP values at boundaries and after sleep/resume/clock jumps; no stale code remains.\r",
-        "- [ ] Real pointer clicks and keyboard shortcuts reach copy/edit/delete/search/sort/view without drag scrolling stealing clicks.\r"
+        "- [ ] Cards match independent TOTP values at boundaries and after sleep/resume/clock jumps; no stale code remains.",
+        "- [ ] Real pointer clicks and keyboard shortcuts reach copy/edit/delete/search/sort/view without drag scrolling stealing clicks."
       ],
       "checked": 15
     },
@@ -81,18 +79,18 @@
       "file": "12-export-backup-screen.md",
       "status": "Status: in_progress - native full-graph export/restore reviewed; remaining visual/environment gates open",
       "open": [
-        "- [ ] Shared header names Export encrypted backup and provides back navigation. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] Summary explains what is included without showing credentials. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] Local destination control uses a file picker and a readable selected path. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] Masked passphrase/confirmation fields have accessible labels and recovery guidance. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] Encryption is mandatory; no plaintext or cloud option appears. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] Overwrite confirmation names the file and requires deliberate intent. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] Export action shows progress, prevents repeated submission and handles cancellation. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] Success/error feedback is safe, readable and theme-consistent; closing clears sensitive fields. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] A new user exports a complete encrypted disposable vault through labeled UI actions without external tools or registration.\r",
-        "- [ ] Passphrase mismatch/cancel/access failure leaves existing files and vault unchanged.\r",
-        "- [ ] The output restores via task 13 and discloses no plaintext on inspection.\r",
-        "- [ ] Pointer, keyboard, focus, busy/error and narrow-window checks pass independent review.\r"
+        "- [ ] Shared header names Export encrypted backup and provides back navigation. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] Summary explains what is included without showing credentials. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] Local destination control uses a file picker and a readable selected path. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] Masked passphrase/confirmation fields have accessible labels and recovery guidance. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] Encryption is mandatory; no plaintext or cloud option appears. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] Overwrite confirmation names the file and requires deliberate intent. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] Export action shows progress, prevents repeated submission and handles cancellation. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] Success/error feedback is safe, readable and theme-consistent; closing clears sensitive fields. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] A new user exports a complete encrypted disposable vault through labeled UI actions without external tools or registration.",
+        "- [ ] Passphrase mismatch/cancel/access failure leaves existing files and vault unchanged.",
+        "- [ ] The output restores via task 13 and discloses no plaintext on inspection.",
+        "- [ ] Pointer, keyboard, focus, busy/error and narrow-window checks pass independent review."
       ],
       "checked": 4
     },
@@ -100,18 +98,18 @@
       "file": "13-import-backup-screen.md",
       "status": "Status: in_progress - native full-graph Merge/Replace reviewed; remaining conflict/matrix/environment gates open",
       "open": [
-        "- [ ] Shared header names Import backup with clear back/cancel actions. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] File selection displays supported native backup format guidance. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] Passphrase entry is masked and errors reveal no payload. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] Preview puts counts and affected-data summary before confirmation. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] Merge/replace and conflict selectors have readable labels and safe defaults. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] Destructive replacement receives explicit confirmation. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] Progress/error states preserve the existing vault and offer retry. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] Success shows imported data, focus returns logically and sensitive buffers are released. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] Restore task 12's backup into a fresh local vault and verify codes, metadata, folders, backup used states, trash and supported preferences.\r",
-        "- [ ] Exercise incorrect passphrase, tampering, future version, conflict decisions, replace confirmation, cancel and lock/failure during import.\r",
-        "- [ ] Imported preferences do not silently enable startup or weaken lock settings.\r",
-        "- [ ] Real pointer/keyboard preview choices work and independent visual review passes.\r"
+        "- [ ] Shared header names Import backup with clear back/cancel actions. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] File selection displays supported native backup format guidance. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] Passphrase entry is masked and errors reveal no payload. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] Preview puts counts and affected-data summary before confirmation. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] Merge/replace and conflict selectors have readable labels and safe defaults. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] Destructive replacement receives explicit confirmation. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] Progress/error states preserve the existing vault and offer retry. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] Success shows imported data, focus returns logically and sensitive buffers are released. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] Restore task 12's backup into a fresh local vault and verify codes, metadata, folders, backup used states, trash and supported preferences.",
+        "- [ ] Exercise incorrect passphrase, tampering, future version, conflict decisions, replace confirmation, cancel and lock/failure during import.",
+        "- [ ] Imported preferences do not silently enable startup or weaken lock settings.",
+        "- [ ] Real pointer/keyboard preview choices work and independent visual review passes."
       ],
       "checked": 4
     },
@@ -177,7 +175,7 @@
       "file": "17-folders-and-organization.md",
       "status": "Status: in_progress - native membership/filter/Trash/backup paths reviewed; remaining full QA gates open",
       "open": [
-        "- [ ] Pointer clicks, keyboard search/selection and compact layouts pass independent review.\r"
+        "- [ ] Pointer clicks, keyboard search/selection and compact layouts pass independent review."
       ],
       "checked": 15
     },
@@ -185,15 +183,15 @@
       "file": "18-trash-and-restoration.md",
       "status": "Status: in_progress - native restore/single-permanent/Empty paths reviewed; remaining full QA gates open",
       "open": [
-        "- [ ] Shared Trash header shows count and Empty trash action. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] Policy explains that items remain until permanently deleted. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] Rows identify deleted service/account and deletion time without exposing secrets. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] Restore is a visible keyboard-operable action. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] Single permanent deletion is separate from restore. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] Empty trash confirmation explains scope and irreversibility. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] Conflict/error/empty states offer actionable recovery without data loss. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] Theme, icon contrast, focus and narrow layouts match the shared shell; no swipe-only dependency. — PRD/reference structure; shared implementation from task 04.\r",
-        "- [ ] Restart/import/restore counts and references stay consistent; real keyboard/pointer actions and visual review pass.\r"
+        "- [ ] Shared Trash header shows count and Empty trash action. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] Policy explains that items remain until permanently deleted. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] Rows identify deleted service/account and deletion time without exposing secrets. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] Restore is a visible keyboard-operable action. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] Single permanent deletion is separate from restore. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] Empty trash confirmation explains scope and irreversibility. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] Conflict/error/empty states offer actionable recovery without data loss. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] Theme, icon contrast, focus and narrow layouts match the shared shell; no swipe-only dependency. — PRD/reference structure; shared implementation from task 04.",
+        "- [ ] Restart/import/restore counts and references stay consistent; real keyboard/pointer actions and visual review pass."
       ],
       "checked": 8
     },

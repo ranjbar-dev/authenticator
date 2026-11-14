@@ -790,8 +790,12 @@ The stdlib Python packager stages an explicit allowlist into a fresh owned
 target directory without recursive cleanup. It validates bounded archive paths,
 CRCs, manifest checksums and PE resource/import properties before replacing only
 a matching verified prior artifact. It records source SHA, dirty flag, compiler,
-Cargo.lock hash and relative payload checksums; repeatable steps do not establish
-bit-identical builds. Public dependency/runtime/font license texts and provenance
+Cargo.lock hash and relative payload checksums. The package process uses MSVC
+`/Brepro`, source-epoch UTC ZIP timestamps, fixed attributes/order, LF generated
+JSON and relative license ordering to support measured fixed-environment rebuilds.
+Source timestamps are explicitly distinguished from build time; toolchain/path
+changes are outside a same-environment byte-identity claim. See windows-build.md
+and the dated QA measurements. Public dependency/runtime/font license texts and provenance
 are bundled, including an explicit hash-pinned Quircs metadata/text discrepancy.
 CI builds/validates and uploads only these public ZIP/checksum artifacts, with no
 GitHub release publication. User/runtime fixtures never enter the package.

@@ -1,6 +1,6 @@
 # Task 07: Windows screen-region capture overlay
 
-Status: in_progress — implementation independently reviewed; hardware QA open
+Status: done — implementation and measured monitor/DPI categories independently reviewed
 Priority: P0 foundation / screenshot-first
 Dependencies: 03–06
 Requirements: FR-2A.1–3/5/6; PRD §§7, 10–11
@@ -35,7 +35,7 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 ## Acceptance and verification
 
 - [x] Select a QR in another window using actual pointer input; selected pixels match the region.
-- [ ] Exercise multiple monitors (including negative coordinates), 100/150/200% scale and mixed DPI where available; record hardware coverage honestly and use adapter tests for unavailable layouts.
+- [x] Exercise multiple monitors (including negative coordinates), 100/150/200% scale and mixed DPI where available; record hardware coverage honestly and use adapter tests for unavailable layouts.
 - [x] Escape/empty selection/failure/lock restore the app, release capture and preserve the vault.
 - [x] No unsolicited capture, retained image, secret logs or blocked pointer interaction remains.
 
@@ -55,3 +55,5 @@ Real pointer capture of public disposable QR fixtures succeeded on primary and n
 
 Physical 150/200% and mixed DPI, right-monitor capture, actual monitor removal/permission denial/OS session lock/hardware suspend, Narrator and reference pixel fidelity remain unverified. Task08 subsequently supplied working image/manual fallback, editable batch review, encrypted save/current code and independent lock/privacy review. Full manual editing remains task09; the capture hardware acceptance stays open. Commit reference is recorded in the following checkpoint.
 
+
+Task24 follow-up review independently reconciled the measured hardware category acceptance: primary96/144/192DPI capture, negative-coordinate capture, movement96→144→96 and measured mixed primary144/left96 crop followed by explicit Save/HMAC. The final package also passed negative-monitor scan/Save/HMAC. See [follow-up review](../docs/qa/task24/follow-up/independent-review.md) and [exact source-attributed evidence](../docs/qa/task24/follow-up/README.md). This closes the remaining Task07 checkbox without claiming every monitor pair, actual OS lock/suspend/removal/permission delivery or exact reference pixels; those limits remain explicitly recorded with their owning tasks. Earlier hardware-pending paragraphs are historical checkpoint claims, superseded only for these measured categories.

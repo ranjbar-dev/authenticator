@@ -1,0 +1,142 @@
+[
+  {
+    "name": "sanitized-frame-001.png",
+    "label": "current Settings initial heading counts Export action visible after focus repair",
+    "sha256": "b52970e65365e5f032be4640a46c28f9d43f787a30aff8eedc39c0a960c02268",
+    "bytes": 167806,
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-002.png",
+    "label": "current import authentication busy after actual keyboard submit",
+    "sha256": "a546540d0f559db474b51798891553422ebd0b1d286211c54166ad2a38ab86b3",
+    "bytes": 115987,
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-003.png",
+    "label": "current wrong backup phrase error no private preview ciphertext unchanged",
+    "sha256": "8037b31afff55eb3f75a607bebfb77ca75e57cd4f9bb6fb343be175576564fb1",
+    "bytes": 161174,
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-004.png",
+    "label": "current import deep security selector focus at600x800 before Review action",
+    "sha256": "3e173d8e1107bee59adb9d2e51ff13955c0ddb419c12254023b5bf10c1d56fc8",
+    "bytes": 197397,
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-005.png",
+    "label": "current import Help focus after tab wrap; not primary action evidence",
+    "sha256": "6a4122f363f2a982023e8d2ff481ce94411340dea5ec49fbc070514ba631362e",
+    "bytes": 199706,
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-006.png",
+    "label": "current real reverse Tab Review action visibility600x800",
+    "sha256": "e701f2c1af8665ca6a5a7c196364a376fa4274434ecedd796ce488971a8937f2",
+    "bytes": 190292,
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-007.png",
+    "label": "current stable keyboard Review primary action340x780",
+    "sha256": "7795aa93c4dc23425e5b96fecad1c4a130583f902708ba1d5c6754a709190081",
+    "bytes": 143042,
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-008.png",
+    "label": "current stable keyboard Review primary action960x900",
+    "sha256": "a08c9d99f2852c4bb5669d0e366f68f01d8e96f5f5e6fe1b34d19d9ab3336630",
+    "bytes": 248663,
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-009.png",
+    "label": "current native wheel scroll preserved while Review button retains keyboard focus",
+    "sha256": "a000aa0091c8e4cccfdcf463e75b3347f675595267b2b6f34e07277126119ddc",
+    "bytes": 253811,
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-010.png",
+    "label": "current replacement exact counts and paginated257 account candidate",
+    "sha256": "d2b81d642d7196079cdb7064d2be6f840a9e51d5ab12a221555447561720cb67",
+    "bytes": 283231,
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-011.png",
+    "label": "current large candidate actual keyboard page2 metadata no source mutation",
+    "sha256": "0b66a63ae01142022031250a6e6fd5c535ea97f38d76aa4355ee358e9f57483c",
+    "bytes": 291061,
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-012.png",
+    "label": "current stable actual keyboard Apply reviewed import fully visible600x800",
+    "sha256": "7a7b26a35407e0ba6744514c651378db132c35fb8f5ff286a56987953800887f",
+    "bytes": 207201,
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-013.png",
+    "label": "current large Replace confirmation Cancel default before any commit",
+    "sha256": "30ad364cd9f5e837310c34c310309b1e304de9cd3a3746491157b94aa0d5ce17",
+    "bytes": 190042,
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  },
+  {
+    "name": "sanitized-frame-014.png",
+    "label": "current stable large Replace dialog initial Cancel focus",
+    "sha256": "30ad364cd9f5e837310c34c310309b1e304de9cd3a3746491157b94aa0d5ce17",
+    "bytes": 190042,
+    "pixels_per_point": 1,
+    "app_zoom": 1,
+    "physical_dpi": 96,
+    "sanitized": true
+  }
+]

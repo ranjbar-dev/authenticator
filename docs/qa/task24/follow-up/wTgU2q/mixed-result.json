@@ -1,0 +1,23 @@
+{
+  "at": "2026-11-13T22:18:22.807Z",
+  "primaryDpi": 144,
+  "fixtureDpi": 96,
+  "selected": {
+    "left": -1825,
+    "top": 411,
+    "width": 433,
+    "height": 432
+  },
+  "expectedQr": {
+    "left": -1824,
+    "top": 411,
+    "right": -1392,
+    "bottom": 843
+  },
+  "exactMatchingCount": true,
+  "exactService": true,
+  "hmacMatch": true,
+  "counterStable": true,
+  "cipherChangedAfterSave": true,
+  "beforeSaveUnchanged": true
+}

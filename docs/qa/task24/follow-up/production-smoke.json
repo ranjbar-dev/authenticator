@@ -1,0 +1,139 @@
+{
+  "root": "D:\\Projects\\github\\authenticator\\target\\task24-runtime-public-4517ac98-b9b4-426b-8db6-013448fb985c",
+  "private_evidence_root": "D:\\Projects\\github\\authenticator\\target\\task24-production-k6xgp5nt",
+  "exe": "D:\\Projects\\github\\authenticator\\target\\task24-runtime-public-4517ac98-b9b4-426b-8db6-013448fb985c\\Authenticator-0.1.0-windows-x86_64\\Authenticator.exe",
+  "archive_sha256": "60f940fd5364f999f7335500487e0e79024798aed0ab0f93686a6c21517e9b78",
+  "exe_sha256": "9656ed317d6b2e36a96cf17ac5c0d2729680cb6abb850941c295f7418272978e",
+  "bytes": 12179456,
+  "source_dirty": true,
+  "public_artifact_directory_inherits_workspace_acl": true,
+  "profileBaselines": [
+    {
+      "path": "C:/Users/root/AppData/Local/Authenticator",
+      "exists": false,
+      "error": "ENOENT"
+    },
+    {
+      "path": "C:/Users/root/AppData/Local/Packages/OpenAI.Codex_2p2nqsd0c76g0/LocalCache/Local/Authenticator",
+      "exists": true,
+      "isLink": false,
+      "birthtimeMs": 1794585030294.6118,
+      "members": []
+    }
+  ],
+  "startedUtc": "2026-11-13T23:40:27.284Z",
+  "dataRoot": "C:/Users/root/AppData/Local/Packages/OpenAI.Codex_2p2nqsd0c76g0/LocalCache/Local/Authenticator",
+  "runtimeAfterLaunch": [
+    {
+      "path": "C:/Users/root/AppData/Local/Authenticator",
+      "absent": true
+    },
+    {
+      "path": "C:/Users/root/AppData/Local/Packages/OpenAI.Codex_2p2nqsd0c76g0/LocalCache/Local/Authenticator",
+      "members": [
+        {
+          "name": "session.lock",
+          "bytes": 0,
+          "birthtimeMs": 1794613228140.304,
+          "isLink": false
+        }
+      ]
+    }
+  ],
+  "process": {
+    "pid": 14476,
+    "image": "D:\\Projects\\github\\authenticator\\target\\task24-runtime-public-4517ac98-b9b4-426b-8db6-013448fb985c\\Authenticator-0.1.0-windows-x86_64\\Authenticator.exe",
+    "exe_sha256": "9656ed317d6b2e36a96cf17ac5c0d2729680cb6abb850941c295f7418272978e",
+    "get_package_full_name_status": 15700,
+    "inherited_codex_package_identity": false,
+    "no_package_identity": true
+  },
+  "firstVault": {
+    "bytes": 262,
+    "sha256": "c440091ef0970d2cff9ed85b0245fb18996a535135994d1b6849c6cac03e82ff",
+    "birthtimeMs": 1794613414761.1978
+  },
+  "scan": {
+    "previewCipherUnchanged": true,
+    "uniqueEditableLabelConfirmed": true,
+    "concealedReview": true,
+    "explicitKeyboardSave": true,
+    "utc": "2026-11-13T23:49:59.835Z",
+    "counter": 59820459,
+    "stableCounter": true,
+    "matchesIndependentHmac": true,
+    "exactlyOne": true,
+    "route": true,
+    "codeCount": 1,
+    "cipherChangedAfterSave": true
+  },
+  "copy": {
+    "counter": 59820461,
+    "matches_independent_hmac": true,
+    "six_digits": true,
+    "actualKeyboardCopy": true,
+    "utc": "2026-11-13T23:50:56.507Z"
+  },
+  "backupPath": "D:\\Projects\\github\\authenticator\\target\\task24-runtime-public-4517ac98-b9b4-426b-8db6-013448fb985c\\production-disposable.authpbk",
+  "export": {
+    "successNotice": true,
+    "bytes": 406,
+    "sha256": "fdb18b2e566bf6cd73c5c38ee746ca7b8865633a473b3588880c0943fba5d56b",
+    "noPlainService": true,
+    "backupPhraseDifferentFromLocal": true
+  },
+  "firstVaultAfterSave": {
+    "bytes": 406,
+    "sha256": "92fe94ea8cabf5a7421bd8f541f0dc969e42807209131991e39701379c201e86",
+    "ownedBirthtimeMs": 1794613874612.3525,
+    "preserved": true,
+    "closedPid14476Absent": true
+  },
+  "restore": {
+    "independentLocalPhrase": true,
+    "emptyBeforeRestore": true,
+    "previewCipherUnchanged": true,
+    "exactCandidateOneAccount": true,
+    "explicitApply": true,
+    "utc": "2026-11-13T23:56:54.194Z",
+    "counter": 59820473,
+    "stableCounter": true,
+    "matchesIndependentHmac": true,
+    "exactlyOne": true,
+    "route": true,
+    "codeCount": 1,
+    "cipherChangedOnApply": true
+  },
+  "restart": {
+    "opensLocked": true,
+    "privateAxAbsent": true,
+    "cipherUnchangedBeforeUnlock": true,
+    "afterUnlock": {
+      "utc": "2026-11-13T23:58:08.696Z",
+      "counter": 59820476,
+      "stableCounter": true,
+      "matchesIndependentHmac": true,
+      "exactlyOne": true,
+      "route": true,
+      "codeCount": 1
+    },
+    "independentLocalPhraseUnlockSucceeded": true
+  },
+  "finalLock": {
+    "locked": true,
+    "privateAxAbsent": true,
+    "cipherUnchanged": true
+  },
+  "cleanup": {
+    "utc": "2026-11-13T23:58:43.923Z",
+    "runtimeProcessAbsent": true,
+    "ownedCiphertextsPreserved": true,
+    "restoredVaultSha256": "4ece41a52810c2c4c5d70819888f0e0657ea9932adf5bba7b98dcb7cd753dbad",
+    "redirectedRootMembers": [],
+    "preexistingEmptyDirectoryPreserved": true,
+    "ordinaryRootAbsent": true,
+    "ownedQrWindowAbsent": true,
+    "narratorOff": true,
+    "autoLockDefault300": true
+  }
+}

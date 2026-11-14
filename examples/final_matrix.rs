@@ -1,11 +1,12 @@
 //! Argument-free final QA fixture. Never opens the default vault or writes raw captures.
 #![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
 use authenticator::{
+    backup::{self, Destination},
     domain::{
         otp::{OtpSettings, Secret},
         records::{AccountDraft, BackupCode, FolderColor, Timestamp, Vault},
     },
-    storage::VaultStore,
+    storage::{OperationCancellation, VaultStore},
     ui::{components as c, shell::AuthenticatorApp},
 };
 use eframe::egui;
@@ -223,6 +224,39 @@ fn main() -> eframe::Result {
             if let Some(id) = first {
                 vault.add_membership(folder, id, Timestamp(11))?;
             }
+            // An encrypted, independent-key source fixture for native import
+            // review/pagination and large-vault journeys. No plaintext file or
+            // QR pixels are written. This example never resolves default data.
+            let mut incoming = vault.clone();
+            for index in 0..250 {
+                incoming.add_account(
+                    AccountDraft::new(
+                        &format!("Public large fixture {index:03}"),
+                        Some("https://example.invalid"),
+                        Some("disposable-large@public.invalid"),
+                        Secret::from_base32("GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ")?,
+                        OtpSettings::default(),
+                    )?,
+                    Timestamp(20 + index),
+                )?;
+            }
+            let mut source = VaultStore::open_directory(root.join("import-source"))?;
+            source.create(Zeroizing::new("disposablematrixsource".into()), incoming)?;
+            // The production backup adapter deliberately accepts ordinary drive
+            // paths only, while Windows canonicalize adds a verbatim prefix.
+            let backup_directory = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("target")
+                .join(root.file_name().ok_or("QA root has no name")?);
+            if backup_directory.canonicalize()? != root {
+                return Err("QA backup directory identity changed".into());
+            }
+            backup::export(
+                &source,
+                Destination::create_new(&backup_directory.join("public-import.authpbk"))?,
+                Zeroizing::new("disposablematrixbackup".into()),
+                &OperationCancellation::default(),
+            )?;
+            drop(source);
             let mut store = VaultStore::open_directory(root.join("vault"))?;
             store.create(Zeroizing::new("disposablematrixpassphrase".into()), vault)?;
             let mut app = AuthenticatorApp::with_repository(cc, Ok(store));

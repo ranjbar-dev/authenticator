@@ -1,0 +1,54 @@
+{
+  "root": "D:/Projects/github/authenticator/target/task24-owned-qcckBc",
+  "exeSha256": "cfa1d7a7553034404049782af412f082148eb8e946d75a608fb7b32143f4680b",
+  "keyboardSettings": true,
+  "pointerImportAndPicker": true,
+  "authenticated257": true,
+  "reviewFullyVisible600": true,
+  "wheelWithReviewFocus": true,
+  "cancelInitialVisible600": true,
+  "tabConfirmVisible600": true,
+  "escapeAndSpaceCancelCipherUnchanged": true,
+  "reopenSafeCancel": true,
+  "ctrlLLockedPrivateAxAbsent": true,
+  "closedNormally": true,
+  "closedWindowAbsent": true,
+  "base_commit": "2e2da2cba35e99d6d6d218471a12f48d67e7abc0",
+  "source_dirty": true,
+  "source_manifest_sha256": "5bd1e0935ebb77b49f0a9674287949a7a526ef8ff5a7aa4ac9e6eb5791862c17",
+  "frames": [
+    {
+      "path": "cancel.png",
+      "label": "Independent final-source initial safe Cancel at600x800",
+      "sha256": "c45bdafe48abc49958e42c0e6f93d8039c682ba486c24bac72d4c319035f362c",
+      "bytes": 192313,
+      "size": [
+        600,
+        800
+      ],
+      "metadata": {
+        "pixels_per_point": 1,
+        "app_zoom": 1,
+        "physical_dpi": 96,
+        "sanitized": true
+      }
+    },
+    {
+      "path": "confirm-focus.png",
+      "label": "Independent final-source Tab reveals whole Confirm at600x800",
+      "sha256": "c55b0009b4cff9e84e4a70d135d820cbdd509bbb8f78b0aae5f84578451edfd3",
+      "bytes": 182784,
+      "size": [
+        600,
+        800
+      ],
+      "metadata": {
+        "pixels_per_point": 1,
+        "app_zoom": 1,
+        "physical_dpi": 96,
+        "sanitized": true
+      }
+    }
+  ],
+  "limits": "No Apply/Replace mutation; no OS setting, clipboard or other fixture changed. Public fixture AX-output caveat is in the independent report. These frames are separate from the author59 and older195 manifests."
+}

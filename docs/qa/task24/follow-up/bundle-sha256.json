@@ -1,0 +1,1032 @@
+[
+  {
+    "path": "docs/qa/task24/follow-up/current-source-sha256.json",
+    "bytes": 11507,
+    "sha256": "5bd1e0935ebb77b49f0a9674287949a7a526ef8ff5a7aa4ac9e6eb5791862c17"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/environment.json",
+    "bytes": 1660,
+    "sha256": "46a909038c6636d5bf3f49e0fd1b3d967c568d4c9e7c0fe7132165cb28db14a7"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/final-check-0.log",
+    "bytes": 212,
+    "sha256": "654dd9c49ea6d487a20e2b63f11cc7f519a38eadb8f160c027fbeb494c014fc8"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/final-check-1.log",
+    "bytes": 355,
+    "sha256": "435ac8eede49cea5d0d5562ec4c79effd9249025f4954834efdd46539795ff20"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/final-check-2.log",
+    "bytes": 1222,
+    "sha256": "895eefa036e34aef5ad38c2ca2c17973ec22822cf0f97c2b550c705df7726534"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/final-check-3.log",
+    "bytes": 1234,
+    "sha256": "d2996ce5c70004fdafe58d210a26bc097003b4d61b0d396d8321ea9f82c79da3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/final-check-4.log",
+    "bytes": 229,
+    "sha256": "37a268ec43d269305119f6b6220b9c7fc8675a0190648aaa50a32ba5a4b22383"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/final-check-results.json",
+    "bytes": 1460,
+    "sha256": "be9d6818921280a96116c3f4ab009c21780624b4217ebd9d3628b164108a20f1"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/frame-manifest.json",
+    "bytes": 42003,
+    "sha256": "6b7f807535606a1bd04c9e91e83dd58807242bac07a7302d9d0c594ed5821ea3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/full-repro-driver.py",
+    "bytes": 6188,
+    "sha256": "ee7282364e930f6248e2d5cab01ffab66ab8a1682cef011a62f5049369d05a1c"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/full-repro-result.json",
+    "bytes": 4381,
+    "sha256": "6847a65a31db0481577c0bd6c7b3b5707a468a6c03ecb7ea4bb960a4bde5cd38"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/full-repro-source-inputs.json",
+    "bytes": 17200,
+    "sha256": "419b47e42d81f3cb5a1b3ac47456f9d0ece95cde2c214b897b4211cd1a13a94b"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/handoff-verification.json",
+    "bytes": 457,
+    "sha256": "d5611a52ec24e3e0710f36c10286e8af0ebbc20a9cf42a077439781c628d75e0"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/original-frame-labels.json",
+    "bytes": 4577,
+    "sha256": "93f98c56ffd0b7c805324b00c6d175192692b8c9696251a84b3bc690d38bd7b7"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-001.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-001.png",
+    "bytes": 167806,
+    "sha256": "b52970e65365e5f032be4640a46c28f9d43f787a30aff8eedc39c0a960c02268"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-001.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-002.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-002.png",
+    "bytes": 115987,
+    "sha256": "a546540d0f559db474b51798891553422ebd0b1d286211c54166ad2a38ab86b3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-002.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-003.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-003.png",
+    "bytes": 161174,
+    "sha256": "8037b31afff55eb3f75a607bebfb77ca75e57cd4f9bb6fb343be175576564fb1"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-003.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-004.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-004.png",
+    "bytes": 197397,
+    "sha256": "3e173d8e1107bee59adb9d2e51ff13955c0ddb419c12254023b5bf10c1d56fc8"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-004.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-005.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-005.png",
+    "bytes": 199706,
+    "sha256": "6a4122f363f2a982023e8d2ff481ce94411340dea5ec49fbc070514ba631362e"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-005.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-006.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-006.png",
+    "bytes": 190292,
+    "sha256": "e701f2c1af8665ca6a5a7c196364a376fa4274434ecedd796ce488971a8937f2"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-006.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-007.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-007.png",
+    "bytes": 143042,
+    "sha256": "7795aa93c4dc23425e5b96fecad1c4a130583f902708ba1d5c6754a709190081"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-007.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-008.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-008.png",
+    "bytes": 248663,
+    "sha256": "a08c9d99f2852c4bb5669d0e366f68f01d8e96f5f5e6fe1b34d19d9ab3336630"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-008.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-009.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-009.png",
+    "bytes": 253811,
+    "sha256": "a000aa0091c8e4cccfdcf463e75b3347f675595267b2b6f34e07277126119ddc"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-009.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-010.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-010.png",
+    "bytes": 283231,
+    "sha256": "d2b81d642d7196079cdb7064d2be6f840a9e51d5ab12a221555447561720cb67"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-010.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-011.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-011.png",
+    "bytes": 291061,
+    "sha256": "0b66a63ae01142022031250a6e6fd5c535ea97f38d76aa4355ee358e9f57483c"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-011.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-012.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-012.png",
+    "bytes": 207201,
+    "sha256": "7a7b26a35407e0ba6744514c651378db132c35fb8f5ff286a56987953800887f"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-012.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-013.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-013.png",
+    "bytes": 190042,
+    "sha256": "30ad364cd9f5e837310c34c310309b1e304de9cd3a3746491157b94aa0d5ce17"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-013.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-014.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-014.png",
+    "bytes": 190042,
+    "sha256": "30ad364cd9f5e837310c34c310309b1e304de9cd3a3746491157b94aa0d5ce17"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/LbDnux/sanitized-frame-014.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/package-build-info.json",
+    "bytes": 65642,
+    "sha256": "52688a551de562c70585f5af297a9ca573f3059c38d8cb3ac5c38f59f3dbcbf6"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/package-test-names.json",
+    "bytes": 799,
+    "sha256": "d8dfd52cfbfd988a87940c47e6bf0ee12c19447416a26ad3b93ec0d4c3e4f101"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/production-empty-codes.jpg",
+    "bytes": 44154,
+    "sha256": "c4670482fa324939cfbfad17c82c5b187c646f7a2b8ddbf7bf966f08668c57cc"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/production-restart-locked.jpg",
+    "bytes": 44262,
+    "sha256": "2205b9584f683cc83434b14e816225dd04dc84c96768fb844464a0a44e128ef7"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/production-smoke.json",
+    "bytes": 4703,
+    "sha256": "f42ae0a4451e971dd0c65a9143c339ded01be974ca4f0b75d46914eb528b4074"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/controlled-idle-result.json",
+    "bytes": 286,
+    "sha256": "5fc7fb096fe9a5cdf8c6b94923511b9857203dc70ba41f3f55279ed77b91d912"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/fixture-exe-sha256.json",
+    "bytes": 229,
+    "sha256": "a1792e9ca83eb73283df7b72e28cbcec63214010531c0035c104f2089437be08"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/idle-at55.json",
+    "bytes": 127,
+    "sha256": "d046231cefa1108f299e0fe0df2c434c7e3e2b5960e7706293369ba75296a3b5"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/idle-default-restored.json",
+    "bytes": 95,
+    "sha256": "2ab751b95117967c5de538738dff0c39561c1db76343cb3eb9b1beca5b5cdc05"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/narrator-exit.json",
+    "bytes": 162,
+    "sha256": "860531237e572f7d2c4fe0b65eb2bfdb9fe31f9c8e8cc31e0416f846021ad5e5"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/narrator-foreground-positive-control.json",
+    "bytes": 253,
+    "sha256": "c1ea3ffcde8985ef2f9ffdaaa728e670f773883eeda3ee3ff33406d4eddea4e4"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/narrator-rollover-result.json",
+    "bytes": 979,
+    "sha256": "ae0f558db7bd304603d5cb6992a47531a604abe436f4f51586b77faf3eb84947"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/original-frame-labels.json",
+    "bytes": 7382,
+    "sha256": "51071c1cc1a1534187693201bc63ef201ecc294dcc6023acc26b317dadfbdcea"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-001.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-001.png",
+    "bytes": 192659,
+    "sha256": "9047c4a35acae18d7caead5740e3333dc1d131f50fd0822137339e9d3cf0fbe5"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-001.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-002.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-002.png",
+    "bytes": 136217,
+    "sha256": "83362e68a8c2949155ab1601f358f4e6a96377deb2069bf3f043832d7c427075"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-002.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-003.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-003.png",
+    "bytes": 221398,
+    "sha256": "72455b90c961c48085665d95f0c346160a7db2f19352096dc600474fea9af31c"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-003.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-004.json",
+    "bytes": 74,
+    "sha256": "c298e5aeeef9738d40080883d6f2caa491562a6461f3344b57a1856ba9a8c427"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-004.png",
+    "bytes": 238218,
+    "sha256": "083ce7d9201ba417f3e10fc053fc60085da7e47caa85601b254325f209c25f25"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-004.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-005.json",
+    "bytes": 74,
+    "sha256": "c298e5aeeef9738d40080883d6f2caa491562a6461f3344b57a1856ba9a8c427"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-005.png",
+    "bytes": 318194,
+    "sha256": "4e17d849b226b8e2ab6649f82d8941f926d51585948ae2d143f9226a432d4d95"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-005.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-006.json",
+    "bytes": 74,
+    "sha256": "c298e5aeeef9738d40080883d6f2caa491562a6461f3344b57a1856ba9a8c427"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-006.png",
+    "bytes": 363377,
+    "sha256": "084ea54322338e49323b88aba126570932423aac18175cedead6c1d7978764c9"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-006.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-007.json",
+    "bytes": 70,
+    "sha256": "05b98d616665087dcae1ef3fccf0ba195a13b2defd7fa7cac0f5b9d20957f3c4"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-007.png",
+    "bytes": 312002,
+    "sha256": "d3c7a3a06bbde19d572a08f185b32ec5d06de533b9ed2636d7465cae36021281"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-007.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-008.json",
+    "bytes": 70,
+    "sha256": "05b98d616665087dcae1ef3fccf0ba195a13b2defd7fa7cac0f5b9d20957f3c4"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-008.png",
+    "bytes": 403804,
+    "sha256": "f65e374981d2a685bdea7620a7d6e944ed2f26633e853d2c44cbcd047eddcd85"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-008.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-009.json",
+    "bytes": 70,
+    "sha256": "05b98d616665087dcae1ef3fccf0ba195a13b2defd7fa7cac0f5b9d20957f3c4"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-009.png",
+    "bytes": 461414,
+    "sha256": "e1a00ba9a41d46a6549b032618dd043431db688ad2c3ad0849192a989be209e8"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-009.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-010.json",
+    "bytes": 70,
+    "sha256": "05b98d616665087dcae1ef3fccf0ba195a13b2defd7fa7cac0f5b9d20957f3c4"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-010.png",
+    "bytes": 426410,
+    "sha256": "8f52a1cacf5fe041b9cb3e756c2df3e4e019901af3435df269792b88ab339e77"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-010.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-011.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-011.png",
+    "bytes": 154507,
+    "sha256": "88a3bff06e78f47396d8b78cab197bf749e53ae703f5340ae689ff5fb2efa92c"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-011.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-012.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-012.png",
+    "bytes": 148257,
+    "sha256": "7e5b75dfe2d014a88e1c8b1720e5daa838dd25c07bba988e552d8e223295c0ea"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-012.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-013.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-013.png",
+    "bytes": 142233,
+    "sha256": "e4b15170afa7acc5091a02f524518de526675c4182a6c8de5304669c2dd9f1de"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-013.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-014.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-014.png",
+    "bytes": 126160,
+    "sha256": "c2f330fe1319f1c4c39919bf2b8039082e50e7d73f4f798c3f285ea3a76795b7"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-014.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-015.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-015.png",
+    "bytes": 167214,
+    "sha256": "b72813d28d9618fc9551a9787ccf2253a2bbcbd5bc526c2f844db099f05c63b4"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-015.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-016.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-016.png",
+    "bytes": 238157,
+    "sha256": "ceb0aa4435675bde3135374a920e3b2acf62c353aa9ef1e448da70b53e414ed2"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-016.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-017.json",
+    "bytes": 74,
+    "sha256": "c298e5aeeef9738d40080883d6f2caa491562a6461f3344b57a1856ba9a8c427"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-017.png",
+    "bytes": 210724,
+    "sha256": "df662a8739d5dfcbebb2c31e8ebb8143edd1531c0ee61a27ac02326a4fc724db"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-017.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-018.json",
+    "bytes": 74,
+    "sha256": "c298e5aeeef9738d40080883d6f2caa491562a6461f3344b57a1856ba9a8c427"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-018.png",
+    "bytes": 288245,
+    "sha256": "cb5585a50254b7bea425752a5a25673908b3466853a0bb8ff6c2c68070836cbb"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-018.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-019.json",
+    "bytes": 74,
+    "sha256": "c298e5aeeef9738d40080883d6f2caa491562a6461f3344b57a1856ba9a8c427"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-019.png",
+    "bytes": 370778,
+    "sha256": "607cf1f92c4b75f0ac0e9a47a8f8e7f22afa140837411a7bc182a9ec638f0bb1"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-019.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-020.json",
+    "bytes": 70,
+    "sha256": "05b98d616665087dcae1ef3fccf0ba195a13b2defd7fa7cac0f5b9d20957f3c4"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-020.png",
+    "bytes": 234898,
+    "sha256": "8fc5274c6663cb31e8bc8e9bc7035eaec1934c39fce9ff48f04ade49e9d9678d"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-020.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-021.json",
+    "bytes": 70,
+    "sha256": "05b98d616665087dcae1ef3fccf0ba195a13b2defd7fa7cac0f5b9d20957f3c4"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-021.png",
+    "bytes": 327822,
+    "sha256": "b1446cd42de46cb0f1acbaf724b7c2550728613404146a64f17ad25b4687b624"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-021.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-022.json",
+    "bytes": 70,
+    "sha256": "05b98d616665087dcae1ef3fccf0ba195a13b2defd7fa7cac0f5b9d20957f3c4"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-022.png",
+    "bytes": 432158,
+    "sha256": "3969a8f07c8c757d191aab3976f41b6dfc9afd86f90afd9c73757ed932974447"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-022.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-023.json",
+    "bytes": 70,
+    "sha256": "05b98d616665087dcae1ef3fccf0ba195a13b2defd7fa7cac0f5b9d20957f3c4"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-023.png",
+    "bytes": 254729,
+    "sha256": "c09c56c3a5f6bc20cf617d9206b13b97dff1618863fce684f90fd205b59d0b3c"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-023.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-024.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-024.png",
+    "bytes": 134692,
+    "sha256": "7deecf42f6fa93ce46a0739fd74d5e1829ecfc23f4570dd4f0772bf282d13a49"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/sanitized-frame-024.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/q9qZkB/timed-idle-result.json",
+    "bytes": 420,
+    "sha256": "97cf8abcdf6c97ff90ce139ba956adeadd7bd74748b57e50a2e6ec7152f1f525"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/README.md",
+    "bytes": 14648,
+    "sha256": "30ecb008e6e0876f58ef5cbc30b66410d63f1c6c3e27ff8c26de3530a316778f"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/reproducibility.md",
+    "bytes": 4974,
+    "sha256": "d52359df0b05a76080015c82342ca9a419842a527982fd4df5c90fd6ba7e75cd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/state-coverage.md",
+    "bytes": 5986,
+    "sha256": "10e75fa26fabbb58df1f6bc0f43ea42f56cee8a47134dbb528d7cc0bf133ae83"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/capture-bounds.json",
+    "bytes": 49,
+    "sha256": "440fcd0215c7aac70c7ff7f1e5a30e9d2c28945b01dd6ca2d95e7c372935a483"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/mixed-result.json",
+    "bytes": 432,
+    "sha256": "7e4cf684ba21d043d6a55783fdab1874ebd7eff5ee9d6646335adde822ce8bb2"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/original-frame-labels.json",
+    "bytes": 5822,
+    "sha256": "4832c73edd399430ef0320b4f09824692d7a0c14e73411b0f7cf1a900a800d43"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/overlay-lock-result.json",
+    "bytes": 143,
+    "sha256": "33749f4ed3eeb0db679423f781bd78c208860797be10bb550b5eeecf1e82d3ee"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-001.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-001.png",
+    "bytes": 101302,
+    "sha256": "9ccd30ec4b339d9ebdd43cc664798f59bc3e22c64001a5775f7ab2027661bf04"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-001.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-002.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-002.png",
+    "bytes": 147579,
+    "sha256": "ddf8e5bfc6167b0d85e4a710e1323edcae9671a5c0db9bfb92de1ea81c530205"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-002.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-003.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-003.png",
+    "bytes": 208922,
+    "sha256": "cacd88d5a04094d5b06b56b5cb086bc2e85c934c128ad4e7c0bb31aeee3643cc"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-003.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-004.json",
+    "bytes": 74,
+    "sha256": "c298e5aeeef9738d40080883d6f2caa491562a6461f3344b57a1856ba9a8c427"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-004.png",
+    "bytes": 185605,
+    "sha256": "7c0bfa9d47437bf6546ed00bbfafb7003f528aa65a2c5224cd2649af457a9e3b"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-004.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-005.json",
+    "bytes": 74,
+    "sha256": "c298e5aeeef9738d40080883d6f2caa491562a6461f3344b57a1856ba9a8c427"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-005.png",
+    "bytes": 265501,
+    "sha256": "aabddc91bf2aec7e22c73c16ce2c65458fee4ff86904d3e93e31f03aca7eec09"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-005.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-006.json",
+    "bytes": 74,
+    "sha256": "c298e5aeeef9738d40080883d6f2caa491562a6461f3344b57a1856ba9a8c427"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-006.png",
+    "bytes": 341818,
+    "sha256": "457f5e7ba0677f737dbbabdd0fe92653bd0191fbd343f0e886771cbbebd37ecd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-006.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-007.json",
+    "bytes": 70,
+    "sha256": "05b98d616665087dcae1ef3fccf0ba195a13b2defd7fa7cac0f5b9d20957f3c4"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-007.png",
+    "bytes": 215999,
+    "sha256": "e8526d99321ef13cb3c9e39d25ccb6a826c23159d112ee8d40bc6081a7a0becf"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-007.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-008.json",
+    "bytes": 70,
+    "sha256": "05b98d616665087dcae1ef3fccf0ba195a13b2defd7fa7cac0f5b9d20957f3c4"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-008.png",
+    "bytes": 306791,
+    "sha256": "fd2b70981bf17c90252187697a2b73df1c788e443e385e737f6e249708d6d4c9"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-008.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-009.json",
+    "bytes": 70,
+    "sha256": "05b98d616665087dcae1ef3fccf0ba195a13b2defd7fa7cac0f5b9d20957f3c4"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-009.png",
+    "bytes": 406626,
+    "sha256": "7593372eb9c0993458cd653b32ccc7d1523098bca5d977e3d86046699c4b1525"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-009.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-010.json",
+    "bytes": 70,
+    "sha256": "05b98d616665087dcae1ef3fccf0ba195a13b2defd7fa7cac0f5b9d20957f3c4"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-010.png",
+    "bytes": 435568,
+    "sha256": "97fa15d6b142c6588677fb827da1d300c6ce49be9322e57058d695de85c74a5e"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-010.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-011.json",
+    "bytes": 70,
+    "sha256": "05b98d616665087dcae1ef3fccf0ba195a13b2defd7fa7cac0f5b9d20957f3c4"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-011.png",
+    "bytes": 333849,
+    "sha256": "3c13c6fda92558abf4894dcb13876bcc92688eb388a83a0237f78a1db25de327"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-011.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-012.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-012.png",
+    "bytes": 159527,
+    "sha256": "4107d77f524ff83541387e23e41e96c197c301fdb23ab2a109aed52792b0c523"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-012.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-013.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-013.png",
+    "bytes": 144757,
+    "sha256": "65a9d8ec51d43962c1d3c6a2b18081c6e70cd4f616478c57e032fd23d5613cef"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-013.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-014.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-014.png",
+    "bytes": 146007,
+    "sha256": "703f67d069b053f4c4e77a9a7d9c82bcf0d33e13a8f893f55187a67747983b9b"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-014.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-015.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-015.png",
+    "bytes": 119107,
+    "sha256": "feb83735fee1d980d4875a7d7b5dcdaaa181f58ee65e00d060f905bce446b4dd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-015.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-016.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-016.png",
+    "bytes": 104955,
+    "sha256": "7ead77a2c865bc991ef61c68560789dbabdbc0791d02ce26912370f519a83890"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-016.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-017.json",
+    "bytes": 73,
+    "sha256": "e8f9f6894d4ef032a53235bf0eb61bb40538ca351e41c87ff7ab4d5b775b4bf8"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-017.png",
+    "bytes": 319068,
+    "sha256": "ba209e16285b9a4add5d3a5abafdd851f44376c681cd752682414cd016f59b86"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-017.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-018.json",
+    "bytes": 73,
+    "sha256": "e8f9f6894d4ef032a53235bf0eb61bb40538ca351e41c87ff7ab4d5b775b4bf8"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-018.png",
+    "bytes": 289802,
+    "sha256": "779feb7975f75ef60529c12375b1229e14ab9d787dd98f757072ebb76dcb3c9c"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-018.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-019.json",
+    "bytes": 73,
+    "sha256": "e8f9f6894d4ef032a53235bf0eb61bb40538ca351e41c87ff7ab4d5b775b4bf8"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-019.png",
+    "bytes": 274083,
+    "sha256": "76cdc78118f74b3ff806ca4cfbf177cb50ee7ccbc947bbe8b7cdd0a3816a647b"
+  },
+  {
+    "path": "docs/qa/task24/follow-up/wTgU2q/sanitized-frame-019.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  }
+]

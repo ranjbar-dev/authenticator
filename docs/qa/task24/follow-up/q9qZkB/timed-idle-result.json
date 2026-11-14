@@ -1,0 +1,18 @@
+{
+  "startUtc": "2026-11-13T23:15:18.474Z",
+  "configuredSeconds": 60,
+  "at55": {
+    "observedUtc": "2026-11-13T23:16:13.608Z",
+    "elapsedSeconds": 55.134,
+    "overlayActive": true,
+    "cipherUnchanged": true
+  },
+  "after": {
+    "observedUtc": "2026-11-13T23:16:38.171Z",
+    "elapsedSeconds": 79.697,
+    "overlayGone": true,
+    "locked": true,
+    "privateNodesAbsent": true,
+    "cipherUnchanged": true
+  }
+}

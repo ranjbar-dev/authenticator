@@ -1,0 +1,19 @@
+[
+  "test_valid_manifest",
+  "test_manifest_tamper_rejected",
+  "test_duplicate_manifest_rejected",
+  "test_unsafe_path_rejected",
+  "test_userdata_rejected_even_when_in_manifest",
+  "test_windows_path_alias_rejected",
+  "test_windows_device_aliases_rejected",
+  "test_file_ancestor_collisions_rejected_in_both_orders",
+  "test_raw_nul_name_rejected_before_crc_or_manifest",
+  "test_non_allowlisted_payload_rejected",
+  "test_license_and_requires_all_clauses",
+  "test_notice_only_cannot_satisfy_license",
+  "test_discrepancy_requires_exact_version_and_hash",
+  "test_vendored_notices_survive_windows_autocrlf_checkout",
+  "test_archive_ignores_file_mtimes_modes_and_creation_order",
+  "test_epoch_defaults_to_source_and_preserves_explicit_value",
+  "test_notice_numbering_uses_relative_identity"
+]

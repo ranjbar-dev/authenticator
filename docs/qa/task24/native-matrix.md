@@ -1,5 +1,13 @@
 # Task 24 native matrix — author checkpoint
 
+This is the earlier scoped checkpoint. The [follow-up report](follow-up/README.md)
+and [exact state coverage](follow-up/state-coverage.md) supersede its active-work
+statements: measured mixed negative-monitor capture, actual overlay Ctrl+L,
+controlled idle, current account-editor/Replace grids and final packaged runtime
+have since been exercised. Original source attribution and the 195-frame manifest
+remain unchanged. The 59 additional frames have a separate manifest and await
+distinct review.
+
 Status: scoped observations, independent review pending. This is not the full Task 21 acceptance matrix. The [manifest](frame-manifest.json) binds every retained PNG to its root, executable SHA256, dimensions, available metadata and inspection status. Screens are production components running against an isolated encrypted public fixture, with an added QA banner; they are not the packaged executable. Parent must review new source and images before acceptance.
 
 ## Fixture, input and capture policy
@@ -54,6 +62,14 @@ All three extended monitors were read at100%(Recommended) before changes. Only m
 Physical image/capture masks at PPP1.5/2 were visually checked before curation. These are debug component/adapter workflows, not smoke of a future rebuilt release artifact. No raw QR or code pixels are in retained evidence. HMAC comparisons used only the exact newly imported unique record at144/192, not an older same-name record.
 
 ## Accessibility and OS settings
+
+Speech attribution correction: the Help/Close/locked-label speech report below
+is a historical author observation, not a reproduced positive control. In the
+follow-up, official Speech Recap exposed only chrome even with a known static
+label and foreground retry. AX labels/focus and live counter rollover were
+observed separately; automatic announcement behavior remains unverified. Do not
+infer heard speech or silence from an inaccessible history. See the exact
+[rollover and positive-control evidence](follow-up/README.md#narrator-observation-limit).
 
 Narrator baseline OFF. Actual Narrator Speech Recap observed safe spoken region/Help button, Offline help dialog/Close/heading and, after app Lock, Vault passphrase/edit. No OTP/filled phrase was focused; no raw transcript/capture persisted. This proves those limited names/roles and focus transitions, not a whole-app screen-reader pass or explicit password-protected announcement. Insert+Escape exit was verified process absent; baseline OFF restored. Non-code-focus30s rollover announcement check remains unperformed.
 

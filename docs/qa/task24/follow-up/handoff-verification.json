@@ -1,0 +1,13 @@
+{
+  "relative_links_checked": 45,
+  "missing_links": 0,
+  "image_hashes_and_Pillow_verify": 59,
+  "full_rebuild_inputs_unchanged": 123,
+  "current_source_hashes_verified": 73,
+  "ordinary_root_absent": true,
+  "redirected_root_empty": true,
+  "no_ciphertext_copied_into_evidence": true,
+  "git_diff_check": "passed in final shell check",
+  "production_and_narrator_process_absence": "verified with tasklist at handoff",
+  "native_exclusivity": "released"
+}

@@ -1,3 +1,13 @@
 # Vendored upstream notices are verified against their exact recorded bytes.
 # Windows checkout line-ending conversion must not rewrite those public inputs.
 assets/notices/** -text
+
+# Package inputs and embedded text use the same bytes in Windows checkouts.
+Cargo.lock text eol=lf
+assets/windows.manifest text eol=lf
+assets/fonts/OFL.txt text eol=lf
+LICENSE-MIT text eol=lf
+LICENSE-APACHE text eol=lf
+docs/package-readme.md text eol=lf
+docs/user-guide.md text eol=lf
+docs/security-limits.md text eol=lf

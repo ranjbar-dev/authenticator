@@ -1,8 +1,14 @@
-# Authenticator implementation tasks
+## Current follow-up checkpoint
 
-This is the implementation plan for [PRD.md](../PRD.md). Execute numbered tasks **01–24 in ascending order**, one implementation child at a time, followed by an independent review child after the implementer exits. All tasks are required for v1 completion; task 22 requires an evidence-based discovery result, not unproven reference-format compatibility.
+Newest phase: the distinct follow-up review is FINAL and approves the bounded focus/packaging changes. All 59 new author frames and two separate reviewer frames, 73 source hashes, 206 author bundle entries and both full 183-crate rebuild artifacts were independently checked; real import/dialog/Lock repetition passed. Native exclusivity is released. Task07's measured monitor/DPI category acceptance is reconciled to done. Five bounded recovery/folder/Trash native state-evidence cases remain and will be completed next by one implementation child, then re-reviewed. Parent is integrating the accepted source fixes, starting current CI and producing a clean-commit package; no Task24/project completion is claimed. Current commit attribution follows in the next checkpoint to avoid circularity.
 
-No app implementation has been started by generating this plan. Every initial status is `todo`.
+Previous phase:
+
+Latest: sole implementer `complete24_followup` owns native UI and is testing the final production package. Shared-focus repairs passed targeted and native cases; two full builds each compiled 183 crates from empty release directories and matched EXE `9656ed31…` / ZIP `60f940fd…`. Parent independently confirmed these working-artifact hashes and archive validation. The controlled idle observation was active at 55.134 seconds and Locked by 79.697 seconds; the encrypted default is restored to 300 seconds. Live rollover/non-code focus was observed, but Narrator speech remains unverified because the official Recap observer failed its static-label positive control. Narrator was restored off. Source is still uncommitted over pushed `2e2da2c`; next steps are evidence curation, distinct review, integration, clean-source package and fresh CI. Project acceptance remains incomplete. See [latest parent evidence](../docs/qa/task24/parent-integration.md).
+
+Earlier phase, retained for chronology:
+
+Parent-pushed main is `2e2da2cba35e99d6d6d218471a12f48d67e7abc0`; current follow-up work is uncommitted. Hosted [43515853116](https://github.com/ranjbar-dev/authenticator/actions/runs/43515853116) passed fmt/strict lint but failed import keyboard-focus visibility (208 library passed/1 failed/4 directly invoked helpers ignored); build/package skipped. Sole implementer `complete24_followup` reproduced600x800 bounds y777..813, repaired bounded focus settling with old-red/new-green geometry and wheel-preservation tests, and is running affected checks/rebuild/native verification. Earlier two actual deterministic builds matched EXE91656871…/ZIPfa012cd4… on the pre-focus-fix dirty source; those are not final-source artifacts. Mixed144/96 negative-monitor capture→Save→independent HMAC and real overlay Ctrl+L passed with attributed safe evidence. Native exclusivity remains with that child; parent hidden filesystem/CI only. Next: complete remaining feasible native/package checks, distinct read-only review, parent clean-source integration/new CI/package, task reconciliation and final remote/clean checks. Effective offline/clean-profile/no-Rust and actual OS lifecycle/logon gates remain unverified; project incomplete. See [parent evidence](../docs/qa/task24/parent-integration.md) and completion report.
 
 ## Execution order
 
@@ -14,7 +20,7 @@ No app implementation has been started by generating this plan. Every initial st
 | 04 | [Reference-based Rust shell and shared controls](04-shared-ui-shell.md) | done |
 | 05 | [Local vault setup, unlock and lock lifecycle](05-vault-setup-and-lock-screen.md) | in_progress; implementation reviewed, hardware/integration QA open |
 | 06 | [Bounded local image and QR decoding](06-local-qr-decoding.md) | done |
-| 07 | [Windows screen-region capture overlay](07-windows-region-capture.md) | in_progress; implementation reviewed, hardware QA open |
+| 07 | [Windows screen-region capture overlay](07-windows-region-capture.md) | done; measured monitor/DPI categories independently reviewed |
 | 08 | [Complete screenshot-to-2FA workflow](08-screenshot-review-and-import.md) | in_progress; functional implementation approved, disconnected-machine QA open |
 | 09 | [Manual creation and account editing](09-manual-account-editor.md) | done |
 | 10 | [Complete 2FA list, search, sort, views and copy](10-codes-list-and-clipboard.md) | in_progress; repaired clipboard/native paths approved, hardware/full QA open |

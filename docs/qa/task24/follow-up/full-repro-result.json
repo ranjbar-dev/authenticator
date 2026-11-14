@@ -1,0 +1,127 @@
+{
+  "owned_root": "D:\\Projects\\github\\authenticator\\target\\task24-full-repro-5erftluo",
+  "source_commit": "2e2da2cba35e99d6d6d218471a12f48d67e7abc0",
+  "source_dirty": true,
+  "scope": "Same source/toolchain/SDK/cache and project paths; full host and target release outputs rebuilt; Rust standard library is the installed toolchain input.",
+  "preserved_directories": [
+    {
+      "round": 1,
+      "source": "D:\\Projects\\github\\authenticator\\target\\release",
+      "destination": "D:\\Projects\\github\\authenticator\\target\\task24-full-repro-5erftluo\\before-build-1\\host-release",
+      "inventory": {
+        "path": "D:\\Projects\\github\\authenticator\\target\\release",
+        "top": [
+          ".cargo-artifact-lock",
+          ".cargo-build-lock",
+          ".cargo-lock",
+          ".fingerprint",
+          "Authenticator.d",
+          "Authenticator.exe",
+          "Authenticator.pdb",
+          "build",
+          "deps",
+          "examples",
+          "incremental"
+        ],
+        "files": 2559,
+        "bytes": 935267828
+      },
+      "free_before": 91694645248
+    },
+    {
+      "round": 1,
+      "source": "D:\\Projects\\github\\authenticator\\target\\x86_64-pc-windows-msvc\\release",
+      "destination": "D:\\Projects\\github\\authenticator\\target\\task24-full-repro-5erftluo\\before-build-1\\windows-target-release",
+      "inventory": {
+        "path": "D:\\Projects\\github\\authenticator\\target\\x86_64-pc-windows-msvc\\release",
+        "top": [
+          ".cargo-artifact-lock",
+          ".cargo-build-lock",
+          ".cargo-lock",
+          ".fingerprint",
+          "Authenticator.d",
+          "Authenticator.exe",
+          "Authenticator.pdb",
+          "build",
+          "deps",
+          "examples",
+          "incremental"
+        ],
+        "files": 2344,
+        "bytes": 1077428887
+      },
+      "free_before": 91694645248
+    },
+    {
+      "round": 2,
+      "source": "D:\\Projects\\github\\authenticator\\target\\release",
+      "destination": "D:\\Projects\\github\\authenticator\\target\\task24-full-repro-5erftluo\\before-build-2\\host-release",
+      "inventory": {
+        "path": "D:\\Projects\\github\\authenticator\\target\\release",
+        "top": [
+          ".cargo-artifact-lock",
+          ".cargo-build-lock",
+          ".cargo-lock",
+          ".fingerprint",
+          "build",
+          "deps",
+          "examples",
+          "incremental"
+        ],
+        "files": 464,
+        "bytes": 209783163
+      },
+      "free_before": 90944098304
+    },
+    {
+      "round": 2,
+      "source": "D:\\Projects\\github\\authenticator\\target\\x86_64-pc-windows-msvc\\release",
+      "destination": "D:\\Projects\\github\\authenticator\\target\\task24-full-repro-5erftluo\\before-build-2\\windows-target-release",
+      "inventory": {
+        "path": "D:\\Projects\\github\\authenticator\\target\\x86_64-pc-windows-msvc\\release",
+        "top": [
+          ".cargo-artifact-lock",
+          ".cargo-build-lock",
+          ".cargo-lock",
+          ".fingerprint",
+          "Authenticator.d",
+          "Authenticator.exe",
+          "Authenticator.pdb",
+          "build",
+          "deps",
+          "examples",
+          "incremental"
+        ],
+        "files": 1186,
+        "bytes": 568500373
+      },
+      "free_before": 90944098304
+    }
+  ],
+  "runs": [
+    {
+      "index": 1,
+      "seconds": 205.288,
+      "exe_sha256": "9656ed317d6b2e36a96cf17ac5c0d2729680cb6abb850941c295f7418272978e",
+      "zip_sha256": "60f940fd5364f999f7335500487e0e79024798aed0ab0f93686a6c21517e9b78",
+      "exe_bytes": 12179456,
+      "zip_bytes": 6026388,
+      "pe_coff_timestamp": 536886441,
+      "compiling_lines": 183,
+      "full_host_and_target_release_outputs_empty_before_build": true
+    },
+    {
+      "index": 2,
+      "seconds": 219.703,
+      "exe_sha256": "9656ed317d6b2e36a96cf17ac5c0d2729680cb6abb850941c295f7418272978e",
+      "zip_sha256": "60f940fd5364f999f7335500487e0e79024798aed0ab0f93686a6c21517e9b78",
+      "exe_bytes": 12179456,
+      "zip_bytes": 6026388,
+      "pe_coff_timestamp": 536886441,
+      "compiling_lines": 183,
+      "full_host_and_target_release_outputs_empty_before_build": true
+    }
+  ],
+  "exe_identical": true,
+  "zip_identical": true
+}

@@ -1,0 +1,85 @@
+[
+  {
+    "command": [
+      "rtk",
+      "proxy",
+      "python",
+      "-X",
+      "utf8",
+      "target/follow24-cargo.py",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    "exit": 0,
+    "seconds": 0.818
+  },
+  {
+    "command": [
+      "rtk",
+      "proxy",
+      "python",
+      "-X",
+      "utf8",
+      "target/follow24-cargo.py",
+      "clippy",
+      "--offline",
+      "--locked",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "exit": 0,
+    "seconds": 3.902
+  },
+  {
+    "command": [
+      "rtk",
+      "proxy",
+      "python",
+      "-X",
+      "utf8",
+      "target/follow24-cargo.py",
+      "test",
+      "--offline",
+      "--locked",
+      "settings_navigation_keeps_visible_heading_counts_and_first_action",
+      "--",
+      "--nocapture"
+    ],
+    "exit": 0,
+    "seconds": 12.938
+  },
+  {
+    "command": [
+      "rtk",
+      "proxy",
+      "python",
+      "-X",
+      "utf8",
+      "target/follow24-cargo.py",
+      "test",
+      "--offline",
+      "--locked",
+      "settings_each_lock_action_conceals_the_triggering_frame_without_an_extra_pass",
+      "--",
+      "--nocapture"
+    ],
+    "exit": 0,
+    "seconds": 23.862
+  },
+  {
+    "command": [
+      "rtk",
+      "proxy",
+      "python",
+      "-X",
+      "utf8",
+      "scripts/test_package_windows.py"
+    ],
+    "exit": 0,
+    "seconds": 1.103
+  }
+]

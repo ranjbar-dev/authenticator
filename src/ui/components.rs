@@ -39,12 +39,48 @@ pub fn card<R>(ui: &mut Ui, content: impl FnOnce(&mut Ui) -> R) -> egui::InnerRe
 pub fn focus(ui: &Ui, response: &Response) {
     // Keyboard navigation must bring an off-screen control into the shared
     // scroll holder, including compact lock forms and enlarged app text.
-    if response.gained_focus() {
-        // Keep already-visible content steady. Centering every new focus can
-        // scroll a page's heading/summary away even when the control fits.
-        response.scroll_to_me(None);
+    let reveal = response.id.with("focus-reveal-frames");
+    let observed = response.id.with("focus-observed");
+    let frame = ui.ctx().cumulative_frame_nr();
+    let has_focus = response.has_focus();
+    let previous = ui.ctx().data(|d| d.get_temp::<(u64, bool)>(observed));
+    let newly_observed =
+        has_focus && previous.is_none_or(|(last, focused)| !focused || frame > last + 1);
+    ui.ctx()
+        .data_mut(|d| d.insert_temp(observed, (frame, has_focus)));
+    if response.gained_focus() || newly_observed {
+        // A wrapped page can settle its content size one frame after focus.
+        // request_focus after widget creation may never set gained_focus on its
+        // next Response; first-observed focus also covers modal initial actions.
+        // Recheck for three actual frames, not sizing passes. Wheel/pointer or
+        // lost focus cancels immediately; this is not a permanent scroll lock.
+        ui.ctx()
+            .data_mut(|d| d.insert_temp(reveal, (3_u8, None::<u64>)));
     }
-    if response.has_focus() {
+    let (remaining, last_reveal) = ui
+        .ctx()
+        .data(|d| d.get_temp::<(u8, Option<u64>)>(reveal).unwrap_or((0, None)));
+    if remaining > 0 {
+        let pointer_input = ui.input(|i| {
+            i.smooth_scroll_delta != egui::Vec2::ZERO
+                || i.raw
+                    .events
+                    .iter()
+                    .any(|e| matches!(e, egui::Event::MouseWheel { .. }))
+                || i.pointer.any_pressed()
+        });
+        if has_focus && !pointer_input {
+            // Minimal reveal keeps already-visible headings and summaries still.
+            response.scroll_to_me(None);
+            ui.ctx().request_repaint();
+            let remaining = remaining - u8::from(last_reveal != Some(frame));
+            ui.ctx()
+                .data_mut(|d| d.insert_temp(reveal, (remaining, Some(frame))));
+        } else {
+            ui.ctx().data_mut(|d| d.remove::<(u8, Option<u64>)>(reveal));
+        }
+    }
+    if has_focus {
         // Outside the filled button, against its holder; no bright halo.
         ui.painter().rect_stroke(
             response.rect.expand(theme::FOCUS_STROKE),
@@ -576,6 +612,107 @@ fn labeled_field_impl(
 #[cfg(test)]
 mod field_tests {
     use super::*;
+    #[test]
+    fn focused_action_rechecks_settled_geometry_then_allows_pointer_scroll() {
+        focus_layout_then_wheel(false);
+    }
+    #[test]
+    fn requested_focus_after_widget_creation_is_revealed_and_wheel_remains_free() {
+        focus_layout_then_wheel(true);
+    }
+    fn focus_layout_then_wheel(programmatic: bool) {
+        let ctx = egui::Context::default();
+        theme::apply(&ctx);
+        let mut clock = 0_u32;
+        let mut frame = |spacer: f32, events: Vec<egui::Event>| {
+            clock += 1;
+            let mut measured = None;
+            let mut output = ctx.run_ui(
+                egui::RawInput {
+                    time: Some(f64::from(clock) / 60.),
+                    screen_rect: Some(egui::Rect::from_min_size(
+                        egui::Pos2::ZERO,
+                        egui::vec2(340., 400.),
+                    )),
+                    events,
+                    ..Default::default()
+                },
+                |root| {
+                    egui::CentralPanel::default().show(root, |ui| {
+                        let scroll =
+                            egui::ScrollArea::vertical()
+                                .id_salt("settled-focus")
+                                .show(ui, |ui| {
+                                    heading(ui, "Page heading", 1);
+                                    ui.add_space(spacer);
+                                    let action = button(ui, "Deep action", ButtonStyle::Primary);
+                                    if programmatic && clock == 2 {
+                                        // Same order as a modal's initial Cancel.
+                                        action.request_focus();
+                                    }
+                                    let info = (action.id, action.rect, ui.clip_rect());
+                                    ui.add_space(600.);
+                                    info
+                                });
+                        measured = Some((scroll.inner, scroll.state.clamped_offset()));
+                    });
+                },
+            );
+            output.textures_delta.clear();
+            measured.unwrap_or_else(|| panic!("scroll geometry missing"))
+        };
+        let ((id, _, _), _) = frame(620., Vec::new());
+        let keys = if programmatic {
+            Vec::new()
+        } else {
+            [true, false]
+                .into_iter()
+                .map(|pressed| egui::Event::Key {
+                    key: egui::Key::Tab,
+                    physical_key: Some(egui::Key::Tab),
+                    pressed,
+                    repeat: false,
+                    modifiers: egui::Modifiers::NONE,
+                })
+                .collect()
+        };
+        frame(620., keys);
+        assert_eq!(ctx.memory(|m| m.focused()), Some(id));
+        // The page's wrapped layout changes after its focus-entry pass.
+        frame(700., Vec::new());
+        let mut settled = frame(700., Vec::new());
+        for _ in 0..60 {
+            settled = frame(700., Vec::new());
+        }
+        let ((_, rect, clip), before) = settled;
+        assert!(
+            clip.contains_rect(rect),
+            "settled focus clipped: {rect:?} in {clip:?}"
+        );
+        assert_eq!(ctx.memory(|m| m.focused()), Some(id));
+        frame(
+            700.,
+            vec![
+                egui::Event::PointerMoved(egui::pos2(100., 200.)),
+                egui::Event::MouseWheel {
+                    unit: egui::MouseWheelUnit::Point,
+                    delta: egui::vec2(0., 240.),
+                    modifiers: egui::Modifiers::NONE,
+                    phase: egui::TouchPhase::Move,
+                    source: egui::MouseWheelSource::Unknown,
+                },
+            ],
+        );
+        for _ in 0..60 {
+            settled = frame(700., Vec::new());
+        }
+        assert!(
+            settled.1.y < before.y - 100.,
+            "focus fought wheel: {before:?} to {:?}",
+            settled.1
+        );
+        assert_eq!(ctx.memory(|m| m.focused()), Some(id));
+    }
     #[test]
     fn narrow_tabs_keep_full_labels_equal_wrapped_height_and_one_keyboard_row() {
         let ctx = egui::Context::default();

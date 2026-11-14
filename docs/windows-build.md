@@ -23,7 +23,7 @@ release/package validation should build afresh through the default command.
 
 The script creates fresh owned project-target scratch and sets TEMP/TMP only
 for its own process/children. It fixes packaging RUSTFLAGS to
-`-C target-feature=+crt-static` and builds the explicit Windows target, following
+`-C target-feature=+crt-static -C link-arg=/Brepro` and builds the explicit Windows target, following
 [Rust's CRT linkage guidance](https://doc.rust-lang.org/reference/linkage.html#static-and-dynamic-c-runtimes).
 This keeps host build tools separate and avoids shipping an unbundled VC runtime.
 PE import/resource checks verify that result instead of relying on the flag alone.
@@ -41,9 +41,31 @@ and checksum; source/build metadata clearly records a dirty tree.
 The executable has a Windows GUI subsystem, x64 machine type, version/icon and
 manifest resources. Windows system DLLs and a working desktop graphics driver
 remain prerequisites. The package is unsigned, not Store/MSIX signed. The build
-records exact compiler, source commit, dirty flag and Cargo.lock digest. These
-steps are repeatable; timestamped toolchains/linkers/ZIPs are not promised to yield
-bit-identical bytes across machines or runs.
+records exact compiler, Cargo, Python/zlib versions, source commit, dirty flag and
+Cargo.lock digest. The linker `/Brepro` flag replaces clock-dependent PE metadata;
+the ZIP fixes member order, UTC-derived timestamps and file attributes. Generated
+JSON uses LF, notice numbering uses relative source identities, and narrow Git
+attributes preserve package and embedded-text inputs across Windows checkouts.
+Pinned upstream notice hashes are still checked before copying their exact bytes.
+
+`source_date_epoch` defaults to the current commit's committer timestamp. An
+explicit unsigned `SOURCE_DATE_EPOCH` is respected and passed to child processes;
+invalid or post-2107 values fail. ZIP timestamps have two-second granularity and
+dates before1980 are clamped to the format minimum. `source_timestamp_utc` is the
+source timestamp, **not** the actual build time. See the
+[SOURCE_DATE_EPOCH specification](https://reproducible-builds.org/specs/source-date-epoch/)
+and [LLVM's linker determinism usage](https://github.com/llvm/llvm-project/blob/main/llvm/cmake/modules/HandleLLVMOptions.cmake).
+
+For a rebuild comparison, preserve the first ZIP/checksum, run
+`cargo clean --release --target x86_64-pc-windows-msvc -p authenticator`, then run
+the normal package command with `--replace` and compare SHA256 of both EXEs and
+ZIPs. This cleans only this package's release products; never clean the whole
+project target when it contains disposable QA vault/evidence roots. A cached
+no-op build or two `--skip-build` archives is not a compiler/linker comparison.
+Bit-identical results require unchanged source, source epoch, checkout/cache/tool
+paths and compiler/linker/SDK/Python/zlib versions. The measured local scope and
+hashes are recorded under `docs/qa/task24/`; cross-host or cross-toolchain identity
+is not claimed by a same-environment rebuild.
 
 ## Notices and source provenance
 
