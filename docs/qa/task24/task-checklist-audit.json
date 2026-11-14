@@ -1,5 +1,5 @@
 {
-  "note": "Original requirements remain mandatory. Sixteen numbered scopes are done, seven externally blocked, and Task24 final integration is pending. Do not close final Git/CI items until actual results.",
+  "note": "Original requirements remain mandatory. Sixteen numbered scopes are done and eight blocked. Final source/CI/Git verified; Task24 global all-task acceptance remains open.",
   "tasks": [
     {
       "file": "01-foundation-and-decisions.md",
@@ -162,15 +162,11 @@
     },
     {
       "file": "24-final-prd-audit-and-main-push.md",
-      "status": "Status: in_progress — final committed-source CI and clean Git verification pending; external acceptance remains blocked",
+      "status": "Status: blocked — mandatory isolated-runtime, OS lifecycle/logon and heard-speech acceptance unavailable; source/CI/Git integration verified",
       "open": [
-        "- [ ] Run final cargo fmt --check, cargo clippy with the agreed warning policy, cargo test, release build/package and affected real-UI journeys. Review git diff for secrets/unrelated changes.",
-        "- [ ] Commit coherent project changes on main and push to https://github.com/ranjbar-dev/authenticator without force-push or rewriting unrelated history. Verify origin/main equals local HEAD and working tree is clean.",
-        "- [ ] All numbered tasks are done only with evidence and independent review where required; every coverage row is verified.",
-        "- [ ] Required checks pass, packaged output is identifiable, no real secrets are committed and no material issue is unresolved.",
-        "- [ ] main is committed/pushed and remote SHA equals local HEAD; final report names checks, artifacts and genuine limitations."
+        "- [ ] All numbered tasks are done only with evidence and independent review where required; every coverage row is verified."
       ],
-      "checked": 5
+      "checked": 9
     }
   ]
 }

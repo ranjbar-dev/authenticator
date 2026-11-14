@@ -1,6 +1,6 @@
-## Current follow-up checkpoint
+## Current final checkpoint
 
-Final acceptance checkpoint: 16 numbered scopes are done, seven have explicit resource/tool-limited acceptance, and Task24 is in progress for final CI/Git verification. The same independent checker closed all five additional native state groups and approved the narrow QA-only support; release EXE `9656ed31…` remains byte-identical. Tasks12–18 are reconciled done, with original requirements and historical evidence preserved. No active child or native exclusivity remains. Clean local artifact and hosted source109171a checks/package are separately identified in the completion report. This checkpoint contains the reviewed post109171a QA additions and final status reconciliation; its actual integration SHA, attached CI result and remote equality are supplied in the following final update. Mandatory isolated offline/other-user/no-Rust, actual OS lifecycle/logon and heard-speech gates remain blocked. [Current audit](../docs/completion-report.md), [final state re-review](../docs/qa/task24/state-gaps/independent-review.md). No whole-project completion claim.
+Final reviewed source `079c08ddcda27c652f452e5b5756ed2500523fc9` is pushed to main, remote equals local HEAD and tree was clean. [CI43546047875](https://github.com/ranjbar-dev/authenticator/actions/runs/43546047875) passed full check/package jobs. [Integration record](../docs/qa/task24/final-integration.md) identifies exact checks and clean local ZIP9c8b7810…/native-tested EXE9656…. Sixteen numbered tasks are done and eight blocked by isolated offline/no-Rust/other-user, actual OS lifecycle/logon and heard-speech acceptance. Task24 final source/CI/Git items are checked; its all-tasks acceptance remains open. Original requirements and all historical evidence remain. No active child/native ownership remains. This following commit changes documentation/status only; its SHA/CI and final remote equality are reported after push. No full-project completion claim.
 
 Previous phase:
 
@@ -37,7 +37,7 @@ Parent-pushed main is `2e2da2cba35e99d6d6d218471a12f48d67e7abc0`; current follow
 | 21 | [Full offline workflow, accessibility and visual QA](21-complete-ui-and-workflow-qa.md) | blocked — isolated runtime, OS lifecycle and heard-speech acceptance unavailable |
 | 22 | [Reference-format discovery and truthful compatibility](22-reference-migration-discovery.md) | done - evidence-based unsupported reference-format decision independently reviewed |
 | 23 | [Windows packaging, clean-install recovery and documentation](23-windows-packaging-and-user-docs.md) | blocked — isolated offline/no-Rust/other-user installation acceptance unavailable |
-| 24 | [Final completeness audit, PRD reconciliation and main push](24-final-prd-audit-and-main-push.md) | in_progress — final committed-source CI and clean Git verification pending; external acceptance remains blocked |
+| 24 | [Final completeness audit, PRD reconciliation and main push](24-final-prd-audit-and-main-push.md) | blocked — source/CI/Git verified; mandatory external acceptance unavailable |
 
 ## Start in Codex CLI
 

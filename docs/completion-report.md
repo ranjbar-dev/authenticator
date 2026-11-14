@@ -1,6 +1,6 @@
 # Authenticator completion audit — incomplete acceptance
 
-The implementation and all identified feasible software/native QA cases are independently reviewed. **16 numbered scopes are done; seven are externally blocked, and Task24 final integration is pending.** The project is not declared fully complete. The [24 task files](../tasks/README.md), [48 coverage rows](../tasks/coverage.md) and [open checklist audit](qa/task24/task-checklist-audit.json) retain the original requirements and exact remaining items.
+The implementation and all identified feasible software/native QA cases are independently reviewed. **16 numbered scopes are done; eight remain blocked by mandatory external acceptance.** Final source/CI/Git integration is verified in the [integration record](qa/task24/final-integration.md). The project is not declared fully complete. The [24 task files](../tasks/README.md), [48 coverage rows](../tasks/coverage.md) and [open checklist audit](qa/task24/task-checklist-audit.json) retain the original requirements and exact remaining items.
 
 ## Shipped behavior and reviewed repairs
 
@@ -15,7 +15,7 @@ The [state re-review](qa/task24/state-gaps/independent-review.md) closed all fiv
 | Evidence | Actual result and scope |
 |---|---|
 | [Hosted 109171a](qa/task23/hosted-109171a.md) | Run 43536070275 passed fmt, strict all-target Clippy, 230 ordinary tests, Windows build, release package,17 packaging regressions, validation and artifact upload. Five direct helper entrypoints are exercised by parent subprocess tests; nested summaries are not double-counted. |
-| [Post109171a additions](qa/task24/state-gaps/checks.json) | Formatting, strict example Clippy and the existing real-file retention regression passed, then independent re-review repeated the relevant checks. Final committed-source CI will be attached to the final integration commit; the following final update records its exact SHA/run/result. |
+| [Post109171a additions](qa/task24/state-gaps/checks.json) | Formatting, strict example Clippy and the existing real-file retention regression passed, then independent re-review repeated the relevant checks. Committed source `079c08ddcda27c652f452e5b5756ed2500523fc9` passed [CI 43546047875](https://github.com/ranjbar-dev/authenticator/actions/runs/43546047875): full formatting/lint/tests/Windows build and release-package checks. [Final integration](qa/task24/final-integration.md) records Git equality and clean state. |
 | [Reproducibility](qa/task24/follow-up/reproducibility.md) | Two complete builds from empty host/target release outputs each compiled 183 crates and matched EXE/ZIP bytes. This is fixed-toolchain, same-path/environment evidence, not universal cross-host identity. |
 | [Final release equivalence](qa/task24/state-gaps/release-equivalence.json) | Own-source compile/link 91.979 seconds with the exact static-CRT /Brepro flags retained the native-tested EXE hash. No package command overwrote the clean local ZIP. |
 | [Production runtime](qa/task24/follow-up/production-smoke.json) | Exact local EXE 9656… passed fresh setup, negative-monitor QR, concealed edited review, keyboard Save, exactly-one independent HMAC, real keyboard Copy, 406-byte encrypted export, differently keyed fresh-vault restore, restart Locked, correct unlock/current HMAC and Ctrl+L privacy. |
@@ -29,11 +29,12 @@ Primary physical 96/144/192 DPI capture and mixed primary 144/negative-left 96 c
 
 | Artifact | Source and byte identity |
 |---|---|
-| **Local native-tested ZIP** [clean build](qa/task23/clean-build-109171a.md) | `dist/Authenticator-0.1.0-windows-x86_64.zip`, 6,026,391 bytes; SHA256 `ee7af10e69420d99da4eb8ceccf8dc3f4cfa7a9a09d0adbca6221bbcd94afe8b`. Metadata identifies committed 109171ac72e458ac3c34738e828e83b29983ec5a, source_dirty=false, epoch 1794616978. |
+| **Local native-tested EXE in current ZIP** [clean build](qa/task23/clean-build-079c08d.md) | `dist/Authenticator-0.1.0-windows-x86_64.zip`, 6,026,393 bytes; SHA256 `9c8b781018c3e6b66d06cbe3f5d5a5184b620f0d9925ce738e941b953badbcc6`. Metadata identifies committed `079c08ddcda27c652f452e5b5756ed2500523fc9`, source_dirty=false, epoch 1794623007. The contained EXE exactly matches native runtime evidence. |
 | **Local EXE** | 12,179,456 bytes; SHA256 `9656ed317d6b2e36a96cf17ac5c0d2729680cb6abb850941c295f7418272978e`. Clean packaging and subsequent QA-only source rebuild exactly match the independently reviewed full-build/native-runtime bytes. |
-| Hosted artifact [record](qa/task23/hosted-109171a.md) | Artifact 14091015742, expiry 28 November 2026. Download digest/checksum/paths/CRCs/manifest validated; source 109171a/dirty=false. ZIP SHA `e84e5fc2cbc652a5132385c28a473333ab571be6a5a6bbf826e4f6742dd1e1ba`; EXE SHA `8806765c4ada8d152b6dbe35d35befa69cd877c7bd355fafff76ff315a7beb3e`. This hosted EXE was not native-tested; its cross-host bytes are not substituted for local 9656… proof. |
+| Current hosted artifact [record](qa/task23/hosted-079c08d.md) | Artifact14095690010, source079c08d/dirty=false; ZIP SHA `22b2c11944a2e33716559d8af51bf639be945bf4d451e68dd330a5caafe51103`, EXE SHA `8806765c4ada8d152b6dbe35d35befa69cd877c7bd355fafff76ff315a7beb3e`. API digest/checksum/paths/CRCs/manifest validated; no native runtime test. |
+| Historical hostedA artifact [record](qa/task23/hosted-109171a.md) | Artifact 14091015742, expiry 28 November 2026. Download digest/checksum/paths/CRCs/manifest validated; source 109171a/dirty=false. ZIP SHA `e84e5fc2cbc652a5132385c28a473333ab571be6a5a6bbf826e4f6742dd1e1ba`; EXE SHA `8806765c4ada8d152b6dbe35d35befa69cd877c7bd355fafff76ff315a7beb3e`. This hosted EXE was not native-tested; its cross-host bytes are not substituted for local 9656… proof. |
 
-The earlier dirty-source ZIP 60f9… belongs to the full-rebuild comparison, not the current dist file. Prior 99a2…/9165…/b7ac… binaries remain historical. Source timestamp means commit/source time, not actual build wall time. No GitHub Release was published. Post109171a QA-only additions preserve production  bytes; final main/remote/CI attribution is supplied by the following integration update, avoiding a circular commit reference.
+The earlier clean109171a ZIPee7af10e… is preserved in `target/task24-preserved-clean-109171a`; its record is historical. The dirty-source ZIP60f9… belongs to the full-rebuild comparison, not the current dist file. Prior 99a2…/9165…/b7ac… binaries remain historical. Source timestamp means commit/source time, not actual build wall time. No GitHub Release was published. Post109171a QA-only additions preserve production EXE bytes. [Final source/CI/Git attribution](qa/task24/final-integration.md) records079c08d; the following documentation-only commit supplies its own SHA/CI result after push, avoiding a circular reference.
 
 ## All numbered outcomes
 
@@ -62,7 +63,7 @@ The earlier dirty-source ZIP 60f9… belongs to the full-rebuild comparison, not
 | [21](../tasks/21-complete-ui-and-workflow-qa.md) | blocked | isolated runtime, OS lifecycle and heard-speech acceptance unavailable |
 | [22](../tasks/22-reference-migration-discovery.md) | done - evidence-based unsupported reference-format decision independently reviewed | Accepted numbered scope; evidence in task file. |
 | [23](../tasks/23-windows-packaging-and-user-docs.md) | blocked | isolated offline/no-Rust/other-user installation acceptance unavailable |
-| [24](../tasks/24-final-prd-audit-and-main-push.md) | in_progress | Final committed-source CI and clean Git verification pending; external acceptance remains blocked. |
+| [24](../tasks/24-final-prd-audit-and-main-push.md) | blocked | Final source/CI/Git verified; mandatory isolated-runtime/OS/speech acceptance remains unavailable. |
 
 The done page tasks credit their earlier separately reviewed parser/fault/security/recovery tests and native workflows. Source tests are not relabeled as newly recorded native actions. All mandatory requirements remain; [normative sections 1–12](qa/task24/requirements-preservation.json) exactly match the reviewed baseline after CRLF normalization (28,322 characters, SHA 6d28a5ca846517d3a4519f048d2fae7352c774c5165f84f8dc2172423622fcf7).
 

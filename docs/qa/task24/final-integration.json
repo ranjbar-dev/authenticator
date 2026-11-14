@@ -1,0 +1,494 @@
+{
+  "source_commit": "079c08ddcda27c652f452e5b5756ed2500523fc9",
+  "run": {
+    "id": 43546047875,
+    "head_sha": "079c08ddcda27c652f452e5b5756ed2500523fc9",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/ranjbar-dev/authenticator/actions/runs/43546047875",
+    "updated_at": "2026-11-14T02:46:13Z"
+  },
+  "jobs": [
+    {
+      "id": 132297504551,
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install Rust",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Format",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Lint",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build Windows app",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 132302860034,
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install Rust",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v6",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build Windows portable ZIP",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Packaging regression checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Validate package contents and checksums",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Upload public package artifacts",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v6",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "tests": {
+    "run": "43546047875",
+    "top_level_summaries": [
+      {
+        "passed": 211,
+        "failed": 0,
+        "direct_ignored": 4,
+        "seconds": "887.41"
+      },
+      {
+        "passed": 1,
+        "failed": 0,
+        "direct_ignored": 1,
+        "seconds": "0.01"
+      },
+      {
+        "passed": 3,
+        "failed": 0,
+        "direct_ignored": 0,
+        "seconds": "0.00"
+      },
+      {
+        "passed": 12,
+        "failed": 0,
+        "direct_ignored": 0,
+        "seconds": "0.00"
+      },
+      {
+        "passed": 0,
+        "failed": 0,
+        "direct_ignored": 0,
+        "seconds": "0.00"
+      },
+      {
+        "passed": 0,
+        "failed": 0,
+        "direct_ignored": 0,
+        "seconds": "0.00"
+      },
+      {
+        "passed": 0,
+        "failed": 0,
+        "direct_ignored": 0,
+        "seconds": "0.00"
+      },
+      {
+        "passed": 0,
+        "failed": 0,
+        "direct_ignored": 0,
+        "seconds": "0.00"
+      },
+      {
+        "passed": 0,
+        "failed": 0,
+        "direct_ignored": 0,
+        "seconds": "0.00"
+      },
+      {
+        "passed": 1,
+        "failed": 0,
+        "direct_ignored": 0,
+        "seconds": "0.00"
+      },
+      {
+        "passed": 0,
+        "failed": 0,
+        "direct_ignored": 0,
+        "seconds": "0.00"
+      },
+      {
+        "passed": 0,
+        "failed": 0,
+        "direct_ignored": 0,
+        "seconds": "0.00"
+      },
+      {
+        "passed": 0,
+        "failed": 0,
+        "direct_ignored": 0,
+        "seconds": "0.00"
+      },
+      {
+        "passed": 0,
+        "failed": 0,
+        "direct_ignored": 0,
+        "seconds": "0.00"
+      },
+      {
+        "passed": 0,
+        "failed": 0,
+        "direct_ignored": 0,
+        "seconds": "0.00"
+      },
+      {
+        "passed": 0,
+        "failed": 0,
+        "direct_ignored": 0,
+        "seconds": "0.00"
+      },
+      {
+        "passed": 1,
+        "failed": 0,
+        "direct_ignored": 0,
+        "seconds": "0.00"
+      },
+      {
+        "passed": 0,
+        "failed": 0,
+        "direct_ignored": 0,
+        "seconds": "0.00"
+      },
+      {
+        "passed": 0,
+        "failed": 0,
+        "direct_ignored": 0,
+        "seconds": "0.00"
+      },
+      {
+        "passed": 0,
+        "failed": 0,
+        "direct_ignored": 0,
+        "seconds": "0.00"
+      },
+      {
+        "passed": 1,
+        "failed": 0,
+        "direct_ignored": 0,
+        "seconds": "0.00"
+      },
+      {
+        "passed": 0,
+        "failed": 0,
+        "direct_ignored": 0,
+        "seconds": "0.00"
+      },
+      {
+        "passed": 0,
+        "failed": 0,
+        "direct_ignored": 0,
+        "seconds": "0.00"
+      },
+      {
+        "passed": 0,
+        "failed": 0,
+        "direct_ignored": 0,
+        "seconds": "0.00"
+      }
+    ],
+    "ordinary_pass_total": 230,
+    "direct_ignored_total": 5,
+    "focused": [
+      "platform::clipboard::tests::rejected_published_copy_is_not_success_and_retains_guarded_cleanup ... ok",
+      "ui::shell::capture_privacy_tests::account_evidence_masks_revealed_seed_and_creation_backup_through_lock ... ok",
+      "ui::shell::trash_tests::trash_permanent_scope_fault_retry_latest_preferences_and_encrypted_restart ... ok"
+    ]
+  },
+  "local_package": {
+    "source_commit": "079c08ddcda27c652f452e5b5756ed2500523fc9",
+    "source_dirty": false,
+    "clean_seconds": 0.304,
+    "build_seconds": 96.932,
+    "exe_sha256": "9656ed317d6b2e36a96cf17ac5c0d2729680cb6abb850941c295f7418272978e",
+    "exe_bytes": 12179456,
+    "zip_sha256": "9c8b781018c3e6b66d06cbe3f5d5a5184b620f0d9925ce738e941b953badbcc6",
+    "zip_bytes": 6026393,
+    "source_date_epoch": 1794623007,
+    "owned_root": "D:\\Projects\\github\\authenticator\\target\\task24-parent-clean-079c08d-y75h72kj",
+    "runtime_evidence_reusable_exact_exe": true
+  },
+  "hosted_package": {
+    "run": {
+      "id": 43546047875,
+      "head_sha": "079c08ddcda27c652f452e5b5756ed2500523fc9",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/ranjbar-dev/authenticator/actions/runs/43546047875",
+      "created_at": "2026-11-14T02:23:38Z",
+      "updated_at": "2026-11-14T02:46:13Z"
+    },
+    "jobs": [
+      {
+        "id": 132297504551,
+        "name": "check",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-14T02:23:41Z",
+        "completed_at": "2026-11-14T02:42:00Z",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-14T02:23:42Z",
+            "completed_at": "2026-11-14T02:23:42Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-14T02:23:42Z",
+            "completed_at": "2026-11-14T02:23:55Z"
+          },
+          {
+            "name": "Install Rust",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-14T02:23:55Z",
+            "completed_at": "2026-11-14T02:24:15Z"
+          },
+          {
+            "name": "Format",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-14T02:24:15Z",
+            "completed_at": "2026-11-14T02:24:17Z"
+          },
+          {
+            "name": "Lint",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-14T02:24:17Z",
+            "completed_at": "2026-11-14T02:25:26Z"
+          },
+          {
+            "name": "Tests",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-14T02:25:26Z",
+            "completed_at": "2026-11-14T02:41:55Z"
+          },
+          {
+            "name": "Build Windows app",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-14T02:41:55Z",
+            "completed_at": "2026-11-14T02:41:56Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-14T02:41:56Z",
+            "completed_at": "2026-11-14T02:41:58Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-14T02:41:58Z",
+            "completed_at": "2026-11-14T02:41:58Z"
+          }
+        ]
+      },
+      {
+        "id": 132302860034,
+        "name": "package",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-14T02:42:02Z",
+        "completed_at": "2026-11-14T02:46:12Z",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-14T02:42:03Z",
+            "completed_at": "2026-11-14T02:42:04Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-14T02:42:04Z",
+            "completed_at": "2026-11-14T02:42:16Z"
+          },
+          {
+            "name": "Install Rust",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-14T02:42:16Z",
+            "completed_at": "2026-11-14T02:42:35Z"
+          },
+          {
+            "name": "Run actions/setup-python@v6",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-14T02:42:35Z",
+            "completed_at": "2026-11-14T02:42:35Z"
+          },
+          {
+            "name": "Build Windows portable ZIP",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-14T02:42:35Z",
+            "completed_at": "2026-11-14T02:46:04Z"
+          },
+          {
+            "name": "Packaging regression checks",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-14T02:46:04Z",
+            "completed_at": "2026-11-14T02:46:06Z"
+          },
+          {
+            "name": "Validate package contents and checksums",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-14T02:46:06Z",
+            "completed_at": "2026-11-14T02:46:06Z"
+          },
+          {
+            "name": "Upload public package artifacts",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-14T02:46:06Z",
+            "completed_at": "2026-11-14T02:46:08Z"
+          },
+          {
+            "name": "Post Run actions/setup-python@v6",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-14T02:46:08Z",
+            "completed_at": "2026-11-14T02:46:09Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-14T02:46:09Z",
+            "completed_at": "2026-11-14T02:46:10Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-14T02:46:10Z",
+            "completed_at": "2026-11-14T02:46:10Z"
+          }
+        ]
+      }
+    ],
+    "artifact": {
+      "id": 14095690010,
+      "name": "Authenticator-windows-x86_64",
+      "size_in_bytes": 5542470,
+      "digest": "sha256:ea4381682e88344725e5b8810658abb5e3f603c4b885b9d8b0ec8893026b18fb",
+      "expired": false,
+      "created_at": "2026-11-14T02:46:08Z",
+      "expires_at": "2026-11-28T02:46:06Z"
+    },
+    "download_sha256": "ea4381682e88344725e5b8810658abb5e3f603c4b885b9d8b0ec8893026b18fb",
+    "package_sha256": "22b2c11944a2e33716559d8af51bf639be945bf4d451e68dd330a5caafe51103",
+    "package_bytes": 6024558,
+    "exe_sha256": "8806765c4ada8d152b6dbe35d35befa69cd877c7bd355fafff76ff315a7beb3e",
+    "exe_bytes": 12105728,
+    "source_commit": "079c08ddcda27c652f452e5b5756ed2500523fc9",
+    "source_dirty": false,
+    "archive_validation": "passed paths/CRCs/manifest checksums",
+    "download_root": "D:\\Projects\\github\\authenticator\\target\\task24-hosted-079c08d-il174dsn",
+    "native_runtime_tested": false
+  },
+  "git_at_validation": {
+    "local_head": "079c08ddcda27c652f452e5b5756ed2500523fc9",
+    "remote_main": "079c08ddcda27c652f452e5b5756ed2500523fc9",
+    "working_tree_clean": true
+  },
+  "scope": "Reviewed production source plus debug-only QA additions. Following commit changes documentation/status only. No external acceptance waived."
+}

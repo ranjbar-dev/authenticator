@@ -1,0 +1,7 @@
+# Clean local package from final source
+
+Source `079c08ddcda27c652f452e5b5756ed2500523fc9`, clean working tree, source_dirty=false. Local HEAD and clean state were verified before and after packaging; remote main equality was verified by the final integration guard. The checked own-package release clean was followed by `rtk proxy python scripts/package_windows.py --replace`; build/link/package took 96.932 seconds. Only authenticator release outputs were cleaned after resolved workspace/target/release bounds checks. Existing QA roots and all dependencies were preserved.
+
+Current `dist/Authenticator-0.1.0-windows-x86_64.zip`: 6,026,393 bytes, SHA256 `9c8b781018c3e6b66d06cbe3f5d5a5184b620f0d9925ce738e941b953badbcc6`. Source epoch 1794623007. EXE 12,179,456 bytes, SHA256 `9656ed317d6b2e36a96cf17ac5c0d2729680cb6abb850941c295f7418272978e`. These are exactly the native-tested local production EXE bytes; no new native launch is claimed. Independent final archive path/CRC/manifest validation passed. [Exact record](clean-build-079c08d.json).
+
+Owned output/log root: `D:\Projects\github\authenticator\target\task24-parent-clean-079c08d-y75h72kj`. Prior clean109171a archive/checksum were preserved byte-for-byte in `target/task24-preserved-clean-109171a`; its [record](clean-build-109171a.md) is historical. Archive bytes differ because source provenance/epoch changed. Native runtime attribution belongs to the unchanged EXE, not to a claim that two ZIPs match. The final following documentation/status commit does not change executable source.

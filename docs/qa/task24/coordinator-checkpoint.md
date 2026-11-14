@@ -1,6 +1,6 @@
-## Current follow-up checkpoint
+## Current final checkpoint
 
-Final source/evidence checkpoint: all five state groups independently closed, narrow debug support approved and release9656 bytes preserved.16 scopes done, seven explicitly blocked; Task24 final integration pending by mandatory host/tool-limited acceptance. Tasks12–18 and coverage/checklist audit are reconciled; original requirements preserved. No active child/native ownership remains. Clean local109171a ZIPee7af10e… and successful hosted43536070275 artifacts retain separate identities. This checkpoint will be committed/pushed and its actual SHA/current CI/remote equality recorded in the following final update. Exact remaining resume work is isolated offline/no-Rust/other-user runtime, real WTS/suspend/logon and heard Narrator behavior with a working positive control. No full-project completion claim.
+Final reviewed source `079c08ddcda27c652f452e5b5756ed2500523fc9` is pushed to main, remote equals local HEAD and tree was clean. [CI43546047875](https://github.com/ranjbar-dev/authenticator/actions/runs/43546047875) passed full check/package jobs. [Integration record](final-integration.md) identifies exact checks and clean local ZIP9c8b7810…/native-tested EXE9656…. Sixteen numbered tasks are done and eight blocked by isolated offline/no-Rust/other-user, actual OS lifecycle/logon and heard-speech acceptance. Task24 final source/CI/Git items are checked; its all-tasks acceptance remains open. Original requirements and all historical evidence remain. No active child/native ownership remains. This following commit changes documentation/status only; its SHA/CI and final remote equality are reported after push. No full-project completion claim.
 
 Previous phase:
 

@@ -1,0 +1,5 @@
+# Hosted final source artifact
+
+[CI43546047875](https://github.com/ranjbar-dev/authenticator/actions/runs/43546047875) passed check/package jobs on source `079c08ddcda27c652f452e5b5756ed2500523fc9`. Artifact14095690010 expires 2026-11-28T02:46:06Z. API download digest `ea4381682e88344725e5b8810658abb5e3f603c4b885b9d8b0ec8893026b18fb` matches actual bytes. Bounded public payload download, checksum, paths/CRCs/manifest and clean source identity validation passed. [Exact record](hosted-079c08d.json), [build info](hosted-build-info-079c08d.json).
+
+Hosted ZIP 6,024,558 bytes, SHA256 `22b2c11944a2e33716559d8af51bf639be945bf4d451e68dd330a5caafe51103`. Hosted EXE 12,105,728 bytes, SHA256 `8806765c4ada8d152b6dbe35d35befa69cd877c7bd355fafff76ff315a7beb3e`. This hosted EXE was not native-tested. Local native-tested EXE9656… and [local clean ZIP9c8b…](clean-build-079c08d.md) remain distinct. Cross-host binary identity is not claimed. Safe downloaded output root `D:\Projects\github\authenticator\target\task24-hosted-079c08d-il174dsn`; no Git credential or signed storage URL retained.
