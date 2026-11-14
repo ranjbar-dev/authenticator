@@ -1,0 +1,46 @@
+{
+  "source": "cfffcc5c3da2002fdec4adb0dc9b689bf4b9f2fb",
+  "scope": "Documented Narrator copy observer investigation; native launch prerequisite failed",
+  "fixture": {
+    "path": "target/debug/examples/final_matrix.exe",
+    "sha256": "2c7adfe7a0d2d700662ff197cf8b2121d7a758311ca054138aa05336bf08f626",
+    "bytes": 41938432,
+    "native_runtime_observed": false
+  },
+  "documented_semantics": {
+    "narrator_control_x": "Copies the last spoken phrase only",
+    "narrator_alt_x": "Opens Speech Recap; last 500 spoken strings; standard reading and copy commands",
+    "unchanged_last_phrase_proves_no_intermediate_utterance": false
+  },
+  "native_attempts": {
+    "initial_inventory_succeeded": true,
+    "launch_attempt_count": 2,
+    "error_each_attempt": "GetCursorPos failed: Access is denied. (0x80070005)",
+    "fresh_inventory_between_attempts": true,
+    "fixture_narrator_lockapp_window_matches": 0,
+    "fixture_or_narrator_processes_observed": 0,
+    "new_owned_fixture_root_observed": false,
+    "last_existing_root_created_utc": "2026-11-14T01:15:48Z",
+    "native_input_stopped_after_two_failed_launches": true
+  },
+  "read_only_diagnostic": {
+    "at_utc": "2026-11-14T18:45:04.655461+00:00",
+    "observer": "exec Python caller; not sky helper",
+    "caller_session_id": 1,
+    "caller_thread_desktop_name": "Default",
+    "input_desktop_opened": false,
+    "input_desktop_name": null,
+    "input_desktop_open_error": 5,
+    "c_free_bytes": 76321472512,
+    "desktop_or_security_state_changed": false,
+    "cause_established": false
+  },
+  "positive_control_executed": false,
+  "clipboard_copy_or_read_executed": false,
+  "speech_history_observed": false,
+  "rollover_announcement_test_executed": false,
+  "narrator_started": false,
+  "screenshots_created": 0,
+  "production_source_changed": false,
+  "acceptance_gates_closed": []
+}

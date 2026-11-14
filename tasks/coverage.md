@@ -1,5 +1,7 @@
 # PRD coverage and evidence
 
+The later [Narrator copy-observer investigation](../docs/qa/task19/speech-copy-2026-11-14.md) found a new native prerequisite failure: normal fixture launch returned GetCursorPos Access denied twice. No positive control or speech test ran. Last-phrase copying alone cannot prove absence of intermediate announcements; Task19/21 speech acceptance remains unverified.
+
 Later 14 November execution: the [measured Sandbox enable/rollback attempt](../docs/qa/task05/sandbox-attempt-2026-11-14.md) found a real restart prerequisite. The feature is Disabled again, but CBS/pending XML servicing remains queued; no restart or app acceptance occurred. All 48 coverage rows and mandatory boundaries below remain unchanged.
 
 14 November resume: [fresh prerequisite inspection](../docs/qa/task05/resume-2026-11-14.md) and [current main/CI/package checks](../docs/qa/resume-2026-11-14.md) preserve all 48 rows and their acceptance boundaries. Hyper-V availability is distinguished from a ready isolated Windows guest. No blocked runtime/OS/speech requirement gained a passing result.
