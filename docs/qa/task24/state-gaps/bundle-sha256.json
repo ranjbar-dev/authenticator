@@ -1,0 +1,407 @@
+[
+  {
+    "path": "docs/qa/task24/state-gaps/builds.json",
+    "bytes": 1539,
+    "sha256": "1a1167f8bfded5c5b6f2e2efbdf58158aabac58ae64588901096580eb2589b13"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/checkpoint.md",
+    "bytes": 2185,
+    "sha256": "c37e662c2ecefd9f829b7ac1de01c3570ba982e62fb7f49b6907c332d665757d"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/checks.json",
+    "bytes": 1891,
+    "sha256": "4fc828469d85ebfec8610efcdb7565a3efc8a148e8baff028a5742bc9e85a5ba"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/draft/build.log",
+    "bytes": 145,
+    "sha256": "cb28efac14818df6f231b7f93619a1654c20ccfda96ee766c1ff561a999417ce"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/draft/fixture-mode.txt",
+    "bytes": 9,
+    "sha256": "147fe04051c901ecb004ad3d975c68146af80d6bffb8d68aa00b47d9a37a11cb"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/draft/metadata-000.json",
+    "bytes": 1121,
+    "sha256": "4d0df3ba0680b7361be8e66913cda41d060921fa29947222b5867c6010b94718"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/draft/metadata-001.json",
+    "bytes": 1121,
+    "sha256": "4d0df3ba0680b7361be8e66913cda41d060921fa29947222b5867c6010b94718"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/draft/metadata-002.json",
+    "bytes": 1121,
+    "sha256": "4d0df3ba0680b7361be8e66913cda41d060921fa29947222b5867c6010b94718"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/draft/metadata-003.json",
+    "bytes": 1121,
+    "sha256": "4d0df3ba0680b7361be8e66913cda41d060921fa29947222b5867c6010b94718"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/draft/metadata-004.json",
+    "bytes": 1121,
+    "sha256": "4d0df3ba0680b7361be8e66913cda41d060921fa29947222b5867c6010b94718"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/draft/ownership.txt",
+    "bytes": 219,
+    "sha256": "3f91e5ab1fc78ea30a2e1212b6b6b2f54b42762a0ec8d474dc4cce52bf55457a"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/draft/recovery-draft-001.json",
+    "bytes": 114,
+    "sha256": "4d2a07d34369aeb5711845de73e4844146cbdb344c3a6d3e83a0cfbf825889d4"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/draft/recovery-draft-002.json",
+    "bytes": 231,
+    "sha256": "28033a20835c650cf8aca6b01e1c4a6fafee66f5c7932485adb5295fa9cd27a1"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/draft/recovery-draft-003.json",
+    "bytes": 231,
+    "sha256": "28033a20835c650cf8aca6b01e1c4a6fafee66f5c7932485adb5295fa9cd27a1"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/draft/sanitized-frame-001.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/draft/sanitized-frame-001.png",
+    "bytes": 190706,
+    "sha256": "ba2950555b44bd5070af5a579e7499f85bb0500b03678554e7e918cdfaf64ef9"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/draft/sanitized-frame-001.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/empty/build.log",
+    "bytes": 145,
+    "sha256": "f425fe1ecdbd8449d862b944d1826e19166ef7589936a8865733ea303fde298a"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/empty/fixture-mode.txt",
+    "bytes": 5,
+    "sha256": "2e1cfa82b035c26cbbbdae632cea070514eb8b773f616aaeaf668e2f0be8f10d"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/empty/metadata-000.json",
+    "bytes": 55,
+    "sha256": "534a88c928cef6aeac9f7e67a1c510d2487ecf766ad40caf992013d6781833cc"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/empty/metadata-001.json",
+    "bytes": 55,
+    "sha256": "534a88c928cef6aeac9f7e67a1c510d2487ecf766ad40caf992013d6781833cc"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/empty/metadata-002.json",
+    "bytes": 55,
+    "sha256": "534a88c928cef6aeac9f7e67a1c510d2487ecf766ad40caf992013d6781833cc"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/empty/ownership.txt",
+    "bytes": 210,
+    "sha256": "121b56413ca6a9b8d0e8bb2ad65969b7f53f79fa452ae0042fdd0aeed9239d42"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/empty/sanitized-frame-001.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/empty/sanitized-frame-001.png",
+    "bytes": 145967,
+    "sha256": "cfcfb1aac3ba04fe3d21e0f554e6a39cb6851eafb7d74eaef4068b8f74c0d374"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/empty/sanitized-frame-001.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/empty/sanitized-frame-002.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/empty/sanitized-frame-002.png",
+    "bytes": 140107,
+    "sha256": "c994afe69a74cb2a1a41c3c49b1536f9a3b514f65ba89e82b8d6cd5800ad4bee"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/empty/sanitized-frame-002.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/empty/sanitized-frame-003.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/empty/sanitized-frame-003.png",
+    "bytes": 147640,
+    "sha256": "8f88a6a1a549f98550db56f4d13b278e3789d6b919569ffa3f253ecdc1553239"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/empty/sanitized-frame-003.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/empty/sanitized-frame-004.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/empty/sanitized-frame-004.png",
+    "bytes": 149012,
+    "sha256": "6ebb9f66522b1115dbcf262fcfbae73cc387700e193fce6cf071fe3a45a6f598"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/empty/sanitized-frame-004.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/frame-manifest.json",
+    "bytes": 14636,
+    "sha256": "0f80ac9b7a3e69d1d6d4757f523b8c479f5a32a5f2669ec9585b3a1412861556"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/README.md",
+    "bytes": 11272,
+    "sha256": "a03e14ca331b76af6b6c1b36747bf4963e39c97bb4373e92e520c137ddf8a195"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/release-build.log",
+    "bytes": 136,
+    "sha256": "e3de70d9022610f0bc0f7a0db5862a577f919883b03d13b29ff54d1dcdaea2fd"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/release-equivalence.json",
+    "bytes": 630,
+    "sha256": "47eee73599c30cacb7126b5aedabbded4e11220af516a488e111117866e49ff4"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/results.json",
+    "bytes": 30262,
+    "sha256": "6cfbce6808c932397f3c1c0d09b3b69ff4e75ae93d8c3896d300d50348df9cb6"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/source-sha256.json",
+    "bytes": 10408,
+    "sha256": "ca07d1e0897ccd0f921f47e85c8cde61897a9011df5f5c9aa63b4a051ced29be"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/build.log",
+    "bytes": 145,
+    "sha256": "f425fe1ecdbd8449d862b944d1826e19166ef7589936a8865733ea303fde298a"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/fixture-mode.txt",
+    "bytes": 9,
+    "sha256": "147fe04051c901ecb004ad3d975c68146af80d6bffb8d68aa00b47d9a37a11cb"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/metadata-000.json",
+    "bytes": 1121,
+    "sha256": "c2de323337f3d792ece71a409cad0d3c3154f246fc5b665a2092d505d03c4adf"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/metadata-001.json",
+    "bytes": 1121,
+    "sha256": "c2de323337f3d792ece71a409cad0d3c3154f246fc5b665a2092d505d03c4adf"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/metadata-002.json",
+    "bytes": 1121,
+    "sha256": "c2de323337f3d792ece71a409cad0d3c3154f246fc5b665a2092d505d03c4adf"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/metadata-003.json",
+    "bytes": 1121,
+    "sha256": "c2de323337f3d792ece71a409cad0d3c3154f246fc5b665a2092d505d03c4adf"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/metadata-004.json",
+    "bytes": 1121,
+    "sha256": "c2de323337f3d792ece71a409cad0d3c3154f246fc5b665a2092d505d03c4adf"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/metadata-005.json",
+    "bytes": 1121,
+    "sha256": "c2de323337f3d792ece71a409cad0d3c3154f246fc5b665a2092d505d03c4adf"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/metadata-006.json",
+    "bytes": 1119,
+    "sha256": "0e3ddf2a30e0923b5f0b39851bc9d8bb650fa4dc4498405aea3a088d740aff7b"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/metadata-007.json",
+    "bytes": 1119,
+    "sha256": "0e3ddf2a30e0923b5f0b39851bc9d8bb650fa4dc4498405aea3a088d740aff7b"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/metadata-008.json",
+    "bytes": 1119,
+    "sha256": "0e3ddf2a30e0923b5f0b39851bc9d8bb650fa4dc4498405aea3a088d740aff7b"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/ownership.txt",
+    "bytes": 215,
+    "sha256": "10192d3c95821b4323441b00e8f62e04787f96fc617b8d40a45ab05b0d36feae"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-001.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-001.png",
+    "bytes": 147211,
+    "sha256": "2f69623abfc765dad05f5b304644ab2979f28d559042b01a7aa424be6a682575"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-001.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-002.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-002.png",
+    "bytes": 156906,
+    "sha256": "270974826708316fa37eb05018f6926d80d055c2c270b94387798def8df166d8"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-002.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-003.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-003.png",
+    "bytes": 193805,
+    "sha256": "0c67e30f83c202e6917fe9515d98ac9be5249c8c3202b7a9a37a346112005142"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-003.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-004.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-004.png",
+    "bytes": 158027,
+    "sha256": "1510fa01df52a95c78ae50756edbb006e47c132a7e49956a66cc0301c0c4cc52"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-004.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-005.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-005.png",
+    "bytes": 139267,
+    "sha256": "e1701e9492e9ab6f631a45500d2332fd0f8904106ff24cf1717b83bb1a6ea4c7"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-005.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-006.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-006.png",
+    "bytes": 173403,
+    "sha256": "d98b4b2abb8000b944bcf77c211fc39819aad7e2ae4a9f719674044471a34520"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-006.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-007.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-007.png",
+    "bytes": 135928,
+    "sha256": "a84e95bbf5f4062bf669f4ed02c3d89156f2ff152ae78f889d8e0957e0ba3adb"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-007.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-008.json",
+    "bytes": 74,
+    "sha256": "c298e5aeeef9738d40080883d6f2caa491562a6461f3344b57a1856ba9a8c427"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-008.png",
+    "bytes": 220764,
+    "sha256": "abbf552dae077c0986eb01a992856d4d2176d657c6f6f5c36b3510fef3b486da"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-008.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-009.json",
+    "bytes": 70,
+    "sha256": "61225cfe5a8f042619ee2d9eed3cc18cc452c709b713a12f4c899259e8831ae3"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-009.png",
+    "bytes": 132111,
+    "sha256": "648fed31220903bd5095f25f8c1ef107ba5d37a356bf50088cb5658ddbeb02fc"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/states/sanitized-frame-009.ready",
+    "bytes": 9,
+    "sha256": "44d8b78bec6ce60168d0849c40fd060d7ddf8d50d9194d99ce1f1240d84f7cbd"
+  },
+  {
+    "path": "docs/qa/task24/state-gaps/verification.json",
+    "bytes": 483,
+    "sha256": "afb9017a89e92d8c294bbbcd9828d6d9871accf3c30390b3c2f5ebcb26ca6ad3"
+  }
+]

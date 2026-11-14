@@ -1,0 +1,13 @@
+{
+  "source_commit": "109171ac72e458ac3c34738e828e83b29983ec5a",
+  "source_dirty": false,
+  "clean_seconds": 0.267,
+  "build_seconds": 104.26,
+  "exe_sha256": "9656ed317d6b2e36a96cf17ac5c0d2729680cb6abb850941c295f7418272978e",
+  "exe_bytes": 12179456,
+  "zip_sha256": "ee7af10e69420d99da4eb8ceccf8dc3f4cfa7a9a09d0adbca6221bbcd94afe8b",
+  "zip_bytes": 6026391,
+  "source_date_epoch": 1794616978,
+  "owned_root": "D:\\Projects\\github\\authenticator\\target\\task24-parent-clean-109171a-kph96tj0",
+  "runtime_evidence_reusable_exact_exe": true
+}

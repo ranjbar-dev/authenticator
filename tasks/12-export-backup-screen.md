@@ -1,6 +1,6 @@
 # Task 12: Easy encrypted backup export screen
 
-Status: in_progress - native full-graph export/restore reviewed; remaining visual/environment gates open
+Status: done — numbered UI scope independently reviewed with native state evidence
 Priority: Required for complete v1
 Dependencies: 04, 05, 11
 Requirements: FR-6.1/3; PRD §§5.4, 7
@@ -20,23 +20,23 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 Planning snapshot, 12 November 2026: no existing application source, screen family, theme or shared components was present. These are PRD/reference-derived roles, not measured project conventions. Use the shared Rust theme and widgets created by task 04 (or create those primitives in task 04 itself); reread this checklist before editing. Refresh implementation paths from the actual code.
 
-- [ ] Shared header names Export encrypted backup and provides back navigation. — PRD/reference structure; shared implementation from task 04.
-- [ ] Summary explains what is included without showing credentials. — PRD/reference structure; shared implementation from task 04.
-- [ ] Local destination control uses a file picker and a readable selected path. — PRD/reference structure; shared implementation from task 04.
-- [ ] Masked passphrase/confirmation fields have accessible labels and recovery guidance. — PRD/reference structure; shared implementation from task 04.
-- [ ] Encryption is mandatory; no plaintext or cloud option appears. — PRD/reference structure; shared implementation from task 04.
-- [ ] Overwrite confirmation names the file and requires deliberate intent. — PRD/reference structure; shared implementation from task 04.
-- [ ] Export action shows progress, prevents repeated submission and handles cancellation. — PRD/reference structure; shared implementation from task 04.
-- [ ] Success/error feedback is safe, readable and theme-consistent; closing clears sensitive fields. — PRD/reference structure; shared implementation from task 04.
+- [x] Shared header names Export encrypted backup and provides back navigation. — PRD/reference structure; shared implementation from task 04.
+- [x] Summary explains what is included without showing credentials. — PRD/reference structure; shared implementation from task 04.
+- [x] Local destination control uses a file picker and a readable selected path. — PRD/reference structure; shared implementation from task 04.
+- [x] Masked passphrase/confirmation fields have accessible labels and recovery guidance. — PRD/reference structure; shared implementation from task 04.
+- [x] Encryption is mandatory; no plaintext or cloud option appears. — PRD/reference structure; shared implementation from task 04.
+- [x] Overwrite confirmation names the file and requires deliberate intent. — PRD/reference structure; shared implementation from task 04.
+- [x] Export action shows progress, prevents repeated submission and handles cancellation. — PRD/reference structure; shared implementation from task 04.
+- [x] Success/error feedback is safe, readable and theme-consistent; closing clears sensitive fields. — PRD/reference structure; shared implementation from task 04.
 
 Must not be copied from the reference: profile/sign-in, cloud sync/backup, language selector, extension/companion promotions, optional encryption switches or swipe-only desktop actions. Reuse shared field, button, dialog and feedback components; do not recreate their styling per page.
 
 ## Acceptance and verification
 
-- [ ] A new user exports a complete encrypted disposable vault through labeled UI actions without external tools or registration.
-- [ ] Passphrase mismatch/cancel/access failure leaves existing files and vault unchanged.
-- [ ] The output restores via task 13 and discloses no plaintext on inspection.
-- [ ] Pointer, keyboard, focus, busy/error and narrow-window checks pass independent review.
+- [x] A new user exports a complete encrypted disposable vault through labeled UI actions without external tools or registration.
+- [x] Passphrase mismatch/cancel/access failure leaves existing files and vault unchanged.
+- [x] The output restores via task 13 and discloses no plaintext on inspection.
+- [x] Pointer, keyboard, focus, busy/error and narrow-window checks pass independent review.
 
 ## Handoff and completion
 
@@ -47,6 +47,9 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 5. Keep at most one child agent active; children must not spawn children, commit, push, change PRD scope or silently skip requirements. Return changed paths, checks, findings and remaining risks to the parent.
 
 ## Evidence
+
+**Current accepted outcome:** The [same-checker re-review](../docs/qa/task24/state-gaps/independent-review.md) recommends closing this task after combining the original source/security/fault tests, reviewed Task21/23 native recovery and the Task24 focus/state evidence. All listed checkboxes are now reconciled to that evidence. Actual offline/other-user/no-Rust, Windows lifecycle/logon and heard-speech gates remain with their explicitly blocked owners; no global certification follows from this page. Earlier evidence paragraphs below retain their historical launch/source context and are superseded only for the now-tested scope.
+
 
 Current native21 follow-up completed Save selection, passphrase mismatch/no output, encrypted full-graph export and fresh native13 restore. Known plaintext sentinels were absent and source ciphertext unchanged. [Journey](../docs/qa/task21/remaining-native-workflows.md), [independent source/18-frame review](../docs/qa/task21/remaining-native-independent-review.md). This closes the previously missing positive GUI recovery evidence; full per-page/state/scale coverage and environment gates are not inferred. Earlier launch failures remain historical below.
 

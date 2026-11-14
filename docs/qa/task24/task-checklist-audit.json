@@ -1,5 +1,5 @@
 {
-  "note": "Verbatim open checklist items are retained requirements, not waived or automatically externally blocked. Parent owns task status/checkbox reconciliation after independent review.",
+  "note": "Original requirements remain mandatory. Sixteen numbered scopes are done, seven externally blocked, and Task24 final integration is pending. Do not close final Git/CI items until actual results.",
   "tasks": [
     {
       "file": "01-foundation-and-decisions.md",
@@ -27,7 +27,7 @@
     },
     {
       "file": "05-vault-setup-and-lock-screen.md",
-      "status": "Status: in_progress — implementation reviewed; hardware/integration QA pending",
+      "status": "Status: blocked — isolated offline and actual Windows session-lock/suspend acceptance unavailable",
       "open": [
         "- [ ] Create/unlock/relock/relaunch a disposable vault without internet; wrong passphrase cannot disclose state.",
         "- [ ] Idle, OS lock, suspend and lock during capture/review/import conceal and discard sensitive state."
@@ -48,7 +48,7 @@
     },
     {
       "file": "08-screenshot-review-and-import.md",
-      "status": "Status: in_progress — functional implementation independently approved; disconnected-machine QA open",
+      "status": "Status: blocked — effective disconnected-machine screenshot workflow unavailable",
       "open": [
         "- [ ] With networking disabled, capture a disposable QR in another app, review it, save and compare the resulting TOTP to an independent implementation."
       ],
@@ -62,12 +62,11 @@
     },
     {
       "file": "10-codes-list-and-clipboard.md",
-      "status": "Status: in_progress - repaired clipboard source/native paths reviewed; hardware clock/full QA gates open",
+      "status": "Status: blocked — actual hardware sleep/resume lifecycle acceptance unavailable",
       "open": [
-        "- [ ] Cards match independent TOTP values at boundaries and after sleep/resume/clock jumps; no stale code remains.",
-        "- [ ] Real pointer clicks and keyboard shortcuts reach copy/edit/delete/search/sort/view without drag scrolling stealing clicks."
+        "- [ ] Cards match independent TOTP values at boundaries and after sleep/resume/clock jumps; no stale code remains."
       ],
-      "checked": 15
+      "checked": 16
     },
     {
       "file": "11-portable-backup-engine.md",
@@ -77,144 +76,57 @@
     },
     {
       "file": "12-export-backup-screen.md",
-      "status": "Status: in_progress - native full-graph export/restore reviewed; remaining visual/environment gates open",
-      "open": [
-        "- [ ] Shared header names Export encrypted backup and provides back navigation. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Summary explains what is included without showing credentials. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Local destination control uses a file picker and a readable selected path. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Masked passphrase/confirmation fields have accessible labels and recovery guidance. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Encryption is mandatory; no plaintext or cloud option appears. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Overwrite confirmation names the file and requires deliberate intent. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Export action shows progress, prevents repeated submission and handles cancellation. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Success/error feedback is safe, readable and theme-consistent; closing clears sensitive fields. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] A new user exports a complete encrypted disposable vault through labeled UI actions without external tools or registration.",
-        "- [ ] Passphrase mismatch/cancel/access failure leaves existing files and vault unchanged.",
-        "- [ ] The output restores via task 13 and discloses no plaintext on inspection.",
-        "- [ ] Pointer, keyboard, focus, busy/error and narrow-window checks pass independent review."
-      ],
-      "checked": 4
+      "status": "Status: done — numbered UI scope independently reviewed with native state evidence",
+      "open": [],
+      "checked": 16
     },
     {
       "file": "13-import-backup-screen.md",
-      "status": "Status: in_progress - native full-graph Merge/Replace reviewed; remaining conflict/matrix/environment gates open",
-      "open": [
-        "- [ ] Shared header names Import backup with clear back/cancel actions. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] File selection displays supported native backup format guidance. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Passphrase entry is masked and errors reveal no payload. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Preview puts counts and affected-data summary before confirmation. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Merge/replace and conflict selectors have readable labels and safe defaults. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Destructive replacement receives explicit confirmation. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Progress/error states preserve the existing vault and offer retry. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Success shows imported data, focus returns logically and sensitive buffers are released. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Restore task 12's backup into a fresh local vault and verify codes, metadata, folders, backup used states, trash and supported preferences.",
-        "- [ ] Exercise incorrect passphrase, tampering, future version, conflict decisions, replace confirmation, cancel and lock/failure during import.",
-        "- [ ] Imported preferences do not silently enable startup or weaken lock settings.",
-        "- [ ] Real pointer/keyboard preview choices work and independent visual review passes."
-      ],
-      "checked": 4
+      "status": "Status: done — numbered UI scope independently reviewed with native state evidence",
+      "open": [],
+      "checked": 16
     },
     {
       "file": "14-backup-codes-list.md",
-      "status": "Status: in_progress - native list/selector/detail and restore counts reviewed; remaining full QA gates open",
-      "open": [
-        "- [ ] Shared tab holder and heading preserve the three-section shell. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Introduction explains recovery codes concisely near the primary action. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Add Backup Codes is immediately discoverable. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Set rows identify service/account and available/used counts without showing secrets. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Empty/no-match/error states provide a useful next action. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Account-selection toolbar offers labeled live search and sort. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Selected account and existing-set status are unambiguous before continuing. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Help, focus, active icons, theme and responsive layout follow shared components; lock hides data. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Empty, populated, no-match and locked states render correctly with no raw codes exposed.",
-        "- [ ] Search/sort selects the intended real account, including similar service names/usernames.",
-        "- [ ] Counts and associations remain correct after restart/import and deletion/restoration.",
-        "- [ ] Pointer/keyboard/tab navigation and visual checks pass."
-      ],
-      "checked": 4
+      "status": "Status: done — numbered UI scope independently reviewed with native state evidence",
+      "open": [],
+      "checked": 16
     },
     {
       "file": "15-backup-codes-editor.md",
-      "status": "Status: in_progress - native file/duplicate-preview/save and round-trip reviewed; remaining full QA gates open",
-      "open": [
-        "- [ ] Shared editor holder identifies the selected service/account. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Multiline code input is labeled and concealed where practical; reveal is intentional. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Read Backup Codes from File uses a local picker and explains UTF-8 input. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Preview summarizes valid/blank/duplicate lines without unsolicited disclosure. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Existing-set replacement and retained used-state behavior are clearly explained. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Save/Cancel/Delete use shared actions and destructive confirmation. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] File/validation/write errors retain safe unsaved input and offer recovery. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Keyboard, focus, scrolling, theme and narrow-window actions remain usable; lock clears input. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Text/file input, BOM/line endings, blanks, duplicates, invalid encoding and oversized file paths have deterministic tested outcomes.",
-        "- [ ] Cancel/failed save preserves existing set and edits; confirmed save survives restart.",
-        "- [ ] No raw file remains and validation messages never contain code values.",
-        "- [ ] Create-account-with-backup and standalone editor produce identical normalized results."
-      ],
-      "checked": 4
+      "status": "Status: done — numbered UI scope independently reviewed with native state evidence",
+      "open": [],
+      "checked": 16
     },
     {
       "file": "16-backup-codes-detail.md",
-      "status": "Status: in_progress - native reveal/copy/used/Undo/restore/delete reviewed; remaining full QA gates open",
-      "open": [
-        "- [ ] Support editing and confirmed deletion of the set, with service-issued/single-use guidance. Restore associated codes with account trash recovery; do not orphan them.",
-        "- [ ] Header identifies the account with consistent back/edit controls. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Guidance explains service issuance and potential single use without excessive text. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Rows conceal codes by default with clear available/used state. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Reveal and Copy are separate labeled intentional actions. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Mark used and Undo expose their current state accessibly. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Delete set clearly confirms its move to Trash; permanent deletion in Trash is explicitly irreversible and account data is preserved. — PRD12.5 and Task15 reversible deletion policy; permanent deletion belongs to18.",
-        "- [ ] Empty/error/copy-confirmation states never echo a code. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Shared theme, focus and narrow layouts apply; lock removes revealed content and accessibility values. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Reveal/copy/mark-used/undo/edit/delete work with pointer and keyboard; copy alone leaves used state unchanged.",
-        "- [ ] Used states persist across restart and encrypted backup round-trip.",
-        "- [ ] Lock, idle timeout and clipboard races disclose no hidden codes or overwrite newer clipboard content.",
-        "- [ ] Account trash/restore preserves its associated set and states; permanent deletion removes logical references."
-      ],
-      "checked": 3
+      "status": "Status: done — numbered UI scope independently reviewed with native state evidence",
+      "open": [],
+      "checked": 16
     },
     {
       "file": "17-folders-and-organization.md",
-      "status": "Status: in_progress - native membership/filter/Trash/backup paths reviewed; remaining full QA gates open",
-      "open": [
-        "- [ ] Pointer clicks, keyboard search/selection and compact layouts pass independent review."
-      ],
-      "checked": 15
+      "status": "Status: done — numbered UI scope independently reviewed with native state evidence",
+      "open": [],
+      "checked": 16
     },
     {
       "file": "18-trash-and-restoration.md",
-      "status": "Status: in_progress - native restore/single-permanent/Empty paths reviewed; remaining full QA gates open",
-      "open": [
-        "- [ ] Shared Trash header shows count and Empty trash action. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Policy explains that items remain until permanently deleted. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Rows identify deleted service/account and deletion time without exposing secrets. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Restore is a visible keyboard-operable action. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Single permanent deletion is separate from restore. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Empty trash confirmation explains scope and irreversibility. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Conflict/error/empty states offer actionable recovery without data loss. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Theme, icon contrast, focus and narrow layouts match the shared shell; no swipe-only dependency. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Restart/import/restore counts and references stay consistent; real keyboard/pointer actions and visual review pass."
-      ],
-      "checked": 8
+      "status": "Status: done — numbered UI scope independently reviewed with native state evidence",
+      "open": [],
+      "checked": 17
     },
     {
       "file": "19-settings-startup-and-help.md",
-      "status": "Status: in_progress - native counts/preferences/help reviewed; offline/logon/package/full QA gates open",
+      "status": "Status: blocked — offline/logon and heard screen-reader acceptance unavailable",
       "open": [
-        "- [ ] Shared Settings holder begins with concise real vault counts/status. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Export & Import is easy to find near the top. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Lock control and auto-lock setting show current state with labeled choices. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Clipboard timeout is clearly labeled with its practical behavior. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Auto Start shows actual success/failure and requires explicit intent. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Version and contextual local help are accessible without internet. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Clock/privacy/recovery guidance is concise and avoids unsupported security claims. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] Shared row hierarchy, opaque active icons, focus and responsive layout apply; excluded controls are absent. — PRD/reference structure; shared implementation from task 04.",
-        "- [ ] All help and core settings function with networking disabled; no excluded control or runtime network call exists.",
-        "- [ ] Keyboard, high-contrast/readability and narrow layouts pass independent review."
+        "- [ ] All help and core settings function with networking disabled; no excluded control or runtime network call exists."
       ],
-      "checked": 7
+      "checked": 16
     },
     {
       "file": "20-reliability-and-security-review.md",
-      "status": "Status: in_progress - source audit/full suite approved; native/offline gates open",
+      "status": "Status: blocked — effective isolated offline runtime inspection unavailable",
       "open": [
         "- [ ] Inspect runtime network behavior offline, plaintext filesystem artifacts, logs, crash output and Debug formatting with disposable sentinel values. Limit diagnostics and document OS crash-dump/memory limitations honestly.",
         "- [ ] Sentinel scan finds no user data in logs/temp/journals; runtime performs no required network operations."
@@ -223,20 +135,14 @@
     },
     {
       "file": "21-complete-ui-and-workflow-qa.md",
-      "status": "Status: in_progress - native recovery/full-graph journeys independently reviewed; environment/full-matrix gates open",
+      "status": "Status: blocked — isolated runtime, OS lifecycle and heard-speech acceptance unavailable",
       "open": [
         "- [ ] Run complete disposable-data journeys from clean install: vault setup → screenshot import → current-code verification → copy/edit/search/sort/views → backup codes → folders → trash/restore → encrypted export → clean-vault merge/replace restore.",
-        "- [ ] Use real pointer/keyboard interactions for capture drag, dropdowns, buttons, multi-selection, dialogs and clipboard; synthetic click-only checks do not suffice.",
-        "- [ ] Inspect actual component screenshots for every page at narrow, intermediate and desktop windows and 100/150/200% scale; use available reference evidence and record unavailable reference comparisons as unverified.",
         "- [ ] Check empty/loading/no-results/open/error/focus/locked states, active-icon contrast, foreground/background pairs, clipping and logical hierarchy. Test Narrator/accessibility labels, roles, tab order and announcements without repeatedly reading OTP values.",
-        "- [ ] Use a reviewer who did not implement the screens, following each task's checklist and ui-consistency:verifying if available. Repair findings and rerun affected checks.",
         "- [ ] Store only sanitized/disposable evidence and a coverage report under docs/qa/. Complete all PRD acceptance criteria, not just a successful launch or test exit code.",
-        "- [ ] Every FR and success criterion maps to passing reproducible tests or explicit honest evidence; no untested manual check is labeled passed.",
-        "- [ ] Screenshot-to-import works offline across available monitor/scaling combinations and failure/cancel/lock paths.",
-        "- [ ] All pages are readable and operable with pointer/keyboard at tested sizes, and reference deviations are fixed or documented accurately.",
-        "- [ ] Independent reviewer finds no unresolved material functional, accessibility or visual defect."
+        "- [ ] Screenshot-to-import works offline across available monitor/scaling combinations and failure/cancel/lock paths."
       ],
-      "checked": 0
+      "checked": 6
     },
     {
       "file": "22-reference-migration-discovery.md",
@@ -246,32 +152,25 @@
     },
     {
       "file": "23-windows-packaging-and-user-docs.md",
-      "status": "Status: in_progress; scoped package/native recovery reviewed; reproducibility and environment gates open",
+      "status": "Status: blocked — isolated offline/no-Rust/other-user installation acceptance unavailable",
       "open": [
-        "- [ ] Produce a reproducible Windows release build and distributable package/installer without requiring paid signing credentials. Use app name Authenticator, correct version, local icon/assets and user-scoped data paths.",
         "- [ ] Smoke-test the packaged binary on a clean local profile/VM if available and restore an encrypted backup independently of original profile keys. Confirm offline runtime and startup toggle behavior.",
-        "- [ ] Add Windows CI release-build/package validation and record artifact location/checksum/license notices. Do not publish a GitHub release or upload user data as part of this task.",
         "- [ ] A clean environment can build the documented package and launch Authenticator offline without Rust installed for end users.",
         "- [ ] Install/update/uninstall handling preserves vault data; recovery on another profile is verified or explicitly recorded as blocked evidence."
       ],
-      "checked": 4
+      "checked": 6
     },
     {
       "file": "24-final-prd-audit-and-main-push.md",
-      "status": "Status: in_progress; scoped repairs reviewed; feasible QA, reproducibility and final gates open",
+      "status": "Status: in_progress — final committed-source CI and clean Git verification pending; external acceptance remains blocked",
       "open": [
-        "- [ ] Audit every FR item, security/visual requirement, success criterion and task acceptance check against actual implementation/test evidence. Repair omissions and regressions; no placeholder, stub, skipped required check or TODO may be called complete.",
-        "- [ ] Reconcile PRD.md with implemented decisions, supported formats, capture/portability behavior, exact retention/lock defaults, migration findings and known platform limitations. Preserve mandatory scope and never narrow requirements merely to close tasks.",
-        "- [ ] Update tasks/README.md, every task status/evidence section, tasks/coverage.md and docs/completion-report.md. Differentiate implemented, independently reviewed, tested and externally unverified claims.",
         "- [ ] Run final cargo fmt --check, cargo clippy with the agreed warning policy, cargo test, release build/package and affected real-UI journeys. Review git diff for secrets/unrelated changes.",
         "- [ ] Commit coherent project changes on main and push to https://github.com/ranjbar-dev/authenticator without force-push or rewriting unrelated history. Verify origin/main equals local HEAD and working tree is clean.",
-        "- [ ] If infrastructure/auth/tool/hardware access truly prevents a requirement, leave its task blocked, persist exact evidence/resume steps and report incomplete honestly. Do not falsely announce completion or keep retrying an unchanged permanent failure forever.",
         "- [ ] All numbered tasks are done only with evidence and independent review where required; every coverage row is verified.",
-        "- [ ] Final PRD matches actual behavior and preserves Rust, reference UI, English-only, encrypted-local-only and screenshot-first requirements.",
         "- [ ] Required checks pass, packaged output is identifiable, no real secrets are committed and no material issue is unresolved.",
         "- [ ] main is committed/pushed and remote SHA equals local HEAD; final report names checks, artifacts and genuine limitations."
       ],
-      "checked": 0
+      "checked": 5
     }
   ]
 }

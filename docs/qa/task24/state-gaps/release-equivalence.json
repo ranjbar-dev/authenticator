@@ -1,0 +1,24 @@
+{
+  "command": [
+    "rtk",
+    "proxy",
+    "cargo",
+    "build",
+    "--release",
+    "--locked",
+    "--offline",
+    "--target",
+    "x86_64-pc-windows-msvc"
+  ],
+  "exit": 0,
+  "seconds": 91.979,
+  "owned_root": "D:\\Projects\\github\\authenticator\\target\\task24-state-release-kety06oz",
+  "before_sha256": "9656ed317d6b2e36a96cf17ac5c0d2729680cb6abb850941c295f7418272978e",
+  "after_sha256": "9656ed317d6b2e36a96cf17ac5c0d2729680cb6abb850941c295f7418272978e",
+  "same_exe_bytes": true,
+  "bytes": 12179456,
+  "production_source_prefix_unchanged": {
+    "src/ui/recovery_editor.rs": true,
+    "src/ui/shell.rs": true
+  }
+}

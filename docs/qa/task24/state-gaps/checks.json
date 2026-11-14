@@ -1,0 +1,34 @@
+{
+  "commands": [
+    {
+      "command": "rtk proxy python target/state-gaps-build.py",
+      "result": "Initial empty and populated example builds succeeded, 6.150 and 6.148 seconds; exact EXE hashes in builds.json."
+    },
+    {
+      "command": "rtk proxy python target/state-gaps-build-fingerprints.py",
+      "result": "Final appended-debug-getter populated helper build succeeded, 3.228 seconds."
+    },
+    {
+      "command": "rtk proxy python target/follow24-cargo.py test --offline --locked recovery_file_job_previews_without_mutation_and_failures_keep_prior_edits -- --nocapture",
+      "result": "One real-file retention test passed, 0.06 seconds test body; test profile build 22.17 seconds. Other binaries had zero selected cases, not extra passes."
+    },
+    {
+      "command": "rtk proxy python target/follow24-cargo.py fmt --all -- --check",
+      "result": "Exit 0, 0.909 seconds."
+    },
+    {
+      "command": "rtk proxy python target/follow24-cargo.py clippy --offline --locked --example final_matrix -- -D warnings",
+      "result": "Exit 0; final dev check 2.09 seconds, wrapper 2.494 seconds."
+    },
+    {
+      "command": "rtk proxy python target/state-gaps-release-check.py",
+      "result": "Exact packaging target/static-CRT/Brepro direct release build passed, 91.979 seconds; both EXEs identical to native-tested 9656\u2026; production source prefixes unchanged."
+    },
+    {
+      "command": "rtk git diff --check",
+      "result": "Exit 0 after final evidence curation."
+    }
+  ],
+  "environment": "Fresh owned D: TEMP/TMP and CARGO_BUILD_JOBS=2 per Cargo invocation; no whole-target clean, global environment or dependency changes.",
+  "build_recovery": "First example compile rejected LowerHex formatting for sha2 0.11 digest. Changed only QA hash-to-hex formatting; subsequent builds and strict Clippy passed. No product runtime defect was identified."
+}

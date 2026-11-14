@@ -1,6 +1,6 @@
 # Task 23: Windows packaging, clean-install recovery and documentation
 
-Status: in_progress; scoped package/native recovery reviewed; reproducibility and environment gates open
+Status: blocked — isolated offline/no-Rust/other-user installation acceptance unavailable
 Priority: Required for complete v1
 Dependencies: 01–22
 Requirements: PRD §§1–3, 7–11, 13–14
@@ -11,11 +11,11 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Implementation
 
-- [ ] Produce a reproducible Windows release build and distributable package/installer without requiring paid signing credentials. Use app name Authenticator, correct version, local icon/assets and user-scoped data paths.
+- [x] Produce a reproducible Windows release build and distributable package/installer without requiring paid signing credentials. Use app name Authenticator, correct version, local icon/assets and user-scoped data paths.
 - [x] Document install/run/update/uninstall, Rust development, screenshot scan, manual/image entry, supported TOTP parameters, lock/recovery, backup codes, folders/trash and easy encrypted export/import in English.
 - [x] Document that uninstall preserves user vaults unless separately deliberately removed; packaging/startup changes must not delete data or weaken ACLs. Do not ship test records or hardcoded business data.
 - [ ] Smoke-test the packaged binary on a clean local profile/VM if available and restore an encrypted backup independently of original profile keys. Confirm offline runtime and startup toggle behavior.
-- [ ] Add Windows CI release-build/package validation and record artifact location/checksum/license notices. Do not publish a GitHub release or upload user data as part of this task.
+- [x] Add Windows CI release-build/package validation and record artifact location/checksum/license notices. Do not publish a GitHub release or upload user data as part of this task.
 
 ## Acceptance and verification
 
@@ -42,3 +42,7 @@ Actual production scan/review/save/HMAC/copy, native encrypted export, separate-
 
 
 The [follow-up independent review](../docs/qa/task24/follow-up/independent-review.md) approves the bounded focus and deterministic packaging changes, verifies both complete 183-crate builds and all 59 new author frames, and independently repeats the native import/dialog/Lock path. The original reproducibility wording remains intact. Five bounded recovery/folder/Trash native state-evidence cases, clean-commit artifact/current CI and genuine environment/tool gates remain open. No final Task24/project acceptance is claimed.
+
+Parent clean committed source109171ac72e458ac3c34738e828e83b29983ec5a produced source_dirty=false metadata and exact native-tested EXE9656…; [local identity and commands](../docs/qa/task23/clean-build-109171a.md). Hosted [43536070275](https://github.com/ranjbar-dev/authenticator/actions/runs/43536070275) passed all230 ordinary tests, format/lint/app build, release package,17 package regressions, validation and upload. [Hosted artifact identity](../docs/qa/task23/hosted-109171a.md) is separate from local runtime proof. The original reproducible-build and CI implementation checkboxes are now evidenced; offline/no-Rust/other-user/logon acceptance remains open.
+
+Current acceptance boundary: all required feasible software-state cases have [independent closure](../docs/qa/task24/state-gaps/independent-review.md). Reviewed source109171a has clean local packaging and successful full hosted check/package evidence; postA QA-only additions preserve exact release bytes and have targeted checks/re-review. This task is blocked only by the named resource/tool-limited acceptance above, not by an unreported software TODO. Resume on a ready isolated Windows environment with effective networking disabled/no Rust and independent user recovery, then test actual OS lifecycle/logon and audible Narrator behavior using a working positive control. Existing source/adapter/AX tests do not pretend those runtime checks passed. The final integration update supplies the actual main SHA and attached CI result.

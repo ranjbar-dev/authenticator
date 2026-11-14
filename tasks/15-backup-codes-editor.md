@@ -1,6 +1,6 @@
 # Task 15: Add/edit backup codes from text and file
 
-Status: in_progress - native file/duplicate-preview/save and round-trip reviewed; remaining full QA gates open
+Status: done — numbered UI scope independently reviewed with native state evidence
 Priority: Required for complete v1
 Dependencies: 09, 14
 Requirements: FR-3.1/3/4, FR-2.5; PRD §§7–9, 12
@@ -20,23 +20,23 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 Planning snapshot, 12 November 2026: no existing application source, screen family, theme or shared components was present. These are PRD/reference-derived roles, not measured project conventions. Use the shared Rust theme and widgets created by task 04 (or create those primitives in task 04 itself); reread this checklist before editing. Refresh implementation paths from the actual code.
 
-- [ ] Shared editor holder identifies the selected service/account. — PRD/reference structure; shared implementation from task 04.
-- [ ] Multiline code input is labeled and concealed where practical; reveal is intentional. — PRD/reference structure; shared implementation from task 04.
-- [ ] Read Backup Codes from File uses a local picker and explains UTF-8 input. — PRD/reference structure; shared implementation from task 04.
-- [ ] Preview summarizes valid/blank/duplicate lines without unsolicited disclosure. — PRD/reference structure; shared implementation from task 04.
-- [ ] Existing-set replacement and retained used-state behavior are clearly explained. — PRD/reference structure; shared implementation from task 04.
-- [ ] Save/Cancel/Delete use shared actions and destructive confirmation. — PRD/reference structure; shared implementation from task 04.
-- [ ] File/validation/write errors retain safe unsaved input and offer recovery. — PRD/reference structure; shared implementation from task 04.
-- [ ] Keyboard, focus, scrolling, theme and narrow-window actions remain usable; lock clears input. — PRD/reference structure; shared implementation from task 04.
+- [x] Shared editor holder identifies the selected service/account. — PRD/reference structure; shared implementation from task 04.
+- [x] Multiline code input is labeled and concealed where practical; reveal is intentional. — PRD/reference structure; shared implementation from task 04.
+- [x] Read Backup Codes from File uses a local picker and explains UTF-8 input. — PRD/reference structure; shared implementation from task 04.
+- [x] Preview summarizes valid/blank/duplicate lines without unsolicited disclosure. — PRD/reference structure; shared implementation from task 04.
+- [x] Existing-set replacement and retained used-state behavior are clearly explained. — PRD/reference structure; shared implementation from task 04.
+- [x] Save/Cancel/Delete use shared actions and destructive confirmation. — PRD/reference structure; shared implementation from task 04.
+- [x] File/validation/write errors retain safe unsaved input and offer recovery. — PRD/reference structure; shared implementation from task 04.
+- [x] Keyboard, focus, scrolling, theme and narrow-window actions remain usable; lock clears input. — PRD/reference structure; shared implementation from task 04.
 
 Must not be copied from the reference: profile/sign-in, cloud sync/backup, language selector, extension/companion promotions, optional encryption switches or swipe-only desktop actions. Reuse shared field, button, dialog and feedback components; do not recreate their styling per page.
 
 ## Acceptance and verification
 
-- [ ] Text/file input, BOM/line endings, blanks, duplicates, invalid encoding and oversized file paths have deterministic tested outcomes.
-- [ ] Cancel/failed save preserves existing set and edits; confirmed save survives restart.
-- [ ] No raw file remains and validation messages never contain code values.
-- [ ] Create-account-with-backup and standalone editor produce identical normalized results.
+- [x] Text/file input, BOM/line endings, blanks, duplicates, invalid encoding and oversized file paths have deterministic tested outcomes.
+- [x] Cancel/failed save preserves existing set and edits; confirmed save survives restart.
+- [x] No raw file remains and validation messages never contain code values.
+- [x] Create-account-with-backup and standalone editor produce identical normalized results.
 
 ## Handoff and completion
 
@@ -47,6 +47,9 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 5. Keep at most one child agent active; children must not spawn children, commit, push, change PRD scope or silently skip requirements. Return changed paths, checks, findings and remaining risks to the parent.
 
 ## Evidence
+
+**Current accepted outcome:** The [same-checker re-review](../docs/qa/task24/state-gaps/independent-review.md) recommends closing this task after combining the original source/security/fault tests, reviewed Task21/23 native recovery and the Task24 focus/state evidence. All listed checkboxes are now reconciled to that evidence. Actual offline/other-user/no-Rust, Windows lifecycle/logon and heard-speech gates remain with their explicitly blocked owners; no global certification follows from this page. Earlier evidence paragraphs below retain their historical launch/source context and are superseded only for the now-tested scope.
+
 
 Current native21 selected generated UTF-8 BOM/CRLF input through the real Open dialog; preview reported two unique codes, one blank and one duplicate, explicit consent saved the normalized set, and used history survived actual fresh native backup restore. [Journey](../docs/qa/task21/remaining-native-workflows.md), [independent review](../docs/qa/task21/remaining-native-independent-review.md). Existing adversarial/editor tests remain their own evidence; this does not assert every native edit/error/restart/scale branch was repeated.
 

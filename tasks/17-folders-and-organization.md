@@ -1,6 +1,6 @@
 # Task 17: Folder management and filtered navigation
 
-Status: in_progress - native membership/filter/Trash/backup paths reviewed; remaining full QA gates open
+Status: done — numbered UI scope independently reviewed with native state evidence
 Priority: Required for complete v1
 Dependencies: 10, 14–16
 Requirements: FR-4; PRD §§5.1, 7, 9, 12
@@ -36,7 +36,7 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 - [x] Create/rename/recolor folders, place an account in multiple folders and verify All/Unfiled behavior.
 - [x] Restart and export/import preserve folders/memberships without duplicated records or orphan references.
 - [x] Deleting a folder leaves all accounts and backup codes intact.
-- [ ] Pointer clicks, keyboard search/selection and compact layouts pass independent review.
+- [x] Pointer clicks, keyboard search/selection and compact layouts pass independent review.
 
 ## Handoff and completion
 
@@ -47,6 +47,9 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 5. Keep at most one child agent active; children must not spawn children, commit, push, change PRD scope or silently skip requirements. Return changed paths, checks, findings and remaining risks to the parent.
 
 ## Evidence
+
+**Current accepted outcome:** The [same-checker re-review](../docs/qa/task24/state-gaps/independent-review.md) recommends closing this task after combining the original source/security/fault tests, reviewed Task21/23 native recovery and the Task24 focus/state evidence. All listed checkboxes are now reconciled to that evidence. Actual offline/other-user/no-Rust, Windows lifecycle/logon and heard-speech gates remain with their explicitly blocked owners; no global certification follows from this page. Earlier evidence paragraphs below retain their historical launch/source context and are superseded only for the now-tested scope.
+
 
 Current native21 created Purple/Green folders for the same account through real pointer and keyboard selection, checked Unfiled/selected-folder results, preserved memberships during account restore, removed a trashed folder without deleting the account, and restored the full folder/membership graph through native backup import. [Journey](../docs/qa/task21/remaining-native-workflows.md), [independent review](../docs/qa/task21/remaining-native-independent-review.md). Native positive/18 cross-integration is now evidenced; all matrix/pagination/environment checks remain separately open.
 

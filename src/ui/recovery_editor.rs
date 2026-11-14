@@ -621,3 +621,36 @@ impl Editor {
         action
     }
 }
+
+// Appended debug-only evidence support preserves production source locations.
+#[cfg(debug_assertions)]
+impl Editor {
+    /// Digest-only oracle for an isolated public fixture; never raw values.
+    pub fn fingerprint_for_evidence(&self) -> String {
+        use sha2::{Digest, Sha256};
+        let hash = |value: &str| {
+            Sha256::digest(value.as_bytes())
+                .iter()
+                .map(|b| format!("{b:02x}"))
+                .collect::<String>()
+        };
+        let preview = self.preview.as_ref().map_or_else(
+            || "null".to_string(),
+            |p| {
+                format!(
+                    "{{\"input_sha256\":\"{}\",\"unique\":{},\"blanks\":{},\"duplicates\":{}}}",
+                    hash(&p.input),
+                    p.parsed.values.len(),
+                    p.parsed.blanks,
+                    p.parsed.duplicates
+                )
+            },
+        );
+        format!(
+            "{{\"input_bytes\":{},\"input_sha256\":\"{}\",\"preview\":{}}}",
+            self.text.len(),
+            hash(&self.text),
+            preview
+        )
+    }
+}

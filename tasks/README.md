@@ -1,6 +1,6 @@
 ## Current follow-up checkpoint
 
-Newest phase: the distinct follow-up review is FINAL and approves the bounded focus/packaging changes. All 59 new author frames and two separate reviewer frames, 73 source hashes, 206 author bundle entries and both full 183-crate rebuild artifacts were independently checked; real import/dialog/Lock repetition passed. Native exclusivity is released. Task07's measured monitor/DPI category acceptance is reconciled to done. Five bounded recovery/folder/Trash native state-evidence cases remain and will be completed next by one implementation child, then re-reviewed. Parent is integrating the accepted source fixes, starting current CI and producing a clean-commit package; no Task24/project completion is claimed. Current commit attribution follows in the next checkpoint to avoid circularity.
+Final acceptance checkpoint: 16 numbered scopes are done, seven have explicit resource/tool-limited acceptance, and Task24 is in progress for final CI/Git verification. The same independent checker closed all five additional native state groups and approved the narrow QA-only support; release EXE `9656ed31…` remains byte-identical. Tasks12–18 are reconciled done, with original requirements and historical evidence preserved. No active child or native exclusivity remains. Clean local artifact and hosted source109171a checks/package are separately identified in the completion report. This checkpoint contains the reviewed post109171a QA additions and final status reconciliation; its actual integration SHA, attached CI result and remote equality are supplied in the following final update. Mandatory isolated offline/other-user/no-Rust, actual OS lifecycle/logon and heard-speech gates remain blocked. [Current audit](../docs/completion-report.md), [final state re-review](../docs/qa/task24/state-gaps/independent-review.md). No whole-project completion claim.
 
 Previous phase:
 
@@ -18,26 +18,26 @@ Parent-pushed main is `2e2da2cba35e99d6d6d218471a12f48d67e7abc0`; current follow
 | 02 | [TOTP engine, data model and credential validation](02-totp-domain-and-uri-parser.md) | done |
 | 03 | [Encrypted local persistence and key management](03-encrypted-local-vault.md) | done |
 | 04 | [Reference-based Rust shell and shared controls](04-shared-ui-shell.md) | done |
-| 05 | [Local vault setup, unlock and lock lifecycle](05-vault-setup-and-lock-screen.md) | in_progress; implementation reviewed, hardware/integration QA open |
+| 05 | [Local vault setup, unlock and lock lifecycle](05-vault-setup-and-lock-screen.md) | blocked — isolated offline and actual Windows session-lock/suspend acceptance unavailable |
 | 06 | [Bounded local image and QR decoding](06-local-qr-decoding.md) | done |
-| 07 | [Windows screen-region capture overlay](07-windows-region-capture.md) | done; measured monitor/DPI categories independently reviewed |
-| 08 | [Complete screenshot-to-2FA workflow](08-screenshot-review-and-import.md) | in_progress; functional implementation approved, disconnected-machine QA open |
+| 07 | [Windows screen-region capture overlay](07-windows-region-capture.md) | done — implementation and measured monitor/DPI categories independently reviewed |
+| 08 | [Complete screenshot-to-2FA workflow](08-screenshot-review-and-import.md) | blocked — effective disconnected-machine screenshot workflow unavailable |
 | 09 | [Manual creation and account editing](09-manual-account-editor.md) | done |
-| 10 | [Complete 2FA list, search, sort, views and copy](10-codes-list-and-clipboard.md) | in_progress; repaired clipboard/native paths approved, hardware/full QA open |
-| 11 | [Authenticated encrypted export/import engine](11-portable-backup-engine.md) | done |
-| 12 | [Easy encrypted backup export screen](12-export-backup-screen.md) | in_progress; native full-graph export/restore reviewed, remaining QA open |
-| 13 | [Easy backup import, preview and conflict decisions](13-import-backup-screen.md) | in_progress; native full-graph Merge/Replace reviewed, remaining QA open |
-| 14 | [Backup Codes tab and account selection](14-backup-codes-list.md) | in_progress; native list/selector/detail/restore reviewed, remaining QA open |
-| 15 | [Add/edit backup codes from text and file](15-backup-codes-editor.md) | in_progress; native file/preview/save/round-trip reviewed, remaining QA open |
-| 16 | [Reveal/copy, used-state and delete recovery codes](16-backup-codes-detail.md) | in_progress; native recovery/clipboard/Trash paths reviewed, remaining QA open |
-| 17 | [Folder management and filtered navigation](17-folders-and-organization.md) | in_progress; native membership/filter/Trash/backup reviewed, remaining QA open |
-| 18 | [Trash, restoration and permanent deletion](18-trash-and-restoration.md) | in_progress; native restore/permanent/Empty reviewed, remaining QA open |
-| 19 | [Settings, auto-start and contextual offline help](19-settings-startup-and-help.md) | in_progress; native counts/preferences/help reviewed, offline/logon/package QA open |
-| 20 | [Failure resilience and independent security audit](20-reliability-and-security-review.md) | in_progress; source audit/full suite approved, native/offline gates open |
-| 21 | [Full offline workflow, accessibility and visual QA](21-complete-ui-and-workflow-qa.md) | in_progress; native/full-graph journeys independently reviewed, environment/matrix QA open |
-| 22 | [Reference-format discovery and truthful compatibility](22-reference-migration-discovery.md) | done; unsupported private format documented and independently reviewed |
-| 23 | [Windows packaging, clean-install recovery and documentation](23-windows-packaging-and-user-docs.md) | in_progress; scoped package/native recovery reviewed; reproducibility and environment gates open |
-| 24 | [Final completeness audit, PRD reconciliation and main push](24-final-prd-audit-and-main-push.md) | in_progress; scoped repairs reviewed; feasible QA/reproducibility/final gates open |
+| 10 | [Complete 2FA list, search, sort, views and copy](10-codes-list-and-clipboard.md) | blocked — actual hardware sleep/resume lifecycle acceptance unavailable |
+| 11 | [Authenticated encrypted export/import engine](11-portable-backup-engine.md) | done - engine approved after distinct security/data-loss review and focused re-review |
+| 12 | [Easy encrypted backup export screen](12-export-backup-screen.md) | done — numbered UI scope independently reviewed with native state evidence |
+| 13 | [Easy backup import, preview and conflict decisions](13-import-backup-screen.md) | done — numbered UI scope independently reviewed with native state evidence |
+| 14 | [Backup Codes tab and account selection](14-backup-codes-list.md) | done — numbered UI scope independently reviewed with native state evidence |
+| 15 | [Add/edit backup codes from text and file](15-backup-codes-editor.md) | done — numbered UI scope independently reviewed with native state evidence |
+| 16 | [Reveal/copy, used-state and delete recovery codes](16-backup-codes-detail.md) | done — numbered UI scope independently reviewed with native state evidence |
+| 17 | [Folder management and filtered navigation](17-folders-and-organization.md) | done — numbered UI scope independently reviewed with native state evidence |
+| 18 | [Trash, restoration and permanent deletion](18-trash-and-restoration.md) | done — numbered UI scope independently reviewed with native state evidence |
+| 19 | [Settings, auto-start and contextual offline help](19-settings-startup-and-help.md) | blocked — offline/logon and heard screen-reader acceptance unavailable |
+| 20 | [Failure resilience and independent security audit](20-reliability-and-security-review.md) | blocked — effective isolated offline runtime inspection unavailable |
+| 21 | [Full offline workflow, accessibility and visual QA](21-complete-ui-and-workflow-qa.md) | blocked — isolated runtime, OS lifecycle and heard-speech acceptance unavailable |
+| 22 | [Reference-format discovery and truthful compatibility](22-reference-migration-discovery.md) | done - evidence-based unsupported reference-format decision independently reviewed |
+| 23 | [Windows packaging, clean-install recovery and documentation](23-windows-packaging-and-user-docs.md) | blocked — isolated offline/no-Rust/other-user installation acceptance unavailable |
+| 24 | [Final completeness audit, PRD reconciliation and main push](24-final-prd-audit-and-main-push.md) | in_progress — final committed-source CI and clean Git verification pending; external acceptance remains blocked |
 
 ## Start in Codex CLI
 

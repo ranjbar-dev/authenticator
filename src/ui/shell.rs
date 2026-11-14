@@ -4600,3 +4600,14 @@ impl Drop for AuthenticatorApp {
         self.lock();
     }
 }
+
+// Appended debug-only support leaves production source locations unchanged.
+#[cfg(debug_assertions)]
+impl AuthenticatorApp {
+    /// Hashes/counts only; no evidence accessor is compiled into release.
+    pub fn recovery_fingerprint_for_evidence(&self) -> Option<String> {
+        self.recovery_editor
+            .as_ref()
+            .map(RecoveryEditor::fingerprint_for_evidence)
+    }
+}

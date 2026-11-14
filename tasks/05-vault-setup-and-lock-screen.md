@@ -1,6 +1,6 @@
 # Task 05: Local vault setup, unlock and lock lifecycle
 
-Status: in_progress — implementation reviewed; hardware/integration QA pending
+Status: blocked — isolated offline and actual Windows session-lock/suspend acceptance unavailable
 Priority: P0 foundation / screenshot-first
 Dependencies: 01–04
 Requirements: FR-7.1, FR-8; PRD §§7–8, 12
@@ -56,3 +56,5 @@ Implementation reviewed 2026-11-12 by distinct review_04 with focused security/d
 
 Task08 integration update: author and distinct review_08 verified lock clearing of editable QR/manual review, image picker/queued results and committed account/code nodes, plus worker stale/cancellation boundaries. Task07 supplied native capture/private-WTS cancellation. Actual OS notification delivery remains unverified, as do later clipboard/recovery-code integrations. The first acceptance checkbox was corrected to open: create/unlock/relaunch and wrong-passphrase behavior were observed, but ordinary machine connectivity was not disabled. Source-local operation is not proof of the disconnected-machine gate.
 
+
+Current acceptance boundary: all required feasible software-state cases have [independent closure](../docs/qa/task24/state-gaps/independent-review.md). Reviewed source109171a has clean local packaging and successful full hosted check/package evidence; postA QA-only additions preserve exact release bytes and have targeted checks/re-review. This task is blocked only by the named resource/tool-limited acceptance above, not by an unreported software TODO. Resume on a ready isolated Windows environment with effective networking disabled/no Rust and independent user recovery, then test actual OS lifecycle/logon and audible Narrator behavior using a working positive control. Existing source/adapter/AX tests do not pretend those runtime checks passed. The final integration update supplies the actual main SHA and attached CI result.

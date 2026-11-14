@@ -1,0 +1,12 @@
+{
+  "frames_verified": 14,
+  "source_files_verified": 66,
+  "relative_links_checked": 11,
+  "missing_links": 0,
+  "prior_59_and_195_bundles_unchanged": true,
+  "parent_clean_A_zip_unchanged": true,
+  "no_raw_fixture_draft_seed_or_phrase_in_curated_text": true,
+  "no_ciphertexts_or_binaries_in_curated_bundle": true,
+  "release_exe_equivalent_to_native_tested_9656": true,
+  "note": "Transient disposable OTP tool-output caveat remains disclosed; retained artifacts are separate."
+}

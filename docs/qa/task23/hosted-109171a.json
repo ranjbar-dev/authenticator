@@ -1,0 +1,192 @@
+{
+  "run": {
+    "id": 43536070275,
+    "head_sha": "109171ac72e458ac3c34738e828e83b29983ec5a",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/ranjbar-dev/authenticator/actions/runs/43536070275",
+    "created_at": "2026-11-14T00:43:15Z",
+    "updated_at": "2026-11-14T01:01:13Z"
+  },
+  "jobs": [
+    {
+      "id": 132265252211,
+      "name": "check",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-14T00:43:19Z",
+      "completed_at": "2026-11-14T00:56:53Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-14T00:43:20Z",
+          "completed_at": "2026-11-14T00:43:20Z"
+        },
+        {
+          "name": "Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-14T00:43:20Z",
+          "completed_at": "2026-11-14T00:43:33Z"
+        },
+        {
+          "name": "Install Rust",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-14T00:43:33Z",
+          "completed_at": "2026-11-14T00:43:52Z"
+        },
+        {
+          "name": "Format",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-14T00:43:52Z",
+          "completed_at": "2026-11-14T00:43:55Z"
+        },
+        {
+          "name": "Lint",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-14T00:43:55Z",
+          "completed_at": "2026-11-14T00:44:47Z"
+        },
+        {
+          "name": "Tests",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-14T00:44:47Z",
+          "completed_at": "2026-11-14T00:56:49Z"
+        },
+        {
+          "name": "Build Windows app",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-14T00:56:49Z",
+          "completed_at": "2026-11-14T00:56:50Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-14T00:56:50Z",
+          "completed_at": "2026-11-14T00:56:52Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-14T00:56:52Z",
+          "completed_at": "2026-11-14T00:56:52Z"
+        }
+      ]
+    },
+    {
+      "id": 132269910176,
+      "name": "package",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-14T00:56:56Z",
+      "completed_at": "2026-11-14T01:01:12Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-14T00:56:57Z",
+          "completed_at": "2026-11-14T00:56:57Z"
+        },
+        {
+          "name": "Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-14T00:56:57Z",
+          "completed_at": "2026-11-14T00:57:12Z"
+        },
+        {
+          "name": "Install Rust",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-14T00:57:12Z",
+          "completed_at": "2026-11-14T00:57:29Z"
+        },
+        {
+          "name": "Run actions/setup-python@v6",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-14T00:57:29Z",
+          "completed_at": "2026-11-14T00:57:29Z"
+        },
+        {
+          "name": "Build Windows portable ZIP",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-14T00:57:29Z",
+          "completed_at": "2026-11-14T01:01:05Z"
+        },
+        {
+          "name": "Packaging regression checks",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-14T01:01:05Z",
+          "completed_at": "2026-11-14T01:01:06Z"
+        },
+        {
+          "name": "Validate package contents and checksums",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-14T01:01:06Z",
+          "completed_at": "2026-11-14T01:01:06Z"
+        },
+        {
+          "name": "Upload public package artifacts",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-14T01:01:06Z",
+          "completed_at": "2026-11-14T01:01:09Z"
+        },
+        {
+          "name": "Post Run actions/setup-python@v6",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-14T01:01:09Z",
+          "completed_at": "2026-11-14T01:01:09Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-14T01:01:09Z",
+          "completed_at": "2026-11-14T01:01:11Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-14T01:01:11Z",
+          "completed_at": "2026-11-14T01:01:11Z"
+        }
+      ]
+    }
+  ],
+  "artifact": {
+    "id": 14091015742,
+    "name": "Authenticator-windows-x86_64",
+    "size_in_bytes": 5542464,
+    "digest": "sha256:3f02d621af2346ecec09b7116b366406766e53047fb345a88c53788dad8f330c",
+    "expired": false,
+    "created_at": "2026-11-14T01:01:09Z",
+    "expires_at": "2026-11-28T01:01:07Z"
+  },
+  "download_sha256": "3f02d621af2346ecec09b7116b366406766e53047fb345a88c53788dad8f330c",
+  "package_sha256": "e84e5fc2cbc652a5132385c28a473333ab571be6a5a6bbf826e4f6742dd1e1ba",
+  "package_bytes": 6024555,
+  "exe_sha256": "8806765c4ada8d152b6dbe35d35befa69cd877c7bd355fafff76ff315a7beb3e",
+  "exe_bytes": 12105728,
+  "source_commit": "109171ac72e458ac3c34738e828e83b29983ec5a",
+  "source_dirty": false,
+  "archive_validation": "passed paths/CRCs/manifest checksums",
+  "download_root": "D:\\Projects\\github\\authenticator\\target\\task24-hosted-109171a-3o05qezt",
+  "native_runtime_tested": false
+}

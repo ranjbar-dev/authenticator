@@ -1,0 +1,38 @@
+# Final metadata reconciliation review
+
+14 November 2026. Same distinct checker; metadata-only follow-up to the [state approval](state-gaps/independent-review.md). No product/status edits, staging, native control, new calibration, image rerender or broad test repetition by this reviewer.
+
+## Findings
+
+Two bookkeeping findings were sent to the parent before integration:
+
+1. **P2, `tasks/24-final-prd-audit-and-main-push.md`, Implementation4/5 and Acceptance3/4:** final integrated checks, final commit/push/clean tree and remote equality were checked while integration was only staged. Completion-report's check row also used present tense for CI not yet attached. Leave these four original items open until actual results exist; keep final integration in progress separately from external blocked acceptance. Older Task24 pending-case/no-final-acceptance paragraphs need an explicit historical label/current supersession.
+2. **P3, staged public log retention:**10of12 log blobs initially normalized CRLF to LF. All contents were equivalent as text, but the four new state-gap log blob hashes then differed from the frozen81-entry bundle. Preserve exact reviewed log bytes with narrow attributes/restaging, rather than claiming byte preservation based only on working-tree files. All81 bundle paths were present; this was conversion, not missing execution evidence.
+
+The parent accepted both corrections. Their corrected staged form was independently verified below.
+
+## Independent checks and scope
+
+Read current task table/checkpoint, completion report, final evidence index, PRD concrete/status changes, all48 current coverage rows,24task status/checklists and audit JSON, retained clean/hosted109171a records and the12 staged public logs. The separate prior source/image/test reviews remain the acceptance basis; this report does not certify new runtime behavior.
+
+Independent `rtk proxy python -X utf8 target/review24-final-metadata.py` and focused scripts verified every numbered task's pre-Evidence requirement body against2e2, removing only Status lines, checkbox marks and CRLF differences. All24match; no requirement removed/rephrased. Normative PRD1–12 (before nonnormative concrete record) remains28,322characters, SHA256 `6d28a5ca846517d3a4519f048d2fae7352c774c5165f84f8dc2172423622fcf7`. Audit statuses/open-item strings/checked counts match the task files. Tasks12–18 implement the exact prior recommendations; Task10 retains hardware sleep/resume, Task19 its offline composite, Task21 its four global composites. Original Task23 reproducible wording remains intact, with its three isolated-runtime/installation items open. No whole-project completion claim is justified.
+
+All48coverage rows preserve the distinction between reviewed source/tests, recorded native actions and unverified offline/OS/speech/reference claims. Current local clean109171a ZIPee7af10e/EXE9656, hosted cleanA e84e/8806,230ordinary+17package checks and no hosted native-test claim agree with reviewed artifact records. PostA debug support/release equivalence,158of268author images plus2reviewer frames/original110unopened, masks, two disposable OTP tool-output caveats and source-only calibration limits remain explicit. No pixel/Cartesian/heard-speech certification was introduced. The dated historical statements are not new current evidence.
+
+Working source/bundle SHA for the state additions remains `ca07d1e0…`/`eaf35153…`; all66source/81bundle entries still match reviewed disk bytes. Earlier206-entry follow-up bundle also matches. Its historical73-file source snapshot differs only at the three explicitly reviewed postA QA source files, as expected; it is not a current-source manifest. No image was reopened because its bytes/attribution and prior visual review are unchanged.
+
+Initial index inventory was123paths/14PNGs/12public logs, no target tree or EXE/ZIP/DLL/PDB/native backup payload. Read the short logs in full; they contain package identity, compilation/check output and safe test names/counts, including preserved RTK fallback diagnostics. Both copied full logs equal their ignored owned originals byte-for-byte, each183Compiling entries and successful3m21s/3m36s endings. These logs repair Git availability of already reviewed proof, not retrospective execution. The newly staged state snapshots contain public UUID/state/count/value-digest evidence, not raw values; source fixture constants are the deliberately published test values already reviewed. No real credential was found in this bounded staged-path/log inspection; this is not an absolute scanner guarantee.
+
+An independent cached tracked-Markdown scan found133files/347relative links/0missing before this report was added; exact count will increase with this report. The parent's earlier132/346record was stale by one document/link. Refresh final audit counts after all review files are included, stating the scan boundary. Final `git diff --cached --check` and index verification are recorded in the correction disposition below.
+
+## Correction disposition and remaining work
+
+Verified corrected Task24 status `in_progress`,16done/7blocked/1in_progress counts, all24audit/checklist matches, and the four final-check/Git original items unchecked alongside the global all-tasks acceptance item. Completion report now says final committed-source CI **will** be attached. Current Task24 Evidence explicitly labels older pending/no-acceptance snapshots historical. Independently confirmed the older bottom sentence calling the task only externally blocked is removed; the corrected text distinguishes pending integration from external acceptance.
+
+Verified staged `.gitattributes` narrow reviewed-public-log rules and exact index-to-reviewed-disk byte equality for all12logs. All81state-gap bundle entries now match their exact staged blob SHA256, including the four formerly converted logs; frozen author hashes/bytes did not change. At verification the index held124paths (the original123plus attributes),14PNGs, with this new report still unstaged. These are index facts, not an invented committed-availability claim: parent must include the report/final metadata and actually commit/push them.
+
+Plain `git diff --cached --check` flags intentional CRLF in retained exact-byte logs. `rtk proxy git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --cached --check` passes, retaining normal whitespace checks while recognizing CRLF. Do not alter preserved evidence bytes to silence that diagnostic.
+
+**Scoped metadata approval after these corrections; no unresolved material bookkeeping finding.** Parent will recompute the temporary target bookkeeping counts/links/index inventory after including this report; the earlier132/346 and16done/8blocked snapshot is superseded. Final current-head CI, commit/push, clean-tree and remote/local equality are parent operations still to be executed and recorded, not outcomes of this metadata review. Effective offline/no-Rust/other-user runtime, actual WTS/suspend/logon and heard Narrator announcements remain mandatory unverified gates with documented resume steps. Exact private Windows reference uses the authorized inventory fallback; accepted unsupported private.vault discovery does not waive native-backup recovery.
+
+Review cost:24requirement/checklist comparisons,48coverage rows,12log files and approximately15additional report/index/artifact records; approximately12focused search/diff/hash/link inquiries (record/search counts are estimates). No new pages/images/native interactions were evaluated. Prior source-only calibration and rendering/privacy limits remain unchanged.

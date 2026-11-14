@@ -1,0 +1,156 @@
+{
+  "run": "43536070275",
+  "top_level_summaries": [
+    {
+      "passed": 211,
+      "failed": 0,
+      "direct_ignored": 4,
+      "seconds": "640.38"
+    },
+    {
+      "passed": 1,
+      "failed": 0,
+      "direct_ignored": 1,
+      "seconds": "0.01"
+    },
+    {
+      "passed": 3,
+      "failed": 0,
+      "direct_ignored": 0,
+      "seconds": "0.00"
+    },
+    {
+      "passed": 12,
+      "failed": 0,
+      "direct_ignored": 0,
+      "seconds": "0.00"
+    },
+    {
+      "passed": 0,
+      "failed": 0,
+      "direct_ignored": 0,
+      "seconds": "0.00"
+    },
+    {
+      "passed": 0,
+      "failed": 0,
+      "direct_ignored": 0,
+      "seconds": "0.00"
+    },
+    {
+      "passed": 0,
+      "failed": 0,
+      "direct_ignored": 0,
+      "seconds": "0.00"
+    },
+    {
+      "passed": 0,
+      "failed": 0,
+      "direct_ignored": 0,
+      "seconds": "0.00"
+    },
+    {
+      "passed": 0,
+      "failed": 0,
+      "direct_ignored": 0,
+      "seconds": "0.00"
+    },
+    {
+      "passed": 1,
+      "failed": 0,
+      "direct_ignored": 0,
+      "seconds": "0.00"
+    },
+    {
+      "passed": 0,
+      "failed": 0,
+      "direct_ignored": 0,
+      "seconds": "0.00"
+    },
+    {
+      "passed": 0,
+      "failed": 0,
+      "direct_ignored": 0,
+      "seconds": "0.00"
+    },
+    {
+      "passed": 0,
+      "failed": 0,
+      "direct_ignored": 0,
+      "seconds": "0.00"
+    },
+    {
+      "passed": 0,
+      "failed": 0,
+      "direct_ignored": 0,
+      "seconds": "0.00"
+    },
+    {
+      "passed": 0,
+      "failed": 0,
+      "direct_ignored": 0,
+      "seconds": "0.00"
+    },
+    {
+      "passed": 0,
+      "failed": 0,
+      "direct_ignored": 0,
+      "seconds": "0.00"
+    },
+    {
+      "passed": 1,
+      "failed": 0,
+      "direct_ignored": 0,
+      "seconds": "0.00"
+    },
+    {
+      "passed": 0,
+      "failed": 0,
+      "direct_ignored": 0,
+      "seconds": "0.00"
+    },
+    {
+      "passed": 0,
+      "failed": 0,
+      "direct_ignored": 0,
+      "seconds": "0.00"
+    },
+    {
+      "passed": 0,
+      "failed": 0,
+      "direct_ignored": 0,
+      "seconds": "0.00"
+    },
+    {
+      "passed": 1,
+      "failed": 0,
+      "direct_ignored": 0,
+      "seconds": "0.00"
+    },
+    {
+      "passed": 0,
+      "failed": 0,
+      "direct_ignored": 0,
+      "seconds": "0.00"
+    },
+    {
+      "passed": 0,
+      "failed": 0,
+      "direct_ignored": 0,
+      "seconds": "0.00"
+    },
+    {
+      "passed": 0,
+      "failed": 0,
+      "direct_ignored": 0,
+      "seconds": "0.00"
+    }
+  ],
+  "ordinary_pass_total": 230,
+  "direct_ignored_total": 5,
+  "focused": [
+    "platform::clipboard::tests::rejected_published_copy_is_not_success_and_retains_guarded_cleanup ... ok",
+    "ui::shell::capture_privacy_tests::account_evidence_masks_revealed_seed_and_creation_backup_through_lock ... ok",
+    "ui::shell::trash_tests::trash_permanent_scope_fault_retry_latest_preferences_and_encrypted_restart ... ok"
+  ]
+}

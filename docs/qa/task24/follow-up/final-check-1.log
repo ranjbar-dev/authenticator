@@ -1,0 +1,5 @@
+
+rtk: Failed to resolve 'python' via PATH, falling back to direct exec: Binary 'python' not found on PATH
+rtk: Failed to resolve 'cargo' via PATH, falling back to direct exec: Binary 'cargo' not found on PATH
+    Checking authenticator v0.1.0 (D:\Projects\github\authenticator)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.63s

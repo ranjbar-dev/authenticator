@@ -1,6 +1,6 @@
 # Task 13: Easy backup import, preview and conflict decisions
 
-Status: in_progress - native full-graph Merge/Replace reviewed; remaining conflict/matrix/environment gates open
+Status: done — numbered UI scope independently reviewed with native state evidence
 Priority: Required for complete v1
 Dependencies: 04, 05, 11, 12
 Requirements: FR-6.2/4; PRD §§7, 11–12
@@ -20,23 +20,23 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 Planning snapshot, 12 November 2026: no existing application source, screen family, theme or shared components was present. These are PRD/reference-derived roles, not measured project conventions. Use the shared Rust theme and widgets created by task 04 (or create those primitives in task 04 itself); reread this checklist before editing. Refresh implementation paths from the actual code.
 
-- [ ] Shared header names Import backup with clear back/cancel actions. — PRD/reference structure; shared implementation from task 04.
-- [ ] File selection displays supported native backup format guidance. — PRD/reference structure; shared implementation from task 04.
-- [ ] Passphrase entry is masked and errors reveal no payload. — PRD/reference structure; shared implementation from task 04.
-- [ ] Preview puts counts and affected-data summary before confirmation. — PRD/reference structure; shared implementation from task 04.
-- [ ] Merge/replace and conflict selectors have readable labels and safe defaults. — PRD/reference structure; shared implementation from task 04.
-- [ ] Destructive replacement receives explicit confirmation. — PRD/reference structure; shared implementation from task 04.
-- [ ] Progress/error states preserve the existing vault and offer retry. — PRD/reference structure; shared implementation from task 04.
-- [ ] Success shows imported data, focus returns logically and sensitive buffers are released. — PRD/reference structure; shared implementation from task 04.
+- [x] Shared header names Import backup with clear back/cancel actions. — PRD/reference structure; shared implementation from task 04.
+- [x] File selection displays supported native backup format guidance. — PRD/reference structure; shared implementation from task 04.
+- [x] Passphrase entry is masked and errors reveal no payload. — PRD/reference structure; shared implementation from task 04.
+- [x] Preview puts counts and affected-data summary before confirmation. — PRD/reference structure; shared implementation from task 04.
+- [x] Merge/replace and conflict selectors have readable labels and safe defaults. — PRD/reference structure; shared implementation from task 04.
+- [x] Destructive replacement receives explicit confirmation. — PRD/reference structure; shared implementation from task 04.
+- [x] Progress/error states preserve the existing vault and offer retry. — PRD/reference structure; shared implementation from task 04.
+- [x] Success shows imported data, focus returns logically and sensitive buffers are released. — PRD/reference structure; shared implementation from task 04.
 
 Must not be copied from the reference: profile/sign-in, cloud sync/backup, language selector, extension/companion promotions, optional encryption switches or swipe-only desktop actions. Reuse shared field, button, dialog and feedback components; do not recreate their styling per page.
 
 ## Acceptance and verification
 
-- [ ] Restore task 12's backup into a fresh local vault and verify codes, metadata, folders, backup used states, trash and supported preferences.
-- [ ] Exercise incorrect passphrase, tampering, future version, conflict decisions, replace confirmation, cancel and lock/failure during import.
-- [ ] Imported preferences do not silently enable startup or weaken lock settings.
-- [ ] Real pointer/keyboard preview choices work and independent visual review passes.
+- [x] Restore task 12's backup into a fresh local vault and verify codes, metadata, folders, backup used states, trash and supported preferences.
+- [x] Exercise incorrect passphrase, tampering, future version, conflict decisions, replace confirmation, cancel and lock/failure during import.
+- [x] Imported preferences do not silently enable startup or weaken lock settings.
+- [x] Real pointer/keyboard preview choices work and independent visual review passes.
 
 ## Handoff and completion
 
@@ -47,6 +47,9 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 5. Keep at most one child agent active; children must not spawn children, commit, push, change PRD scope or silently skip requirements. Return changed paths, checks, findings and remaining risks to the parent.
 
 ## Evidence
+
+**Current accepted outcome:** The [same-checker re-review](../docs/qa/task24/state-gaps/independent-review.md) recommends closing this task after combining the original source/security/fault tests, reviewed Task21/23 native recovery and the Task24 focus/state evidence. All listed checkboxes are now reconciled to that evidence. Actual offline/other-user/no-Rust, Windows lifecycle/logon and heard-speech gates remain with their explicitly blocked owners; no global certification follows from this page. Earlier evidence paragraphs below retain their historical launch/source context and are superseded only for the now-tested scope.
+
 
 Current native21 follow-up restored12's full record graph into a fresh independently keyed vault, verified the current code with independent HMAC, rejected a wrong phrase without ciphertext mutation, preserved a deliberate local used-state change with Keep current and no duplicates, and checked Replace Cancel/Confirm. Display adoption was explicit; local security/startup retained. [Journey](../docs/qa/task21/remaining-native-workflows.md), [independent review](../docs/qa/task21/remaining-native-independent-review.md). Other conflict choices, every state/scale and environment-only checks remain open; no byte-identical-vault claim is made.
 

@@ -1,0 +1,32 @@
+{
+  "initial_helpers": {
+    "program_root": "D:\\Projects\\github\\authenticator\\target\\task24-state-program-d6f1b279-d6d0-44ca-b458-40ff0be3471b",
+    "source_base": "109171ac72e458ac3c34738e828e83b29983ec5a",
+    "builds": [
+      {
+        "mode": "empty",
+        "exe": "D:\\Projects\\github\\authenticator\\target\\task24-state-program-d6f1b279-d6d0-44ca-b458-40ff0be3471b\\final-matrix-empty.exe",
+        "sha256": "b44af39af8f3be7c97b4caf83ea4f0694ef662a64d9544895cad2d1ac3d40faa",
+        "bytes": 41932288,
+        "seconds": 6.15,
+        "log": "D:\\Projects\\github\\authenticator\\target\\task24-state-build-x8su2sml\\compile.log"
+      },
+      {
+        "mode": "populated",
+        "exe": "D:\\Projects\\github\\authenticator\\target\\task24-state-program-d6f1b279-d6d0-44ca-b458-40ff0be3471b\\final-matrix-populated.exe",
+        "sha256": "5f57d4a840e3a94c2b314d93cc09dbb4a4d7ea5f5e0c15de3e7a6142d546030a",
+        "bytes": 41932288,
+        "seconds": 6.148,
+        "log": "D:\\Projects\\github\\authenticator\\target\\task24-state-build-vbrizfgm\\compile.log"
+      }
+    ]
+  },
+  "final_digest_helper": {
+    "mode": "populated",
+    "exe": "D:\\Projects\\github\\authenticator\\target\\task24-state-fingerprints-b4d2593e-c390-42de-8ce5-2d19f1d3a557\\final-matrix-populated.exe",
+    "sha256": "2c7adfe7a0d2d700662ff197cf8b2121d7a758311ca054138aa05336bf08f626",
+    "bytes": 41938432,
+    "seconds": 3.228,
+    "log": "D:\\Projects\\github\\authenticator\\target\\task24-state-build-1n0wlj3z\\compile.log"
+  }
+}

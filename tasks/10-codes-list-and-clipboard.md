@@ -1,6 +1,6 @@
 # Task 10: Complete 2FA list, search, sort, views and copy
 
-Status: in_progress - repaired clipboard source/native paths reviewed; hardware clock/full QA gates open
+Status: blocked — actual hardware sleep/resume lifecycle acceptance unavailable
 Priority: Required for complete v1
 Dependencies: 02–09
 Requirements: FR-1; PRD §§5.1, 7, 11
@@ -37,7 +37,7 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 - [ ] Cards match independent TOTP values at boundaries and after sleep/resume/clock jumps; no stale code remains.
 - [x] Search, every sort mode and both views persist correctly through restart.
 - [x] Clipboard timeout/lock clearing works without overwriting newer user clipboard content, including race cases.
-- [ ] Real pointer clicks and keyboard shortcuts reach copy/edit/delete/search/sort/view without drag scrolling stealing clicks.
+- [x] Real pointer clicks and keyboard shortcuts reach copy/edit/delete/search/sort/view without drag scrolling stealing clicks.
 
 ## Handoff and completion
 
@@ -91,3 +91,5 @@ its unchecked implementation/acceptance item remains open until actual final
 interactive Copy success is evidenced. Continue independent Task11 after this
 review/integration; revisit Copy in20/21 without weakening ownership checks.
 Commit reference is recorded in the following parent checkpoint.
+
+Current acceptance boundary: all required feasible software-state cases have [independent closure](../docs/qa/task24/state-gaps/independent-review.md). Reviewed source109171a has clean local packaging and successful full hosted check/package evidence; postA QA-only additions preserve exact release bytes and have targeted checks/re-review. This task is blocked only by the named resource/tool-limited acceptance above, not by an unreported software TODO. Resume on a ready isolated Windows environment with effective networking disabled/no Rust and independent user recovery, then test actual OS lifecycle/logon and audible Narrator behavior using a working positive control. Existing source/adapter/AX tests do not pretend those runtime checks passed. The final integration update supplies the actual main SHA and attached CI result.

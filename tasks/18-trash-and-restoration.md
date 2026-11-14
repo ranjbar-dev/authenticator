@@ -1,6 +1,6 @@
 # Task 18: Trash, restoration and permanent deletion
 
-Status: in_progress - native restore/single-permanent/Empty paths reviewed; remaining full QA gates open
+Status: done — numbered UI scope independently reviewed with native state evidence
 Priority: Required for complete v1
 Dependencies: 10–17
 Requirements: FR-1.5, FR-5; PRD §§5.4, 8–9, 12
@@ -21,14 +21,14 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 Planning snapshot, 12 November 2026: no existing application source, screen family, theme or shared components was present. These are PRD/reference-derived roles, not measured project conventions. Use the shared Rust theme and widgets created by task 04 (or create those primitives in task 04 itself); reread this checklist before editing. Refresh implementation paths from the actual code.
 
-- [ ] Shared Trash header shows count and Empty trash action. — PRD/reference structure; shared implementation from task 04.
-- [ ] Policy explains that items remain until permanently deleted. — PRD/reference structure; shared implementation from task 04.
-- [ ] Rows identify deleted service/account and deletion time without exposing secrets. — PRD/reference structure; shared implementation from task 04.
-- [ ] Restore is a visible keyboard-operable action. — PRD/reference structure; shared implementation from task 04.
-- [ ] Single permanent deletion is separate from restore. — PRD/reference structure; shared implementation from task 04.
-- [ ] Empty trash confirmation explains scope and irreversibility. — PRD/reference structure; shared implementation from task 04.
-- [ ] Conflict/error/empty states offer actionable recovery without data loss. — PRD/reference structure; shared implementation from task 04.
-- [ ] Theme, icon contrast, focus and narrow layouts match the shared shell; no swipe-only dependency. — PRD/reference structure; shared implementation from task 04.
+- [x] Shared Trash header shows count and Empty trash action. — PRD/reference structure; shared implementation from task 04.
+- [x] Policy explains that items remain until permanently deleted. — PRD/reference structure; shared implementation from task 04.
+- [x] Rows identify deleted service/account and deletion time without exposing secrets. — PRD/reference structure; shared implementation from task 04.
+- [x] Restore is a visible keyboard-operable action. — PRD/reference structure; shared implementation from task 04.
+- [x] Single permanent deletion is separate from restore. — PRD/reference structure; shared implementation from task 04.
+- [x] Empty trash confirmation explains scope and irreversibility. — PRD/reference structure; shared implementation from task 04.
+- [x] Conflict/error/empty states offer actionable recovery without data loss. — PRD/reference structure; shared implementation from task 04.
+- [x] Theme, icon contrast, focus and narrow layouts match the shared shell; no swipe-only dependency. — PRD/reference structure; shared implementation from task 04.
 
 Must not be copied from the reference: profile/sign-in, cloud sync/backup, language selector, extension/companion promotions, optional encryption switches or swipe-only desktop actions. Reuse shared field, button, dialog and feedback components; do not recreate their styling per page.
 
@@ -37,7 +37,7 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 - [x] Delete/restore a disposable entry without changing TOTP settings or recovery-code used states.
 - [x] Conflict/failure/cancel paths preserve existing active and trashed entries.
 - [x] No expiry occurs silently; single/all permanent deletion requires explicit confirmation.
-- [ ] Restart/import/restore counts and references stay consistent; real keyboard/pointer actions and visual review pass.
+- [x] Restart/import/restore counts and references stay consistent; real keyboard/pointer actions and visual review pass.
 
 ## Handoff and completion
 
@@ -48,6 +48,9 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 5. Keep at most one child agent active; children must not spawn children, commit, push, change PRD scope or silently skip requirements. Return changed paths, checks, findings and remaining risks to the parent.
 
 ## Evidence
+
+**Current accepted outcome:** The [same-checker re-review](../docs/qa/task24/state-gaps/independent-review.md) recommends closing this task after combining the original source/security/fault tests, reviewed Task21/23 native recovery and the Task24 focus/state evidence. All listed checkboxes are now reconciled to that evidence. Actual offline/other-user/no-Rust, Windows lifecycle/logon and heard-speech gates remain with their explicitly blocked owners; no global certification follows from this page. Earlier evidence paragraphs below retain their historical launch/source context and are superseded only for the now-tested scope.
+
 
 Current native21 verified account Cancel ciphertext preservation, restore with two memberships/set/two codes/used history, folder and individual-code Trash, single permanent-delete and Empty Cancel/Confirm, plus original Trash dates/states restored by native backup import. [Journey](../docs/qa/task21/remaining-native-workflows.md), [independent review](../docs/qa/task21/remaining-native-independent-review.md). Parent fixed a timing-sensitive pending-preference test precondition without changing runtime behavior; the exact correction independently passed, but new hosted full-suite evidence remains required. [CI history](../docs/qa/task21/current-ci-follow-up.md).
 

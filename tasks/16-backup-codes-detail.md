@@ -1,6 +1,6 @@
 # Task 16: Reveal/copy, used-state and delete recovery codes
 
-Status: in_progress - native reveal/copy/used/Undo/restore/delete reviewed; remaining full QA gates open
+Status: done — numbered UI scope independently reviewed with native state evidence
 Priority: Required for complete v1
 Dependencies: 14, 15
 Requirements: FR-3.2–4; PRD §§7–9
@@ -13,30 +13,30 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 - [x] Implement a selected account's backup-code detail view with concealed codes, intentional reveal/copy, per-code used marking and undo.
 - [x] Copy must not mark a code used; persist explicit used changes atomically with timestamps. Apply app-owned clipboard expiration/lock cleanup rules.
-- [ ] Support editing and confirmed deletion of the set, with service-issued/single-use guidance. Restore associated codes with account trash recovery; do not orphan them.
+- [x] Support editing and confirmed deletion of the set, with service-issued/single-use guidance. Restore associated codes with account trash recovery; do not orphan them.
 - [x] Conceal everything sensitive on lock/navigation where appropriate and keep changing/revealed code values out of status announcements/logs.
 
 ## Screen checklist
 
 Planning snapshot, 12 November 2026: no existing application source, screen family, theme or shared components was present. These are PRD/reference-derived roles, not measured project conventions. Use the shared Rust theme and widgets created by task 04 (or create those primitives in task 04 itself); reread this checklist before editing. Refresh implementation paths from the actual code.
 
-- [ ] Header identifies the account with consistent back/edit controls. — PRD/reference structure; shared implementation from task 04.
-- [ ] Guidance explains service issuance and potential single use without excessive text. — PRD/reference structure; shared implementation from task 04.
-- [ ] Rows conceal codes by default with clear available/used state. — PRD/reference structure; shared implementation from task 04.
-- [ ] Reveal and Copy are separate labeled intentional actions. — PRD/reference structure; shared implementation from task 04.
-- [ ] Mark used and Undo expose their current state accessibly. — PRD/reference structure; shared implementation from task 04.
-- [ ] Delete set clearly confirms its move to Trash; permanent deletion in Trash is explicitly irreversible and account data is preserved. — PRD12.5 and Task15 reversible deletion policy; permanent deletion belongs to18.
-- [ ] Empty/error/copy-confirmation states never echo a code. — PRD/reference structure; shared implementation from task 04.
-- [ ] Shared theme, focus and narrow layouts apply; lock removes revealed content and accessibility values. — PRD/reference structure; shared implementation from task 04.
+- [x] Header identifies the account with consistent back/edit controls. — PRD/reference structure; shared implementation from task 04.
+- [x] Guidance explains service issuance and potential single use without excessive text. — PRD/reference structure; shared implementation from task 04.
+- [x] Rows conceal codes by default with clear available/used state. — PRD/reference structure; shared implementation from task 04.
+- [x] Reveal and Copy are separate labeled intentional actions. — PRD/reference structure; shared implementation from task 04.
+- [x] Mark used and Undo expose their current state accessibly. — PRD/reference structure; shared implementation from task 04.
+- [x] Delete set clearly confirms its move to Trash; permanent deletion in Trash is explicitly irreversible and account data is preserved. — PRD12.5 and Task15 reversible deletion policy; permanent deletion belongs to18.
+- [x] Empty/error/copy-confirmation states never echo a code. — PRD/reference structure; shared implementation from task 04.
+- [x] Shared theme, focus and narrow layouts apply; lock removes revealed content and accessibility values. — PRD/reference structure; shared implementation from task 04.
 
 Must not be copied from the reference: profile/sign-in, cloud sync/backup, language selector, extension/companion promotions, optional encryption switches or swipe-only desktop actions. Reuse shared field, button, dialog and feedback components; do not recreate their styling per page.
 
 ## Acceptance and verification
 
-- [ ] Reveal/copy/mark-used/undo/edit/delete work with pointer and keyboard; copy alone leaves used state unchanged.
-- [ ] Used states persist across restart and encrypted backup round-trip.
-- [ ] Lock, idle timeout and clipboard races disclose no hidden codes or overwrite newer clipboard content.
-- [ ] Account trash/restore preserves its associated set and states; permanent deletion removes logical references.
+- [x] Reveal/copy/mark-used/undo/edit/delete work with pointer and keyboard; copy alone leaves used state unchanged.
+- [x] Used states persist across restart and encrypted backup round-trip.
+- [x] Lock, idle timeout and clipboard races disclose no hidden codes or overwrite newer clipboard content.
+- [x] Account trash/restore preserves its associated set and states; permanent deletion removes logical references.
 
 ## Handoff and completion
 
@@ -47,6 +47,9 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 5. Keep at most one child agent active; children must not spawn children, commit, push, change PRD scope or silently skip requirements. Return changed paths, checks, findings and remaining risks to the parent.
 
 ## Evidence
+
+**Current accepted outcome:** The [same-checker re-review](../docs/qa/task24/state-gaps/independent-review.md) recommends closing this task after combining the original source/security/fault tests, reviewed Task21/23 native recovery and the Task24 focus/state evidence. All listed checkboxes are now reconciled to that evidence. Actual offline/other-user/no-Rust, Windows lifecycle/logon and heard-speech gates remain with their explicitly blocked owners; no global certification follows from this page. Earlier evidence paragraphs below retain their historical launch/source context and are superseded only for the now-tested scope.
+
 
 Current native21 exercised pointer Reveal/Conceal/Copy, keyboard Copy, Mark used/Undo/Mark used, revealed-state Ctrl+L cleanup, association-preserving account restoration and single-code permanent deletion after Cancel. Copy did not change used state. Full native encrypted restore/merge/replace preserved the reviewed used/Trash states. [Journey and340/600/960 frames](../docs/qa/task21/remaining-native-workflows.md), [independent review](../docs/qa/task21/remaining-native-independent-review.md). Shared clipboard availability/cleanup correction is separately approved in task10; every environment/editor/matrix branch is not inferred.
 

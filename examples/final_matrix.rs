@@ -19,6 +19,90 @@ struct Preview {
     root: PathBuf,
     frames: u32,
     hwnd: usize,
+    snapshots: u32,
+}
+
+// Read-only semantic evidence for public, owned fixtures. No raw credential,
+// recovery value or passphrase is written, even when a code is revealed in UI.
+fn metadata_snapshot(vault: &Vault) -> String {
+    use authenticator::domain::records::DeletionState;
+    use sha2::{Digest, Sha256};
+    let active = |state: authenticator::domain::records::RecordState| {
+        state.deletion == DeletionState::Active
+    };
+    let accounts = vault
+        .accounts()
+        .iter()
+        .map(|a| {
+            format!(
+                "{{\"id\":\"{}\",\"active\":{}}}",
+                a.id().as_uuid(),
+                active(a.state())
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(",");
+    let sets = vault
+        .backup_sets()
+        .iter()
+        .map(|s| {
+            let codes = s
+                .codes()
+                .iter()
+                .map(|c| {
+                    format!(
+                        "{{\"id\":\"{}\",\"active\":{},\"used_at\":{},\"value_sha256\":\"{}\"}}",
+                        c.id().as_uuid(),
+                        active(c.state()),
+                        c.used_at()
+                            .map_or_else(|| "null".to_string(), |at| at.0.to_string()),
+                        Sha256::digest(c.expose_value().as_bytes())
+                            .iter()
+                            .map(|b| format!("{b:02x}"))
+                            .collect::<String>()
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join(",");
+            format!(
+                "{{\"id\":\"{}\",\"account\":\"{}\",\"active\":{},\"codes\":[{}]}}",
+                s.id().as_uuid(),
+                s.account_id().as_uuid(),
+                active(s.state()),
+                codes
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(",");
+    let folders = vault
+        .folders()
+        .iter()
+        .map(|f| {
+            format!(
+                "{{\"id\":\"{}\",\"active\":{}}}",
+                f.id().as_uuid(),
+                active(f.state())
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(",");
+    let links = vault
+        .memberships()
+        .iter()
+        .map(|m| {
+            format!(
+                "{{\"id\":\"{}\",\"folder\":\"{}\",\"account\":\"{}\",\"active\":{}}}",
+                m.id().as_uuid(),
+                m.folder_id().as_uuid(),
+                m.account_id().as_uuid(),
+                active(m.state())
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(",");
+    format!(
+        "{{\"accounts\":[{accounts}],\"sets\":[{sets}],\"folders\":[{folders}],\"memberships\":[{links}]}}"
+    )
 }
 impl eframe::App for Preview {
     fn logic(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
@@ -75,6 +159,25 @@ impl eframe::App for Preview {
             );
         });
         self.app.show(root);
+        if ctx.input(|i| i.key_pressed(egui::Key::F2))
+            && let Ok(store) = self.app.state.repository_mut()
+            && let Ok(vault) = store.vault()
+        {
+            self.snapshots += 1;
+            let _ = std::fs::write(
+                self.root
+                    .join(format!("metadata-{:03}.json", self.snapshots)),
+                metadata_snapshot(vault),
+            );
+            #[cfg(debug_assertions)]
+            if let Some(fingerprint) = self.app.recovery_fingerprint_for_evidence() {
+                let _ = std::fs::write(
+                    self.root
+                        .join(format!("recovery-draft-{:03}.json", self.snapshots)),
+                    fingerprint,
+                );
+            }
+        }
         if ctx.input(|i| i.key_pressed(egui::Key::F12)) {
             // Rectangle integers only: never pixels, QR payloads or credentials.
             let region = self.app.state.capture_region().map_or_else(
@@ -185,9 +288,13 @@ fn main() -> eframe::Result {
                     root.display()
                 ),
             )?;
+            // Compile-time QA fixture choice, never read by the production binary.
+            // Build and preserve this example once with `empty`, then `populated`.
+            let state_gaps = option_env!("AUTHENTICATOR_QA_STATE_GAPS");
+            let empty = state_gaps == Some("empty");
             let mut vault = Vault::new(Timestamp(1));
             let mut first = None;
-            for index in 0..7 {
+            for index in 0..if empty { 0 } else { 7 } {
                 let at = Timestamp(2 + index);
                 let id = vault.add_account(
                     AccountDraft::new(
@@ -219,10 +326,20 @@ fn main() -> eframe::Result {
                     vault.trash_account(id, vault.accounts()[index as usize].state(), at)?;
                 }
             }
-            let folder =
-                vault.add_folder("Public Matrix Folder", FolderColor::Purple, Timestamp(10))?;
             if let Some(id) = first {
+                let folder =
+                    vault.add_folder("Public Matrix Folder", FolderColor::Purple, Timestamp(10))?;
                 vault.add_membership(folder, id, Timestamp(11))?;
+                if state_gaps == Some("populated") {
+                    use authenticator::domain::recovery_code::{CodeChange, CodeTarget};
+                    let set = &vault.backup_sets()[0];
+                    let set_id = set.id();
+                    let codes: Vec<_> = set.codes().iter().map(|c| c.id()).collect();
+                    for code in codes {
+                        let target = CodeTarget::capture(&vault, id, set_id, code)?;
+                        vault.change_recovery_code(&target, CodeChange::Trash, Timestamp(12))?;
+                    }
+                }
             }
             // An encrypted, independent-key source fixture for native import
             // review/pagination and large-vault journeys. No plaintext file or
@@ -258,6 +375,11 @@ fn main() -> eframe::Result {
             )?;
             drop(source);
             let mut store = VaultStore::open_directory(root.join("vault"))?;
+            std::fs::write(root.join("metadata-000.json"), metadata_snapshot(&vault))?;
+            std::fs::write(
+                root.join("fixture-mode.txt"),
+                state_gaps.unwrap_or("default"),
+            )?;
             store.create(Zeroizing::new("disposablematrixpassphrase".into()), vault)?;
             let mut app = AuthenticatorApp::with_repository(cc, Ok(store));
             app.state
@@ -268,6 +390,7 @@ fn main() -> eframe::Result {
                 root,
                 frames: 0,
                 hwnd,
+                snapshots: 0,
             }))
         }),
     )

@@ -1,6 +1,6 @@
 # Task 20: Failure resilience and independent security audit
 
-Status: in_progress - source audit/full suite approved; native/offline gates open
+Status: blocked — effective isolated offline runtime inspection unavailable
 Priority: Required for complete v1
 Dependencies: 01–19
 Requirements: PRD §§8–11; all FR cross-cutting guarantees
@@ -46,3 +46,5 @@ Current-source formatting/strict lint/release configuration/prod-bin+lib+own-exa
 
 [Hosted CI43397135687](https://github.com/ranjbar-dev/authenticator/actions/runs/43397135687) subsequently SUCCESS at4e0f715:205library+1main+18other ordinary tests,0failures,5direct helper entries exercised by parents; format/lint/appbuild pass. [Exact follow-up](../docs/qa/task20/hosted-follow-up.md). Hosted source gate closes; native/offline and actual packaged behavior remain separate.
 
+
+Current acceptance boundary: all required feasible software-state cases have [independent closure](../docs/qa/task24/state-gaps/independent-review.md). Reviewed source109171a has clean local packaging and successful full hosted check/package evidence; postA QA-only additions preserve exact release bytes and have targeted checks/re-review. This task is blocked only by the named resource/tool-limited acceptance above, not by an unreported software TODO. Resume on a ready isolated Windows environment with effective networking disabled/no Rust and independent user recovery, then test actual OS lifecycle/logon and audible Narrator behavior using a working positive control. Existing source/adapter/AX tests do not pretend those runtime checks passed. The final integration update supplies the actual main SHA and attached CI result.

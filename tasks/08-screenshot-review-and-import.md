@@ -1,6 +1,6 @@
 # Task 08: Complete screenshot-to-2FA workflow
 
-Status: in_progress — functional implementation independently approved; disconnected-machine QA open
+Status: blocked — effective disconnected-machine screenshot workflow unavailable
 Priority: P0 foundation / screenshot-first
 Dependencies: 01–07
 Requirements: FR-2, FR-2A; PRD highest-priority success criterion
@@ -57,3 +57,5 @@ Cancellation must win the commit guard to prevent saving. If the atomic save has
 
 Networking-disabled execution remains unverified, so the first acceptance checkbox stays open and this task is not fully done. Hardware DPI/OS lock/suspend, Narrator/reference fidelity and later full feature QA remain their recorded gates. Functional APIs are ready for task09. Commit reference is recorded in the following checkpoint.
 
+
+Current acceptance boundary: all required feasible software-state cases have [independent closure](../docs/qa/task24/state-gaps/independent-review.md). Reviewed source109171a has clean local packaging and successful full hosted check/package evidence; postA QA-only additions preserve exact release bytes and have targeted checks/re-review. This task is blocked only by the named resource/tool-limited acceptance above, not by an unreported software TODO. Resume on a ready isolated Windows environment with effective networking disabled/no Rust and independent user recovery, then test actual OS lifecycle/logon and audible Narrator behavior using a working positive control. Existing source/adapter/AX tests do not pretend those runtime checks passed. The final integration update supplies the actual main SHA and attached CI result.

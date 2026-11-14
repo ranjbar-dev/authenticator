@@ -1,0 +1,11 @@
+# Hosted Windows checks and package — 109171a
+
+[Run 43536070275](https://github.com/ranjbar-dev/authenticator/actions/runs/43536070275) completed successfully on source commit 109171ac72e458ac3c34738e828e83b29983ec5a. The check job passed formatting, strict all-target Clippy, all-target tests and the Windows app build. The package job passed the release build, all 17 packaging regressions, archive validation and public artifact upload. No GitHub Release was published.
+
+There were 230 ordinary top-level passes: 211 library, one main and 18 example cases. Five direct helper entrypoints are marked ignored when listed alone and are exercised through their parent subprocess tests; nested filtered summaries are excluded from the ordinary total. The library body took 640.38 seconds. [Exact parsed counts](hosted-test-counts-109171a.json), [job/step metadata](hosted-109171a.json).
+
+The public artifact is Authenticator-windows-x86_64, ID 14091015742, with recorded expiry 28 November 2026. Its downloaded outer SHA256 matches the API digest: 3f02d621af2346ecec09b7116b366406766e53047fb345a88c53788dad8f330c. The two expected payloads were read into an owned bounded target root without general ZIP extraction. The inner checksum, archive paths, CRCs and manifest file checksums all passed. Build metadata identifies the expected source commit and source_dirty=false.
+
+Hosted ZIP: 6,024,555 bytes, SHA256 e84e5fc2cbc652a5132385c28a473333ab571be6a5a6bbf826e4f6742dd1e1ba. Hosted EXE: 12,105,728 bytes, SHA256 8806765c4ada8d152b6dbe35d35befa69cd877c7bd355fafff76ff315a7beb3e. [Hosted build metadata](hosted-build-info-109171a.json). This EXE was structurally validated but not used for the native runtime journey. Cross-host/compiler/path byte identity was never claimed. The separately identified [local clean ZIP and EXE](clean-build-109171a.md) are the exact native-tested 9656… bytes.
+
+Fresh hosted packaging now passes the exact notice provenance guard and checkout-byte regressions. Earlier failed-run bytes were not captured, so this does not invent a retrospective diagnosis. It supplies the previously missing successful hosted package evidence. Offline/no-Rust/other-user runtime and actual OS lifecycle/logon/speech gates remain separate; the five bounded native state additions are undergoing completion/re-review.

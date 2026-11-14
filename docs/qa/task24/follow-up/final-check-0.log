@@ -1,0 +1,3 @@
+
+rtk: Failed to resolve 'python' via PATH, falling back to direct exec: Binary 'python' not found on PATH
+rtk: Failed to resolve 'cargo' via PATH, falling back to direct exec: Binary 'cargo' not found on PATH

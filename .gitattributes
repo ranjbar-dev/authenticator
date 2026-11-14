@@ -11,3 +11,11 @@ LICENSE-APACHE text eol=lf
 docs/package-readme.md text eol=lf
 docs/user-guide.md text eol=lf
 docs/security-limits.md text eol=lf
+
+# Preserve exact bytes of the explicitly retained, reviewed public QA logs.
+# This does not unignore runtime logs or add target/ciphertext artifacts.
+docs/qa/task24/follow-up/final-check-*.log -text
+docs/qa/task24/state-gaps/release-build.log -text
+docs/qa/task24/state-gaps/*/build.log -text
+docs/qa/task23/clean-build-109171a.log -text
+docs/qa/task23/repro-full-*.log -text

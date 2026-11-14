@@ -1,6 +1,6 @@
 # Task 24: Final completeness audit, PRD reconciliation and main push
 
-Status: in_progress; scoped repairs reviewed; feasible QA, reproducibility and final gates open
+Status: in_progress — final committed-source CI and clean Git verification pending; external acceptance remains blocked
 Priority: Required for complete v1
 Dependencies: 01–23
 Requirements: Entire PRD and tasks/coverage.md
@@ -11,17 +11,17 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Implementation
 
-- [ ] Audit every FR item, security/visual requirement, success criterion and task acceptance check against actual implementation/test evidence. Repair omissions and regressions; no placeholder, stub, skipped required check or TODO may be called complete.
-- [ ] Reconcile PRD.md with implemented decisions, supported formats, capture/portability behavior, exact retention/lock defaults, migration findings and known platform limitations. Preserve mandatory scope and never narrow requirements merely to close tasks.
-- [ ] Update tasks/README.md, every task status/evidence section, tasks/coverage.md and docs/completion-report.md. Differentiate implemented, independently reviewed, tested and externally unverified claims.
+- [x] Audit every FR item, security/visual requirement, success criterion and task acceptance check against actual implementation/test evidence. Repair omissions and regressions; no placeholder, stub, skipped required check or TODO may be called complete.
+- [x] Reconcile PRD.md with implemented decisions, supported formats, capture/portability behavior, exact retention/lock defaults, migration findings and known platform limitations. Preserve mandatory scope and never narrow requirements merely to close tasks.
+- [x] Update tasks/README.md, every task status/evidence section, tasks/coverage.md and docs/completion-report.md. Differentiate implemented, independently reviewed, tested and externally unverified claims.
 - [ ] Run final cargo fmt --check, cargo clippy with the agreed warning policy, cargo test, release build/package and affected real-UI journeys. Review git diff for secrets/unrelated changes.
 - [ ] Commit coherent project changes on main and push to https://github.com/ranjbar-dev/authenticator without force-push or rewriting unrelated history. Verify origin/main equals local HEAD and working tree is clean.
-- [ ] If infrastructure/auth/tool/hardware access truly prevents a requirement, leave its task blocked, persist exact evidence/resume steps and report incomplete honestly. Do not falsely announce completion or keep retrying an unchanged permanent failure forever.
+- [x] If infrastructure/auth/tool/hardware access truly prevents a requirement, leave its task blocked, persist exact evidence/resume steps and report incomplete honestly. Do not falsely announce completion or keep retrying an unchanged permanent failure forever.
 
 ## Acceptance and verification
 
 - [ ] All numbered tasks are done only with evidence and independent review where required; every coverage row is verified.
-- [ ] Final PRD matches actual behavior and preserves Rust, reference UI, English-only, encrypted-local-only and screenshot-first requirements.
+- [x] Final PRD matches actual behavior and preserves Rust, reference UI, English-only, encrypted-local-only and screenshot-first requirements.
 - [ ] Required checks pass, packaged output is identifiable, no real secrets are committed and no material issue is unresolved.
 - [ ] main is committed/pushed and remote SHA equals local HEAD; final report names checks, artifacts and genuine limitations.
 
@@ -35,7 +35,12 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Evidence
 
+**Current integration boundary:** All five feasible state gaps and narrow debug support are independently approved. Source109171a has clean local packaging and successful full hosted checks; the reviewed postA QA additions are staged for final integration. Implementation items4/5 and acceptance items3/4 remain unchecked until actual final CI/commit/push/remote-equality operations succeed. Overall acceptance remains unavailable for the separately recorded isolated-runtime/OS/speech gates. All older Evidence paragraphs below are historical snapshots; their pending-state/no-acceptance wording is not a current verdict.
+
+
 Scoped source fixes and evidence received [independent review](../docs/qa/task24/independent-review.md): minimal initial focus, page-owned scroll reset, exact-byte Windows checkout and spaced-device path rejection. Independent 14 package regressions, 45 navigation cases, Settings/deep focus/triggering-frame Lock privacy/contrast checks pass. All 195 frame integrity records were checked; 68 current and 17 historical frames were visually inspected, while 110 historical frames received no independent pixel review. Author [implementation evidence](../docs/qa/task24/implementation-evidence.md), [native matrix](../docs/qa/task24/native-matrix.md) and [completion audit](../docs/completion-report.md) retain precise scope and all open gates. Parent corrected the stale evidence and restored Task23's original open reproducibility checkbox. No final acceptance is checked. Current full-suite/release/package CI, remaining feasible QA/deterministic builds and external environment gates remain open. Parent integration commit is recorded in the following checkpoint to avoid circular attribution.
 
 
 The [follow-up independent review](../docs/qa/task24/follow-up/independent-review.md) approves the bounded focus and deterministic packaging changes, verifies both complete 183-crate builds and all 59 new author frames, and independently repeats the native import/dialog/Lock path. The original reproducibility wording remains intact. Five bounded recovery/folder/Trash native state-evidence cases, clean-commit artifact/current CI and genuine environment/tool gates remain open. No final Task24/project acceptance is claimed.
+
+Current acceptance boundary: all required feasible software-state cases have [independent closure](../docs/qa/task24/state-gaps/independent-review.md). Reviewed source109171a has clean local packaging and successful full hosted check/package evidence; postA QA-only additions preserve exact release bytes and have targeted checks/re-review. External acceptance is blocked by the named resource/tool limits; final committed-source CI and Git verification are separately pending. No additional required feasible software-state case is unreported. Resume on a ready isolated Windows environment with effective networking disabled/no Rust and independent user recovery, then test actual OS lifecycle/logon and audible Narrator behavior using a working positive control. Existing source/adapter/AX tests do not pretend those runtime checks passed. The final integration update supplies the actual main SHA and attached CI result.

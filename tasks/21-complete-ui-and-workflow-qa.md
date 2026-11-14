@@ -1,6 +1,6 @@
 # Task 21: Full offline workflow, accessibility and visual QA
 
-Status: in_progress - native recovery/full-graph journeys independently reviewed; environment/full-matrix gates open
+Status: blocked — isolated runtime, OS lifecycle and heard-speech acceptance unavailable
 Priority: Required for complete v1
 Dependencies: 01–20
 Requirements: PRD §§2, 6–7, 11; all UI checklists
@@ -12,18 +12,18 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 ## Implementation
 
 - [ ] Run complete disposable-data journeys from clean install: vault setup → screenshot import → current-code verification → copy/edit/search/sort/views → backup codes → folders → trash/restore → encrypted export → clean-vault merge/replace restore.
-- [ ] Use real pointer/keyboard interactions for capture drag, dropdowns, buttons, multi-selection, dialogs and clipboard; synthetic click-only checks do not suffice.
-- [ ] Inspect actual component screenshots for every page at narrow, intermediate and desktop windows and 100/150/200% scale; use available reference evidence and record unavailable reference comparisons as unverified.
+- [x] Use real pointer/keyboard interactions for capture drag, dropdowns, buttons, multi-selection, dialogs and clipboard; synthetic click-only checks do not suffice.
+- [x] Inspect actual component screenshots for every page at narrow, intermediate and desktop windows and 100/150/200% scale; use available reference evidence and record unavailable reference comparisons as unverified.
 - [ ] Check empty/loading/no-results/open/error/focus/locked states, active-icon contrast, foreground/background pairs, clipping and logical hierarchy. Test Narrator/accessibility labels, roles, tab order and announcements without repeatedly reading OTP values.
-- [ ] Use a reviewer who did not implement the screens, following each task's checklist and ui-consistency:verifying if available. Repair findings and rerun affected checks.
+- [x] Use a reviewer who did not implement the screens, following each task's checklist and ui-consistency:verifying if available. Repair findings and rerun affected checks.
 - [ ] Store only sanitized/disposable evidence and a coverage report under docs/qa/. Complete all PRD acceptance criteria, not just a successful launch or test exit code.
 
 ## Acceptance and verification
 
-- [ ] Every FR and success criterion maps to passing reproducible tests or explicit honest evidence; no untested manual check is labeled passed.
+- [x] Every FR and success criterion maps to passing reproducible tests or explicit honest evidence; no untested manual check is labeled passed.
 - [ ] Screenshot-to-import works offline across available monitor/scaling combinations and failure/cancel/lock paths.
-- [ ] All pages are readable and operable with pointer/keyboard at tested sizes, and reference deviations are fixed or documented accurately.
-- [ ] Independent reviewer finds no unresolved material functional, accessibility or visual defect.
+- [x] All pages are readable and operable with pointer/keyboard at tested sizes, and reference deviations are fixed or documented accurately.
+- [x] Independent reviewer finds no unresolved material functional, accessibility or visual defect.
 
 ## Handoff and completion
 
@@ -45,3 +45,5 @@ Interrupted by the user's physical Escape stop during native QA; all Computer Us
 
 Exact outcome, uncommitted paths, open owned app/root, reported test PIDs, cleanup limits and later-resume instructions: [checkpoint](../docs/qa/task21/implementation-evidence.md). [Environment recovery](../docs/qa/task21/environment-recovery.md) records the preserved public Cargo archive cache on D:. Leave all acceptance boxes unchecked. Do not resume Computer Use in the stopped turn or terminate the app as a bypass; retain owned resources for a later authorized resume. Tasks22–24 remain unexecuted.
 
+
+Current acceptance boundary: all required feasible software-state cases have [independent closure](../docs/qa/task24/state-gaps/independent-review.md). Reviewed source109171a has clean local packaging and successful full hosted check/package evidence; postA QA-only additions preserve exact release bytes and have targeted checks/re-review. This task is blocked only by the named resource/tool-limited acceptance above, not by an unreported software TODO. Resume on a ready isolated Windows environment with effective networking disabled/no Rust and independent user recovery, then test actual OS lifecycle/logon and audible Narrator behavior using a working positive control. Existing source/adapter/AX tests do not pretend those runtime checks passed. The final integration update supplies the actual main SHA and attached CI result.

@@ -1,0 +1,3 @@
+pid=7892
+executable=D:\projects\github\authenticator\target\task24-state-program-d6f1b279-d6d0-44ca-b458-40ff0be3471b\final-matrix-empty.exe
+root=\\?\D:\Projects\github\authenticator\target\task24-owned-E7nR4I

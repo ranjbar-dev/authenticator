@@ -1,0 +1,942 @@
+{
+  "sourceBase": "109171ac72e458ac3c34738e828e83b29983ec5a",
+  "fixtures": [
+    {
+      "root": "D:/Projects/github/authenticator/target/task24-owned-E7nR4I",
+      "mode": "empty",
+      "build": {
+        "mode": "empty",
+        "exe": "D:\\Projects\\github\\authenticator\\target\\task24-state-program-d6f1b279-d6d0-44ca-b458-40ff0be3471b\\final-matrix-empty.exe",
+        "sha256": "b44af39af8f3be7c97b4caf83ea4f0694ef662a64d9544895cad2d1ac3d40faa",
+        "bytes": 41932288,
+        "seconds": 6.15,
+        "log": "D:\\Projects\\github\\authenticator\\target\\task24-state-build-x8su2sml\\compile.log"
+      },
+      "pid": 7892
+    },
+    {
+      "root": "D:/Projects/github/authenticator/target/task24-owned-rEPFkY",
+      "mode": "populated before digest-only accessor",
+      "build": {
+        "mode": "populated",
+        "exe": "D:\\Projects\\github\\authenticator\\target\\task24-state-program-d6f1b279-d6d0-44ca-b458-40ff0be3471b\\final-matrix-populated.exe",
+        "sha256": "5f57d4a840e3a94c2b314d93cc09dbb4a4d7ea5f5e0c15de3e7a6142d546030a",
+        "bytes": 41932288,
+        "seconds": 6.148,
+        "log": "D:\\Projects\\github\\authenticator\\target\\task24-state-build-vbrizfgm\\compile.log"
+      },
+      "pid": 17084
+    },
+    {
+      "root": "D:/Projects/github/authenticator/target/task24-owned-oGaL6h",
+      "mode": "populated final digest-only accessor",
+      "build": {
+        "mode": "populated",
+        "exe": "D:\\Projects\\github\\authenticator\\target\\task24-state-fingerprints-b4d2593e-c390-42de-8ce5-2d19f1d3a557\\final-matrix-populated.exe",
+        "sha256": "2c7adfe7a0d2d700662ff197cf8b2121d7a758311ca054138aa05336bf08f626",
+        "bytes": 41938432,
+        "seconds": 3.228,
+        "log": "D:\\Projects\\github\\authenticator\\target\\task24-state-build-1n0wlj3z\\compile.log"
+      },
+      "pid": 5324
+    }
+  ],
+  "cases": {
+    "emptyRecovery": {
+      "emptyList": true,
+      "emptyChooser": true,
+      "actualPointerFallbackReachedAccountForm": true,
+      "cipherUnchanged": true,
+      "metadataUnchanged": true
+    },
+    "emptyTrash": {
+      "emptyHeading": true,
+      "disabledEmpty": true,
+      "actualKeyboardBackReachedSettings": true,
+      "cipherUnchanged": true,
+      "metadataUnchanged": true
+    },
+    "listNoMatch": {
+      "listBranch": true,
+      "chooserBranch": false,
+      "noMatchVisible": true,
+      "actualPointerClear": true,
+      "originalRowRestored": true,
+      "originalPageCountRestored": true,
+      "metadataUnchanged": true,
+      "cipherUnchanged": true
+    },
+    "trashConflict": {
+      "matchingRecords": 6,
+      "warningInspected": true,
+      "restoreInitiallyDisabled": true,
+      "actualKeyboardConsentEnabledRestore": true,
+      "actualKeyboardEscapeCanceled": true,
+      "dialogAbsent": true,
+      "metadataUnchanged": true,
+      "cipherUnchanged": true
+    },
+    "emptyDetail": {
+      "allCodesInitiallyTrashed": true,
+      "noActiveGuidanceReadable": true,
+      "zeroActiveCount": true,
+      "disabledUndoAndPages": true,
+      "actualEditReachable": true,
+      "editCancelReturnedDetail": true,
+      "actualIndividualRestores": 2,
+      "sameSetId": true,
+      "sameCodeIdsAndValueHashesAndUsedAt": true,
+      "bothCodesNowActive": true,
+      "usedHistoryPreserved": true,
+      "otherRecordsUnchanged": true,
+      "cipherChangedOnlyAfterExplicitRestores": true,
+      "nativeReturnedToDetail": true,
+      "nativeOneAvailableOneUsed": true,
+      "nativeTwoActive": true
+    },
+    "folders": {
+      "managerNoMatch": true,
+      "actualPointerManagerClear": true,
+      "originalFolderRowRestored": true,
+      "oneResultRestored": true,
+      "membershipNoMatch": true,
+      "narrow340Zoom150GuidanceReadable": true,
+      "actualPointerMemberClearAt600Zoom100": true,
+      "oneSelectionRetainedAfterClear": true,
+      "originalSelectedAccountPresent": true,
+      "originalSelectionVisuallyCheckedAfterClear": true,
+      "actualPointerCancelReturnedManager": true,
+      "metadataUnchanged": true,
+      "cipherUnchanged": true
+    },
+    "fileReadError": {
+      "generatedInvalidUtf8Bytes": 3,
+      "actualNativePicker": true,
+      "actualKeyboardFileConsent": true,
+      "safeUtf8Error": true,
+      "previewTwoStillVisible": true,
+      "exactInputAndPreviewFingerprintsUnchanged": true,
+      "exactDraftMatchesEnteredHash": true,
+      "metadataUnchanged": true,
+      "cipherUnchanged": true,
+      "readableMaskedErrorFrame": true,
+      "actualKeyboardCancelAndDiscard": true,
+      "returnedToNoActiveDetail": true,
+      "draftAccessorAbsentAfterCancel": true,
+      "metadataUnchangedAfterCancel": true,
+      "cipherUnchangedAfterCancel": true
+    }
+  },
+  "fileFingerprints": {
+    "before": {
+      "label": "Exact draft and authenticated preview before malformed-file picker",
+      "root": "D:/Projects/github/authenticator/target/task24-owned-oGaL6h",
+      "file": "metadata-002.json",
+      "data": {
+        "accounts": [
+          {
+            "id": "d4370c67-7b0b-46d8-a19b-0f4bc220fa5a",
+            "active": true
+          },
+          {
+            "id": "a129d7f6-d963-477b-aa7f-6cbf50ae8653",
+            "active": true
+          },
+          {
+            "id": "1dc2bb51-d8db-491b-b99f-93e182581dc0",
+            "active": true
+          },
+          {
+            "id": "d8fda57e-477e-4ba5-a58f-9a97c235351f",
+            "active": true
+          },
+          {
+            "id": "63b30d89-9b7d-4096-92fa-ac826fd34cc1",
+            "active": true
+          },
+          {
+            "id": "08134406-986d-4e49-b8f0-88a07ee652e7",
+            "active": false
+          },
+          {
+            "id": "08ac5051-7bc1-4be9-a67f-5bc821b34db0",
+            "active": true
+          }
+        ],
+        "sets": [
+          {
+            "id": "280ad0dd-e0f5-435f-bb4e-eaa3c6b8d913",
+            "account": "d4370c67-7b0b-46d8-a19b-0f4bc220fa5a",
+            "active": true,
+            "codes": [
+              {
+                "id": "87717bdc-5e1f-4396-898f-b4f50469a7c8",
+                "active": false,
+                "used_at": 2,
+                "value_sha256": "ae09b601a94ef98fa99f97e24366f873929ddf6390f8a700ca41a9f1bebfd7ab"
+              },
+              {
+                "id": "51414ada-0219-48ed-a6b9-392b1eec1732",
+                "active": false,
+                "used_at": null,
+                "value_sha256": "89349242acd06c45d17da1541a0db0599746fcf0116807e029fb99e90c712bd7"
+              }
+            ]
+          }
+        ],
+        "folders": [
+          {
+            "id": "9c53b644-931d-4006-9ce2-086ad6b39f10",
+            "active": true
+          }
+        ],
+        "memberships": [
+          {
+            "id": "20acd4cb-22a7-49bb-934e-d61c80a52c6f",
+            "folder": "9c53b644-931d-4006-9ce2-086ad6b39f10",
+            "account": "d4370c67-7b0b-46d8-a19b-0f4bc220fa5a",
+            "active": true
+          }
+        ]
+      },
+      "draftFile": "recovery-draft-002.json",
+      "draft": {
+        "input_bytes": 56,
+        "input_sha256": "60e475f2d44ccdbe81e25fad85fe06fb0ffa5456111043279e85a48b04542c4b",
+        "preview": {
+          "input_sha256": "60e475f2d44ccdbe81e25fad85fe06fb0ffa5456111043279e85a48b04542c4b",
+          "unique": 2,
+          "blanks": 0,
+          "duplicates": 0
+        }
+      }
+    },
+    "after": {
+      "label": "After real malformed UTF-8 picker error",
+      "root": "D:/Projects/github/authenticator/target/task24-owned-oGaL6h",
+      "file": "metadata-003.json",
+      "data": {
+        "accounts": [
+          {
+            "id": "d4370c67-7b0b-46d8-a19b-0f4bc220fa5a",
+            "active": true
+          },
+          {
+            "id": "a129d7f6-d963-477b-aa7f-6cbf50ae8653",
+            "active": true
+          },
+          {
+            "id": "1dc2bb51-d8db-491b-b99f-93e182581dc0",
+            "active": true
+          },
+          {
+            "id": "d8fda57e-477e-4ba5-a58f-9a97c235351f",
+            "active": true
+          },
+          {
+            "id": "63b30d89-9b7d-4096-92fa-ac826fd34cc1",
+            "active": true
+          },
+          {
+            "id": "08134406-986d-4e49-b8f0-88a07ee652e7",
+            "active": false
+          },
+          {
+            "id": "08ac5051-7bc1-4be9-a67f-5bc821b34db0",
+            "active": true
+          }
+        ],
+        "sets": [
+          {
+            "id": "280ad0dd-e0f5-435f-bb4e-eaa3c6b8d913",
+            "account": "d4370c67-7b0b-46d8-a19b-0f4bc220fa5a",
+            "active": true,
+            "codes": [
+              {
+                "id": "87717bdc-5e1f-4396-898f-b4f50469a7c8",
+                "active": false,
+                "used_at": 2,
+                "value_sha256": "ae09b601a94ef98fa99f97e24366f873929ddf6390f8a700ca41a9f1bebfd7ab"
+              },
+              {
+                "id": "51414ada-0219-48ed-a6b9-392b1eec1732",
+                "active": false,
+                "used_at": null,
+                "value_sha256": "89349242acd06c45d17da1541a0db0599746fcf0116807e029fb99e90c712bd7"
+              }
+            ]
+          }
+        ],
+        "folders": [
+          {
+            "id": "9c53b644-931d-4006-9ce2-086ad6b39f10",
+            "active": true
+          }
+        ],
+        "memberships": [
+          {
+            "id": "20acd4cb-22a7-49bb-934e-d61c80a52c6f",
+            "folder": "9c53b644-931d-4006-9ce2-086ad6b39f10",
+            "account": "d4370c67-7b0b-46d8-a19b-0f4bc220fa5a",
+            "active": true
+          }
+        ]
+      },
+      "draftFile": "recovery-draft-003.json",
+      "draft": {
+        "input_bytes": 56,
+        "input_sha256": "60e475f2d44ccdbe81e25fad85fe06fb0ffa5456111043279e85a48b04542c4b",
+        "preview": {
+          "input_sha256": "60e475f2d44ccdbe81e25fad85fe06fb0ffa5456111043279e85a48b04542c4b",
+          "unique": 2,
+          "blanks": 0,
+          "duplicates": 0
+        }
+      }
+    },
+    "afterCancel": {
+      "label": "After actual keyboard Cancel and Discard edits",
+      "root": "D:/Projects/github/authenticator/target/task24-owned-oGaL6h",
+      "file": "metadata-004.json",
+      "data": {
+        "accounts": [
+          {
+            "id": "d4370c67-7b0b-46d8-a19b-0f4bc220fa5a",
+            "active": true
+          },
+          {
+            "id": "a129d7f6-d963-477b-aa7f-6cbf50ae8653",
+            "active": true
+          },
+          {
+            "id": "1dc2bb51-d8db-491b-b99f-93e182581dc0",
+            "active": true
+          },
+          {
+            "id": "d8fda57e-477e-4ba5-a58f-9a97c235351f",
+            "active": true
+          },
+          {
+            "id": "63b30d89-9b7d-4096-92fa-ac826fd34cc1",
+            "active": true
+          },
+          {
+            "id": "08134406-986d-4e49-b8f0-88a07ee652e7",
+            "active": false
+          },
+          {
+            "id": "08ac5051-7bc1-4be9-a67f-5bc821b34db0",
+            "active": true
+          }
+        ],
+        "sets": [
+          {
+            "id": "280ad0dd-e0f5-435f-bb4e-eaa3c6b8d913",
+            "account": "d4370c67-7b0b-46d8-a19b-0f4bc220fa5a",
+            "active": true,
+            "codes": [
+              {
+                "id": "87717bdc-5e1f-4396-898f-b4f50469a7c8",
+                "active": false,
+                "used_at": 2,
+                "value_sha256": "ae09b601a94ef98fa99f97e24366f873929ddf6390f8a700ca41a9f1bebfd7ab"
+              },
+              {
+                "id": "51414ada-0219-48ed-a6b9-392b1eec1732",
+                "active": false,
+                "used_at": null,
+                "value_sha256": "89349242acd06c45d17da1541a0db0599746fcf0116807e029fb99e90c712bd7"
+              }
+            ]
+          }
+        ],
+        "folders": [
+          {
+            "id": "9c53b644-931d-4006-9ce2-086ad6b39f10",
+            "active": true
+          }
+        ],
+        "memberships": [
+          {
+            "id": "20acd4cb-22a7-49bb-934e-d61c80a52c6f",
+            "folder": "9c53b644-931d-4006-9ce2-086ad6b39f10",
+            "account": "d4370c67-7b0b-46d8-a19b-0f4bc220fa5a",
+            "active": true
+          }
+        ]
+      },
+      "draftFile": null,
+      "draft": null
+    }
+  },
+  "cipherOracles": {
+    "emptyBaseline": "1c092179d3540cf16c720409d5b53a28f9a6d54ee6137bafb5bd21a8f28e5732",
+    "listBaseline": "163ca22bd517769f1fc4e71b4f2b670a73fa35aaf6a12d7583ac3714fa5f3ea5",
+    "fileDraftBaseline": "4cd90f1f7b645981de4970cf14eeab054027cdc32c384ea2ee7611b31160d1dc",
+    "trashCancelBaseline": "163ca22bd517769f1fc4e71b4f2b670a73fa35aaf6a12d7583ac3714fa5f3ea5",
+    "folderCancelBaseline": "2280cf8d48d8c4d5dbf0f12671ef5109f491bb43b0945ebae7cf3b911913d6c8"
+  },
+  "semanticOracles": {
+    "emptyAfter": {
+      "label": "Empty chooser navigation has no account/set mutation",
+      "root": "D:/Projects/github/authenticator/target/task24-owned-E7nR4I",
+      "file": "metadata-001.json",
+      "data": {
+        "accounts": [],
+        "sets": [],
+        "folders": [],
+        "memberships": []
+      }
+    },
+    "listBefore": {
+      "label": "Before recovery list query",
+      "root": "D:/Projects/github/authenticator/target/task24-owned-rEPFkY",
+      "file": "metadata-001.json",
+      "data": {
+        "accounts": [
+          {
+            "id": "3bc6f5b5-31d8-48e1-bba2-f9fa3a8ae99e",
+            "active": true
+          },
+          {
+            "id": "da730c3c-a68f-4622-9c3a-ae3b5afc830a",
+            "active": true
+          },
+          {
+            "id": "d620236e-3f45-43d0-9193-787bc9f96644",
+            "active": true
+          },
+          {
+            "id": "36a8dc53-2ff1-43bd-b312-4d2c355fb717",
+            "active": true
+          },
+          {
+            "id": "0f952e54-0c31-4ce9-9b75-3f0537ba889a",
+            "active": true
+          },
+          {
+            "id": "ba743ca3-ef19-4b1b-9877-cfbdd7602b94",
+            "active": false
+          },
+          {
+            "id": "276d2c8c-9a1e-4c4b-a5b9-116389fe4437",
+            "active": true
+          }
+        ],
+        "sets": [
+          {
+            "id": "0cf93f2a-e027-44ea-817f-b52233af39cb",
+            "account": "3bc6f5b5-31d8-48e1-bba2-f9fa3a8ae99e",
+            "active": true,
+            "codes": [
+              {
+                "id": "3697345d-cca2-4262-b350-48c6ddc485ef",
+                "active": false,
+                "used_at": 2,
+                "value_sha256": "ae09b601a94ef98fa99f97e24366f873929ddf6390f8a700ca41a9f1bebfd7ab"
+              },
+              {
+                "id": "61fc6595-232d-4ee4-8c81-f97df0cbe91f",
+                "active": false,
+                "used_at": null,
+                "value_sha256": "89349242acd06c45d17da1541a0db0599746fcf0116807e029fb99e90c712bd7"
+              }
+            ]
+          }
+        ],
+        "folders": [
+          {
+            "id": "80f552e3-a7cf-4381-9383-12a4390c5dd6",
+            "active": true
+          }
+        ],
+        "memberships": [
+          {
+            "id": "a4d91135-d8cd-4d06-84c5-43115ebbe25c",
+            "folder": "80f552e3-a7cf-4381-9383-12a4390c5dd6",
+            "account": "3bc6f5b5-31d8-48e1-bba2-f9fa3a8ae99e",
+            "active": true
+          }
+        ]
+      }
+    },
+    "listAfter": {
+      "label": "Recovery list Clear search restores original set",
+      "root": "D:/Projects/github/authenticator/target/task24-owned-rEPFkY",
+      "file": "metadata-002.json",
+      "data": {
+        "accounts": [
+          {
+            "id": "3bc6f5b5-31d8-48e1-bba2-f9fa3a8ae99e",
+            "active": true
+          },
+          {
+            "id": "da730c3c-a68f-4622-9c3a-ae3b5afc830a",
+            "active": true
+          },
+          {
+            "id": "d620236e-3f45-43d0-9193-787bc9f96644",
+            "active": true
+          },
+          {
+            "id": "36a8dc53-2ff1-43bd-b312-4d2c355fb717",
+            "active": true
+          },
+          {
+            "id": "0f952e54-0c31-4ce9-9b75-3f0537ba889a",
+            "active": true
+          },
+          {
+            "id": "ba743ca3-ef19-4b1b-9877-cfbdd7602b94",
+            "active": false
+          },
+          {
+            "id": "276d2c8c-9a1e-4c4b-a5b9-116389fe4437",
+            "active": true
+          }
+        ],
+        "sets": [
+          {
+            "id": "0cf93f2a-e027-44ea-817f-b52233af39cb",
+            "account": "3bc6f5b5-31d8-48e1-bba2-f9fa3a8ae99e",
+            "active": true,
+            "codes": [
+              {
+                "id": "3697345d-cca2-4262-b350-48c6ddc485ef",
+                "active": false,
+                "used_at": 2,
+                "value_sha256": "ae09b601a94ef98fa99f97e24366f873929ddf6390f8a700ca41a9f1bebfd7ab"
+              },
+              {
+                "id": "61fc6595-232d-4ee4-8c81-f97df0cbe91f",
+                "active": false,
+                "used_at": null,
+                "value_sha256": "89349242acd06c45d17da1541a0db0599746fcf0116807e029fb99e90c712bd7"
+              }
+            ]
+          }
+        ],
+        "folders": [
+          {
+            "id": "80f552e3-a7cf-4381-9383-12a4390c5dd6",
+            "active": true
+          }
+        ],
+        "memberships": [
+          {
+            "id": "a4d91135-d8cd-4d06-84c5-43115ebbe25c",
+            "folder": "80f552e3-a7cf-4381-9383-12a4390c5dd6",
+            "account": "3bc6f5b5-31d8-48e1-bba2-f9fa3a8ae99e",
+            "active": true
+          }
+        ]
+      }
+    },
+    "trashBefore": {
+      "label": "Before live account restore conflict",
+      "root": "D:/Projects/github/authenticator/target/task24-owned-rEPFkY",
+      "file": "metadata-004.json",
+      "data": {
+        "accounts": [
+          {
+            "id": "3bc6f5b5-31d8-48e1-bba2-f9fa3a8ae99e",
+            "active": true
+          },
+          {
+            "id": "da730c3c-a68f-4622-9c3a-ae3b5afc830a",
+            "active": true
+          },
+          {
+            "id": "d620236e-3f45-43d0-9193-787bc9f96644",
+            "active": true
+          },
+          {
+            "id": "36a8dc53-2ff1-43bd-b312-4d2c355fb717",
+            "active": true
+          },
+          {
+            "id": "0f952e54-0c31-4ce9-9b75-3f0537ba889a",
+            "active": true
+          },
+          {
+            "id": "ba743ca3-ef19-4b1b-9877-cfbdd7602b94",
+            "active": false
+          },
+          {
+            "id": "276d2c8c-9a1e-4c4b-a5b9-116389fe4437",
+            "active": true
+          }
+        ],
+        "sets": [
+          {
+            "id": "0cf93f2a-e027-44ea-817f-b52233af39cb",
+            "account": "3bc6f5b5-31d8-48e1-bba2-f9fa3a8ae99e",
+            "active": true,
+            "codes": [
+              {
+                "id": "3697345d-cca2-4262-b350-48c6ddc485ef",
+                "active": false,
+                "used_at": 2,
+                "value_sha256": "ae09b601a94ef98fa99f97e24366f873929ddf6390f8a700ca41a9f1bebfd7ab"
+              },
+              {
+                "id": "61fc6595-232d-4ee4-8c81-f97df0cbe91f",
+                "active": false,
+                "used_at": null,
+                "value_sha256": "89349242acd06c45d17da1541a0db0599746fcf0116807e029fb99e90c712bd7"
+              }
+            ]
+          }
+        ],
+        "folders": [
+          {
+            "id": "80f552e3-a7cf-4381-9383-12a4390c5dd6",
+            "active": true
+          }
+        ],
+        "memberships": [
+          {
+            "id": "a4d91135-d8cd-4d06-84c5-43115ebbe25c",
+            "folder": "80f552e3-a7cf-4381-9383-12a4390c5dd6",
+            "account": "3bc6f5b5-31d8-48e1-bba2-f9fa3a8ae99e",
+            "active": true
+          }
+        ]
+      }
+    },
+    "trashAfter": {
+      "label": "After actual keyboard Cancel of consented restore conflict",
+      "root": "D:/Projects/github/authenticator/target/task24-owned-rEPFkY",
+      "file": "metadata-005.json",
+      "data": {
+        "accounts": [
+          {
+            "id": "3bc6f5b5-31d8-48e1-bba2-f9fa3a8ae99e",
+            "active": true
+          },
+          {
+            "id": "da730c3c-a68f-4622-9c3a-ae3b5afc830a",
+            "active": true
+          },
+          {
+            "id": "d620236e-3f45-43d0-9193-787bc9f96644",
+            "active": true
+          },
+          {
+            "id": "36a8dc53-2ff1-43bd-b312-4d2c355fb717",
+            "active": true
+          },
+          {
+            "id": "0f952e54-0c31-4ce9-9b75-3f0537ba889a",
+            "active": true
+          },
+          {
+            "id": "ba743ca3-ef19-4b1b-9877-cfbdd7602b94",
+            "active": false
+          },
+          {
+            "id": "276d2c8c-9a1e-4c4b-a5b9-116389fe4437",
+            "active": true
+          }
+        ],
+        "sets": [
+          {
+            "id": "0cf93f2a-e027-44ea-817f-b52233af39cb",
+            "account": "3bc6f5b5-31d8-48e1-bba2-f9fa3a8ae99e",
+            "active": true,
+            "codes": [
+              {
+                "id": "3697345d-cca2-4262-b350-48c6ddc485ef",
+                "active": false,
+                "used_at": 2,
+                "value_sha256": "ae09b601a94ef98fa99f97e24366f873929ddf6390f8a700ca41a9f1bebfd7ab"
+              },
+              {
+                "id": "61fc6595-232d-4ee4-8c81-f97df0cbe91f",
+                "active": false,
+                "used_at": null,
+                "value_sha256": "89349242acd06c45d17da1541a0db0599746fcf0116807e029fb99e90c712bd7"
+              }
+            ]
+          }
+        ],
+        "folders": [
+          {
+            "id": "80f552e3-a7cf-4381-9383-12a4390c5dd6",
+            "active": true
+          }
+        ],
+        "memberships": [
+          {
+            "id": "a4d91135-d8cd-4d06-84c5-43115ebbe25c",
+            "folder": "80f552e3-a7cf-4381-9383-12a4390c5dd6",
+            "account": "3bc6f5b5-31d8-48e1-bba2-f9fa3a8ae99e",
+            "active": true
+          }
+        ]
+      }
+    },
+    "afterCodeRestores": {
+      "label": "After individual available and used code restores",
+      "root": "D:/Projects/github/authenticator/target/task24-owned-rEPFkY",
+      "file": "metadata-006.json",
+      "data": {
+        "accounts": [
+          {
+            "id": "3bc6f5b5-31d8-48e1-bba2-f9fa3a8ae99e",
+            "active": true
+          },
+          {
+            "id": "da730c3c-a68f-4622-9c3a-ae3b5afc830a",
+            "active": true
+          },
+          {
+            "id": "d620236e-3f45-43d0-9193-787bc9f96644",
+            "active": true
+          },
+          {
+            "id": "36a8dc53-2ff1-43bd-b312-4d2c355fb717",
+            "active": true
+          },
+          {
+            "id": "0f952e54-0c31-4ce9-9b75-3f0537ba889a",
+            "active": true
+          },
+          {
+            "id": "ba743ca3-ef19-4b1b-9877-cfbdd7602b94",
+            "active": false
+          },
+          {
+            "id": "276d2c8c-9a1e-4c4b-a5b9-116389fe4437",
+            "active": true
+          }
+        ],
+        "sets": [
+          {
+            "id": "0cf93f2a-e027-44ea-817f-b52233af39cb",
+            "account": "3bc6f5b5-31d8-48e1-bba2-f9fa3a8ae99e",
+            "active": true,
+            "codes": [
+              {
+                "id": "3697345d-cca2-4262-b350-48c6ddc485ef",
+                "active": true,
+                "used_at": 2,
+                "value_sha256": "ae09b601a94ef98fa99f97e24366f873929ddf6390f8a700ca41a9f1bebfd7ab"
+              },
+              {
+                "id": "61fc6595-232d-4ee4-8c81-f97df0cbe91f",
+                "active": true,
+                "used_at": null,
+                "value_sha256": "89349242acd06c45d17da1541a0db0599746fcf0116807e029fb99e90c712bd7"
+              }
+            ]
+          }
+        ],
+        "folders": [
+          {
+            "id": "80f552e3-a7cf-4381-9383-12a4390c5dd6",
+            "active": true
+          }
+        ],
+        "memberships": [
+          {
+            "id": "a4d91135-d8cd-4d06-84c5-43115ebbe25c",
+            "folder": "80f552e3-a7cf-4381-9383-12a4390c5dd6",
+            "account": "3bc6f5b5-31d8-48e1-bba2-f9fa3a8ae99e",
+            "active": true
+          }
+        ]
+      }
+    },
+    "folderBefore": {
+      "label": "Before folder manager no-match query",
+      "root": "D:/Projects/github/authenticator/target/task24-owned-rEPFkY",
+      "file": "metadata-007.json",
+      "data": {
+        "accounts": [
+          {
+            "id": "3bc6f5b5-31d8-48e1-bba2-f9fa3a8ae99e",
+            "active": true
+          },
+          {
+            "id": "da730c3c-a68f-4622-9c3a-ae3b5afc830a",
+            "active": true
+          },
+          {
+            "id": "d620236e-3f45-43d0-9193-787bc9f96644",
+            "active": true
+          },
+          {
+            "id": "36a8dc53-2ff1-43bd-b312-4d2c355fb717",
+            "active": true
+          },
+          {
+            "id": "0f952e54-0c31-4ce9-9b75-3f0537ba889a",
+            "active": true
+          },
+          {
+            "id": "ba743ca3-ef19-4b1b-9877-cfbdd7602b94",
+            "active": false
+          },
+          {
+            "id": "276d2c8c-9a1e-4c4b-a5b9-116389fe4437",
+            "active": true
+          }
+        ],
+        "sets": [
+          {
+            "id": "0cf93f2a-e027-44ea-817f-b52233af39cb",
+            "account": "3bc6f5b5-31d8-48e1-bba2-f9fa3a8ae99e",
+            "active": true,
+            "codes": [
+              {
+                "id": "3697345d-cca2-4262-b350-48c6ddc485ef",
+                "active": true,
+                "used_at": 2,
+                "value_sha256": "ae09b601a94ef98fa99f97e24366f873929ddf6390f8a700ca41a9f1bebfd7ab"
+              },
+              {
+                "id": "61fc6595-232d-4ee4-8c81-f97df0cbe91f",
+                "active": true,
+                "used_at": null,
+                "value_sha256": "89349242acd06c45d17da1541a0db0599746fcf0116807e029fb99e90c712bd7"
+              }
+            ]
+          }
+        ],
+        "folders": [
+          {
+            "id": "80f552e3-a7cf-4381-9383-12a4390c5dd6",
+            "active": true
+          }
+        ],
+        "memberships": [
+          {
+            "id": "a4d91135-d8cd-4d06-84c5-43115ebbe25c",
+            "folder": "80f552e3-a7cf-4381-9383-12a4390c5dd6",
+            "account": "3bc6f5b5-31d8-48e1-bba2-f9fa3a8ae99e",
+            "active": true
+          }
+        ]
+      }
+    },
+    "folderAfter": {
+      "label": "After member no-match Clear and Cancel",
+      "root": "D:/Projects/github/authenticator/target/task24-owned-rEPFkY",
+      "file": "metadata-008.json",
+      "data": {
+        "accounts": [
+          {
+            "id": "3bc6f5b5-31d8-48e1-bba2-f9fa3a8ae99e",
+            "active": true
+          },
+          {
+            "id": "da730c3c-a68f-4622-9c3a-ae3b5afc830a",
+            "active": true
+          },
+          {
+            "id": "d620236e-3f45-43d0-9193-787bc9f96644",
+            "active": true
+          },
+          {
+            "id": "36a8dc53-2ff1-43bd-b312-4d2c355fb717",
+            "active": true
+          },
+          {
+            "id": "0f952e54-0c31-4ce9-9b75-3f0537ba889a",
+            "active": true
+          },
+          {
+            "id": "ba743ca3-ef19-4b1b-9877-cfbdd7602b94",
+            "active": false
+          },
+          {
+            "id": "276d2c8c-9a1e-4c4b-a5b9-116389fe4437",
+            "active": true
+          }
+        ],
+        "sets": [
+          {
+            "id": "0cf93f2a-e027-44ea-817f-b52233af39cb",
+            "account": "3bc6f5b5-31d8-48e1-bba2-f9fa3a8ae99e",
+            "active": true,
+            "codes": [
+              {
+                "id": "3697345d-cca2-4262-b350-48c6ddc485ef",
+                "active": true,
+                "used_at": 2,
+                "value_sha256": "ae09b601a94ef98fa99f97e24366f873929ddf6390f8a700ca41a9f1bebfd7ab"
+              },
+              {
+                "id": "61fc6595-232d-4ee4-8c81-f97df0cbe91f",
+                "active": true,
+                "used_at": null,
+                "value_sha256": "89349242acd06c45d17da1541a0db0599746fcf0116807e029fb99e90c712bd7"
+              }
+            ]
+          }
+        ],
+        "folders": [
+          {
+            "id": "80f552e3-a7cf-4381-9383-12a4390c5dd6",
+            "active": true
+          }
+        ],
+        "memberships": [
+          {
+            "id": "a4d91135-d8cd-4d06-84c5-43115ebbe25c",
+            "folder": "80f552e3-a7cf-4381-9383-12a4390c5dd6",
+            "account": "3bc6f5b5-31d8-48e1-bba2-f9fa3a8ae99e",
+            "active": true
+          }
+        ]
+      }
+    }
+  },
+  "toolOutputCaveat": "A single ordinary screenshot requested before Backup tab transition settled briefly exposed a published disposable OTP on Codes. No real credential or retained QA file/image/log contains it. No universal tool-output absence is claimed; subsequent screenshots require unique settled route predicates and stored frames use F10 masking.",
+  "restoredState": {
+    "utc": "2026-11-14T01:23:57.072Z",
+    "ownedWindowsAbsent": true,
+    "olderTask21Preserved": true,
+    "olderTask23ExplorerPreserved": true,
+    "monitors100PercentUnchanged": true,
+    "contrastNoneUnchanged": true,
+    "narratorNotEnabled": true,
+    "fixtureIdleDefault300Unchanged": true,
+    "ordinaryRootAbsent": true,
+    "redirectedRootMembers": []
+  },
+  "malformedInput": {
+    "path": "D:\\Projects\\github\\authenticator\\target\\task24-state-program-d6f1b279-d6d0-44ca-b458-40ff0be3471b\\generated-invalid-utf8.txt",
+    "bytes": 3,
+    "sha256": "b632bfa9c60bc17f7fd78dba311fd3f5dfa66cb8c017a4278e2bae28d668844d",
+    "expected_bytes_unchanged": true,
+    "contains_no_draft_values": true,
+    "ordinary_inherited_public_fixture_directory": true
+  },
+  "source_base": "109171ac72e458ac3c34738e828e83b29983ec5a",
+  "release_equivalence": {
+    "command": [
+      "rtk",
+      "proxy",
+      "cargo",
+      "build",
+      "--release",
+      "--locked",
+      "--offline",
+      "--target",
+      "x86_64-pc-windows-msvc"
+    ],
+    "exit": 0,
+    "seconds": 91.979,
+    "owned_root": "D:\\Projects\\github\\authenticator\\target\\task24-state-release-kety06oz",
+    "before_sha256": "9656ed317d6b2e36a96cf17ac5c0d2729680cb6abb850941c295f7418272978e",
+    "after_sha256": "9656ed317d6b2e36a96cf17ac5c0d2729680cb6abb850941c295f7418272978e",
+    "same_exe_bytes": true,
+    "bytes": 12179456,
+    "production_source_prefix_unchanged": {
+      "src/ui/recovery_editor.rs": true,
+      "src/ui/shell.rs": true
+    }
+  }
+}

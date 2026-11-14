@@ -1,6 +1,6 @@
 ## Current follow-up checkpoint
 
-Newest phase: follow-up review is FINAL; bounded focus/packaging changes approved with no material source/security/data-loss finding. Independent 59-image review, targeted checks and actual import/dialog/Lock path passed. Native exclusivity is released. Five bounded required recovery/folder/Trash states remain; source fixes are being integrated to start current CI while one implementation child completes those cases for re-review. Task07's measured monitor/DPI checkbox is reconciled to done. Clean committed package/current CI/final state reconciliation and external gates remain open; commit attribution follows after this integration.
+Final source/evidence checkpoint: all five state groups independently closed, narrow debug support approved and release9656 bytes preserved.16 scopes done, seven explicitly blocked; Task24 final integration pending by mandatory host/tool-limited acceptance. Tasks12–18 and coverage/checklist audit are reconciled; original requirements preserved. No active child/native ownership remains. Clean local109171a ZIPee7af10e… and successful hosted43536070275 artifacts retain separate identities. This checkpoint will be committed/pushed and its actual SHA/current CI/remote equality recorded in the following final update. Exact remaining resume work is isolated offline/no-Rust/other-user runtime, real WTS/suspend/logon and heard Narrator behavior with a working positive control. No full-project completion claim.
 
 Previous phase:
 

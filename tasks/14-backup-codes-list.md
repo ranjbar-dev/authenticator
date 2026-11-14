@@ -1,6 +1,6 @@
 # Task 14: Backup Codes tab and account selection
 
-Status: in_progress - native list/selector/detail and restore counts reviewed; remaining full QA gates open
+Status: done — numbered UI scope independently reviewed with native state evidence
 Priority: Required for complete v1
 Dependencies: 04, 05, 10–13
 Requirements: FR-3.1; PRD §§5.3, 7
@@ -20,23 +20,23 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 Planning snapshot, 12 November 2026: no existing application source, screen family, theme or shared components was present. These are PRD/reference-derived roles, not measured project conventions. Use the shared Rust theme and widgets created by task 04 (or create those primitives in task 04 itself); reread this checklist before editing. Refresh implementation paths from the actual code.
 
-- [ ] Shared tab holder and heading preserve the three-section shell. — PRD/reference structure; shared implementation from task 04.
-- [ ] Introduction explains recovery codes concisely near the primary action. — PRD/reference structure; shared implementation from task 04.
-- [ ] Add Backup Codes is immediately discoverable. — PRD/reference structure; shared implementation from task 04.
-- [ ] Set rows identify service/account and available/used counts without showing secrets. — PRD/reference structure; shared implementation from task 04.
-- [ ] Empty/no-match/error states provide a useful next action. — PRD/reference structure; shared implementation from task 04.
-- [ ] Account-selection toolbar offers labeled live search and sort. — PRD/reference structure; shared implementation from task 04.
-- [ ] Selected account and existing-set status are unambiguous before continuing. — PRD/reference structure; shared implementation from task 04.
-- [ ] Help, focus, active icons, theme and responsive layout follow shared components; lock hides data. — PRD/reference structure; shared implementation from task 04.
+- [x] Shared tab holder and heading preserve the three-section shell. — PRD/reference structure; shared implementation from task 04.
+- [x] Introduction explains recovery codes concisely near the primary action. — PRD/reference structure; shared implementation from task 04.
+- [x] Add Backup Codes is immediately discoverable. — PRD/reference structure; shared implementation from task 04.
+- [x] Set rows identify service/account and available/used counts without showing secrets. — PRD/reference structure; shared implementation from task 04.
+- [x] Empty/no-match/error states provide a useful next action. — PRD/reference structure; shared implementation from task 04.
+- [x] Account-selection toolbar offers labeled live search and sort. — PRD/reference structure; shared implementation from task 04.
+- [x] Selected account and existing-set status are unambiguous before continuing. — PRD/reference structure; shared implementation from task 04.
+- [x] Help, focus, active icons, theme and responsive layout follow shared components; lock hides data. — PRD/reference structure; shared implementation from task 04.
 
 Must not be copied from the reference: profile/sign-in, cloud sync/backup, language selector, extension/companion promotions, optional encryption switches or swipe-only desktop actions. Reuse shared field, button, dialog and feedback components; do not recreate their styling per page.
 
 ## Acceptance and verification
 
-- [ ] Empty, populated, no-match and locked states render correctly with no raw codes exposed.
-- [ ] Search/sort selects the intended real account, including similar service names/usernames.
-- [ ] Counts and associations remain correct after restart/import and deletion/restoration.
-- [ ] Pointer/keyboard/tab navigation and visual checks pass.
+- [x] Empty, populated, no-match and locked states render correctly with no raw codes exposed.
+- [x] Search/sort selects the intended real account, including similar service names/usernames.
+- [x] Counts and associations remain correct after restart/import and deletion/restoration.
+- [x] Pointer/keyboard/tab navigation and visual checks pass.
 
 ## Handoff and completion
 
@@ -47,6 +47,9 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 5. Keep at most one child agent active; children must not spawn children, commit, push, change PRD scope or silently skip requirements. Return changed paths, checks, findings and remaining risks to the parent.
 
 ## Evidence
+
+**Current accepted outcome:** The [same-checker re-review](../docs/qa/task24/state-gaps/independent-review.md) recommends closing this task after combining the original source/security/fault tests, reviewed Task21/23 native recovery and the Task24 focus/state evidence. All listed checkboxes are now reconciled to that evidence. Actual offline/other-user/no-Rust, Windows lifecycle/logon and heard-speech gates remain with their explicitly blocked owners; no global certification follows from this page. Earlier evidence paragraphs below retain their historical launch/source context and are superseded only for the now-tested scope.
+
 
 Current native21 used the actual empty list/account selector, created a real set and verified available/used counts after Lock/unlock, account Trash/restore and full-graph backup restoration. [Journey and frames](../docs/qa/task21/remaining-native-workflows.md), [independent review](../docs/qa/task21/remaining-native-independent-review.md). This supplies previously unavailable native positive-path evidence; all-state/large-list/environment checks are not newly certified.
 

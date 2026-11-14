@@ -1,0 +1,7 @@
+
+rtk: Failed to resolve 'python' via PATH, falling back to direct exec: Binary 'python' not found on PATH
+.................
+----------------------------------------------------------------------
+Ran 17 tests in 0.944s
+
+OK

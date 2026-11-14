@@ -1,6 +1,6 @@
 # Task 19: Settings, auto-start and contextual offline help
 
-Status: in_progress - native counts/preferences/help reviewed; offline/logon/package/full QA gates open
+Status: blocked — offline/logon and heard screen-reader acceptance unavailable
 Priority: Required for complete v1
 Dependencies: 05, 10, 12–18
 Requirements: FR-7.2–4, FR-8; PRD §§5.4, 7, 12
@@ -21,14 +21,14 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 Planning snapshot, 12 November 2026: no existing application source, screen family, theme or shared components was present. These are PRD/reference-derived roles, not measured project conventions. Use the shared Rust theme and widgets created by task 04 (or create those primitives in task 04 itself); reread this checklist before editing. Refresh implementation paths from the actual code.
 
-- [ ] Shared Settings holder begins with concise real vault counts/status. — PRD/reference structure; shared implementation from task 04.
-- [ ] Export & Import is easy to find near the top. — PRD/reference structure; shared implementation from task 04.
-- [ ] Lock control and auto-lock setting show current state with labeled choices. — PRD/reference structure; shared implementation from task 04.
-- [ ] Clipboard timeout is clearly labeled with its practical behavior. — PRD/reference structure; shared implementation from task 04.
-- [ ] Auto Start shows actual success/failure and requires explicit intent. — PRD/reference structure; shared implementation from task 04.
-- [ ] Version and contextual local help are accessible without internet. — PRD/reference structure; shared implementation from task 04.
-- [ ] Clock/privacy/recovery guidance is concise and avoids unsupported security claims. — PRD/reference structure; shared implementation from task 04.
-- [ ] Shared row hierarchy, opaque active icons, focus and responsive layout apply; excluded controls are absent. — PRD/reference structure; shared implementation from task 04.
+- [x] Shared Settings holder begins with concise real vault counts/status. — PRD/reference structure; shared implementation from task 04.
+- [x] Export & Import is easy to find near the top. — PRD/reference structure; shared implementation from task 04.
+- [x] Lock control and auto-lock setting show current state with labeled choices. — PRD/reference structure; shared implementation from task 04.
+- [x] Clipboard timeout is clearly labeled with its practical behavior. — PRD/reference structure; shared implementation from task 04.
+- [x] Auto Start shows actual success/failure and requires explicit intent. — PRD/reference structure; shared implementation from task 04.
+- [x] Version and contextual local help are accessible without internet. — PRD/reference structure; shared implementation from task 04.
+- [x] Clock/privacy/recovery guidance is concise and avoids unsupported security claims. — PRD/reference structure; shared implementation from task 04.
+- [x] Shared row hierarchy, opaque active icons, focus and responsive layout apply; excluded controls are absent. — PRD/reference structure; shared implementation from task 04.
 
 Must not be copied from the reference: profile/sign-in, cloud sync/backup, language selector, extension/companion promotions, optional encryption switches or swipe-only desktop actions. Reuse shared field, button, dialog and feedback components; do not recreate their styling per page.
 
@@ -37,7 +37,7 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 - [x] Counts/settings persist correctly after CRUD/import/restore/restart and failures surface safely.
 - [x] Enable/disable startup updates the app's own registration only; OS denial is recoverable.
 - [ ] All help and core settings function with networking disabled; no excluded control or runtime network call exists.
-- [ ] Keyboard, high-contrast/readability and narrow layouts pass independent review.
+- [x] Keyboard, high-contrast/readability and narrow layouts pass independent review.
 
 ## Handoff and completion
 
@@ -64,3 +64,5 @@ Current209library entries compile; final fmt/strict all-target/all-feature Clipp
 
 [Hosted CI43391082018](https://github.com/ranjbar-dev/authenticator/actions/runs/43391082018) subsequently SUCCESS at6264c54:205library+18other top-level tests,0failures,4directignored helper entrypoints, format/lint/appbuild allpass. [Exact evidence](../docs/qa/task19/hosted-follow-up.md). This closes the hosted full-suite source gate, not native/offline/logon/manual acceptance or later Task20 changes.
 
+
+Current acceptance boundary: all required feasible software-state cases have [independent closure](../docs/qa/task24/state-gaps/independent-review.md). Reviewed source109171a has clean local packaging and successful full hosted check/package evidence; postA QA-only additions preserve exact release bytes and have targeted checks/re-review. This task is blocked only by the named resource/tool-limited acceptance above, not by an unreported software TODO. Resume on a ready isolated Windows environment with effective networking disabled/no Rust and independent user recovery, then test actual OS lifecycle/logon and audible Narrator behavior using a working positive control. Existing source/adapter/AX tests do not pretend those runtime checks passed. The final integration update supplies the actual main SHA and attached CI result.
