@@ -1,4 +1,39 @@
-## Current execution checkpoint, 14 November 2026
+## Current execution checkpoint, 15 November 2026
+
+Resumed from clean/pushed `996b56967051f5c6f6e7ac9346e738c6d5505282`.
+[CI43629017363](https://github.com/ranjbar-dev/authenticator/actions/runs/43629017363)
+completed successfully, including check/package jobs. Parent formatting, 17
+packaging regressions and existing ZIP validation passed. Production source and
+the clean079c08d/native-tested package are unchanged; [parent record](../docs/qa/resume-2026-11-15.md).
+
+Sole Task05 implementer `resume05_acceptance` and distinct reviewer
+`review05_current` are FINAL/inactive. [Current prerequisite report](../docs/qa/task05/resume-2026-11-15.md)
+and [scoped approval](../docs/qa/task05/resume-2026-11-15-independent-review.md)
+retain Sandbox Disabled, pending servicing markers, zero registered guests and
+bounded media absence. No host servicing/restart or acceptance journey occurred.
+One P3 evidence-wording issue was corrected and independently verified.
+
+Sole independent Task19 implementer `resume19_observer` is FINAL after one normal
+fixture launch again failed GetCursorPos Access denied. Fresh inventories found
+no fixture/Narrator resource; no positive control, speech, input, clipboard or
+screenshot test ran. [Current report](../docs/qa/task19/speech-prerequisite-2026-11-15.md)
+received [distinct scoped approval](../docs/qa/task19/speech-prerequisite-2026-11-15-independent-review.md)
+with no material finding; this does not close speech acceptance. Both authors
+are FINAL; the distinct reviewer approved the bounded evidence. There is no exposed
+close-thread API; FINAL children are inactive. Parent owns integration/statuses.
+
+Sixteen tasks remain done and eight blocked; earliest unfinished Task05, last
+fully accepted numbered scope22. No original requirement/checkbox is weakened.
+Next Task05 action requires a separately prepared isolated Windows runtime or
+maintenance restart/setup outside this shared-host execution. Do not repeat
+feature servicing or restart/lock/suspend/logoff the shared host. Speech testing
+also requires working normal interactive helper launch/input and a known-label
+positive control before complete-history observation. Parent is committing and
+pushing this reviewed documentation-only checkpoint; final SHA/remote equality
+are reported after creation, avoiding a circular commit reference. Previous
+checkpoints below are historical.
+
+## Previous execution checkpoint, 14 November 2026
 
 Baseline clean main8ac9f38 matched remote and passed [CI43618587528](https://github.com/ranjbar-dev/authenticator/actions/runs/43618587528). Parent formatting,17 packaging regressions and current archive validation passed. Production source and the clean079c08d/native-tested ZIP remain unchanged.
 

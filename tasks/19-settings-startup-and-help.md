@@ -49,6 +49,11 @@ Must not be copied from the reference: profile/sign-in, cloud sync/backup, langu
 
 ## Evidence
 
+15 November: one later-execution normal fixture launch still returned GetCursorPos
+Access denied; no Narrator positive control or speech test ran. [Current evidence](../docs/qa/task19/speech-prerequisite-2026-11-15.md)
+and [distinct scoped approval](../docs/qa/task19/speech-prerequisite-2026-11-15-independent-review.md).
+No acceptance or source change follows from this failed prerequisite.
+
 Later 14 November execution investigated the [documented Narrator copy observer](../docs/qa/task19/speech-copy-2026-11-14.md). The shortcut copies only the last phrase, which cannot alone prove absence of intermediate OTP announcements. Two normal fixture launches failed with GetCursorPos Access denied before Narrator or any positive control ran. [Sanitized facts](../docs/qa/task19/speech-copy-2026-11-14.json) distinguish exec-caller input-desktop denial from an unknown helper cause; no new speech/UI pass, source change or task acceptance follows. [Distinct scoped review](../docs/qa/task19/speech-copy-independent-review-2026-11-14.md) approved the corrected evidence; the observed stopping decision is not an invented launch retry rule.
 
 Current native21 verified real Settings counts across recovery used/Undo, Trash/restore, full-graph Merge and Replace, and explicit imported-display/retained-security/startup choices. A missing navigation glyph was replaced with plain English and verified in a fresh compiled native help view. [Journey](../docs/qa/task21/remaining-native-workflows.md), [independent review](../docs/qa/task21/remaining-native-independent-review.md). The example path could not register startup and no production Run/logon operation was attempted. Offline-machine, OS delivery and remaining help/state/scale checks stay open.

@@ -35,6 +35,10 @@ Implement this task in the Rust Windows desktop app **Authenticator**, using the
 
 ## Evidence
 
+15 November: the independent speech prerequisite attempt again failed normal
+fixture launch before any positive control or speech observation. [Exact report](../docs/qa/task19/speech-prerequisite-2026-11-15.md).
+No UI or speech acceptance closes; task requirements remain unchanged.
+
 Later 14 November independent speech-observer route: [investigation](../docs/qa/task19/speech-copy-2026-11-14.md) established the official last-phrase-only shortcut semantics, then two normal fixture launches failed with GetCursorPos Access denied. Narrator, a known-label positive control and rollover observation never ran. This is a failed native prerequisite, not another failed speech observation or a new pass. All original acceptance remains open.
 
 Current remaining native journeys and all18 sanitized frames received distinct review with no material security/visual finding. [Author evidence](../docs/qa/task21/remaining-native-workflows.md), [independent review](../docs/qa/task21/remaining-native-independent-review.md). Two minor presentation findings were corrected and independently rechecked: accurate global-ID caption and no duplicate Account ID. [Parent checks](../docs/qa/task21/parent-review-fixes.md). Test-only compiler compatibility is corrected locally; new hosted full checks are required. No unavailable environment/state/scale check is marked passed and Task21 remains incomplete.

@@ -1,5 +1,14 @@
 # Authenticator completion audit — incomplete acceptance
 
+The [15 November resume](qa/resume-2026-11-15.md) verifies baseline996b569/remote
+equality, successful current CI, formatting, 17 package regressions and unchanged
+ZIP integrity. [Task05 prerequisite evidence](qa/task05/resume-2026-11-15.md)
+received [distinct review](qa/task05/resume-2026-11-15-independent-review.md);
+the isolated-runtime and OS lifecycle gates remain blocked. The [separate speech
+prerequisite attempt](qa/task19/speech-prerequisite-2026-11-15.md) again failed normal
+launch before any positive control. Production source and all task acceptance
+checkboxes are unchanged.
+
 The subsequent [Narrator copy-observer attempt](qa/task19/speech-copy-2026-11-14.md) stopped before any speech test: two normal fixture launches returned GetCursorPos Access denied. No known-label positive control, Narrator session, clipboard operation or screenshot occurred. The documented shortcut copies only the last phrase and cannot by itself prove no intermediate OTP announcement. No acceptance gate closed.
 
 Later 14 November execution attempted [Sandbox provisioning](qa/task05/sandbox-attempt-2026-11-14.md) with restart suppressed. Enable required a restart; supported disable restored Sandbox to Disabled, while newly present CBS/pending XML servicing markers remain. No restart was performed or scheduled and no app acceptance gate closed. Existing `main`8ac9f38 matched remote and [CI43618587528](https://github.com/ranjbar-dev/authenticator/actions/runs/43618587528) passed; current archive validation, 17 packaging regressions and formatting passed again. Production source/artifact bytes are unchanged.
