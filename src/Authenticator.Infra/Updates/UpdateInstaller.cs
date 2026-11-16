@@ -16,13 +16,20 @@ public static class UpdateInstaller
     private static string? OldPath => ExePath is { } exe ? exe + ".old" : null;
 
     /// <summary>
-    /// Self-update only applies to the published single-file exe (that's what releases ship). In a
-    /// normal build output the assembly has a file location and updates are skipped.
+    /// Self-update only applies to the published single-file exe (that's what releases ship), which the
+    /// build marks with [AssemblyMetadata("SelfUpdate", "true")]. Assembly.Location can't tell: the exe
+    /// self-extracts, so its assemblies do have file locations.
     /// </summary>
     public static bool IsSupported => Supported.Value;
 
     private static readonly Lazy<bool> Supported = new(() =>
-        string.IsNullOrEmpty(typeof(UpdateInstaller).Assembly.Location) && ExePath != null && CanWriteNextToExe());
+        IsSelfUpdateBuild() && ExePath != null && CanWriteNextToExe());
+
+    private static bool IsSelfUpdateBuild() =>
+        System.Reflection.Assembly.GetEntryAssembly()?
+            .GetCustomAttributes(typeof(System.Reflection.AssemblyMetadataAttribute), false)
+            .OfType<System.Reflection.AssemblyMetadataAttribute>()
+            .Any(a => a.Key == "SelfUpdate" && a.Value == "true") == true;
 
     public static bool HasPending => PendingPath is { } pending && File.Exists(pending);
 

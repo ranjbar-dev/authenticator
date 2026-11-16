@@ -37,6 +37,11 @@
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
+  <!-- Marks the single-file exe (what releases ship) so it may update itself; dev builds never do. -->
+  <ItemGroup Condition="'$(PublishSingleFile)' == 'true'">
+    <AssemblyMetadata Include="SelfUpdate" Value="true" />
+  </ItemGroup>
+
   <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <ProjectCapability Include="Msix" />
   </ItemGroup>
