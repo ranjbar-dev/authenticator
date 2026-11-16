@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--  A soft brand-tinted light source in the top-left corner, so lock screens aren't flat.  -->
+<UserControl
+    x:Class="Authenticator.App.Controls.AmbientGlow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    AutomationProperties.AccessibilityView="Raw"
+    IsHitTestVisible="False">
+    <Canvas>
+        <Ellipse
+            Canvas.Left="-260"
+            Canvas.Top="-300"
+            Width="640"
+            Height="600">
+            <Ellipse.Fill>
+                <RadialGradientBrush>
+                    <GradientStop Offset="0" Color="{ThemeResource GlowColor}" />
+                    <GradientStop Offset="1" Color="#007C3AED" />
+                </RadialGradientBrush>
+            </Ellipse.Fill>
+        </Ellipse>
+    </Canvas>
+</UserControl>

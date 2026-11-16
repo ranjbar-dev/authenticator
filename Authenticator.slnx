@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Authenticator.App/Authenticator.App.csproj">
+      <Platform Project="x64" />
+    </Project>
+    <Project Path="src/Authenticator.Core/Authenticator.Core.csproj" />
+    <Project Path="src/Authenticator.Infra/Authenticator.Infra.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Authenticator.Core.Tests/Authenticator.Core.Tests.csproj" />
+  </Folder>
+</Solution>

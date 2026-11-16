@@ -1,273 +1,326 @@
-# Product Requirements Document: Authenticator
+# PRD: Authenticator for Windows
 
-**Status:** Implementation independently reviewed; 16 numbered scopes done and eight blocked by external acceptance; final source/CI/Git integration verified. Acceptance remains incomplete; see [audit](docs/completion-report.md).
-**Basis:** Direct inspection of the running Windows app “Authenticator App · 2FA” on 12 November 2026.  
-**Purpose:** Define Authenticator, a Rust desktop app matching the inspected reference UI, with screenshot-based 2FA import as its defining feature and encrypted local-only storage.  
-**Repository:** https://github.com/ranjbar-dev/authenticator  
-**Branch:** Commit and push project changes to `main`.  
-**Interface language:** English only.
+| | |
+|---|---|
+| **Name** | Authenticator |
+| **Platform** | Windows 10 (1809+) / Windows 11, x64 + ARM64 |
+| **Stack** | C# / .NET 10 (LTS), WinUI 3 (Windows App SDK) |
+| **Status** | Draft v1 · 2026-11-16 |
 
-## 1. Product overview
+---
 
-**Authenticator** is a Windows desktop app written in Rust. It stores OTP credentials, generates current codes and keeps associated emergency backup codes. Its UI must closely match the inspected **Authenticator App · 2FA** reference: a narrow, dark, mobile-like window with **2FA Codes**, **Backup Codes**, and **Settings** tabs. The highest-priority workflow is **Screenshot to Scan**: capture a selected screen region, scan its QR code locally, review the credential and import it into the encrypted vault. No Authenticator account, Google sign-in or cloud service is offered.
+## 1. Summary
 
-The reference inspection was exploratory and non-destructive. It did not create, edit, delete, export, or import real credentials, activate sync, or change security settings. The requirements below distinguish **Observed** interface evidence from **Proposed** rewrite decisions. A visible option is not proof of its implementation, interoperability, or security properties.
+A native Windows desktop authenticator app that generates TOTP and HOTP codes, much like Google Authenticator. Users can bring their existing accounts over by **capturing a QR code from the screen or an image**. This includes Google Authenticator's multi-account "Transfer accounts" QR. They can also **enter secrets manually**. The UI is modern and minimal, follows the system light/dark theme, and uses **purple** as the brand color. Secrets are encrypted at rest and the app is locked behind **Windows Hello**.
 
-## 2. Goals and success criteria
+## 2. Goals & Non-Goals
 
 ### Goals
+1. Generate correct TOTP (RFC 6238) and HOTP (RFC 4226) codes for all common providers.
+2. Import accounts quickly from screenshots: snip a region of the screen, paste from the clipboard, or drop/open an image file.
+3. Import a whole Google Authenticator export (`otpauth-migration://`) in one step.
+4. Add accounts manually when no QR is available.
+5. Keep secrets safe: encrypted vault, Windows Hello unlock, auto-lock, no network access.
+6. Provide a modern, minimal UI with light and dark mode and a purple accent.
+7. Support encrypted local backup and restore.
 
-1. Make it fast to locate an account and obtain a valid code on a Windows desktop.
-2. Make screenshot capture, local QR scanning and 2FA import the primary workflow, with image import and manual entry as alternatives.
-3. Preserve access through deliberate, secure backup, import, and recovery workflows.
-4. Protect credential seeds and recovery codes at rest and avoid accidental disclosure.
-5. Deliver a maintainable Rust implementation, reference-matching UI and English-only interface without app accounts or cloud integrations.
+### Non-Goals (v1)
+- Cloud sync or multi-device sync.
+- macOS, Linux, or mobile versions.
+- Push-based 2FA, Steam Guard, or other proprietary schemes.
+- Browser extension or autofill.
 
-### Success criteria
+## 3. Target User
 
-- A user can add a test TOTP account, find it, and obtain the same code as an independent standards-compliant implementation at the same time.
-- Codes refresh at the configured boundary and remain correct for the supported algorithms, digit lengths, and periods.
-- A user can export an encrypted test vault and restore it on a clean installation without loss of supported data.
-- Secrets, OTP values, and backup codes never appear in logs, analytics, crash reports, or the PRD.
-- First launch, vault creation, screenshot scanning, code generation and export/import work offline without registration or sign-in.
-- A user can start Screenshot to Scan from the codes screen, capture a QR in another window, review and save the credential without typing its secret.
-- Visual comparison confirms reference-matching navigation, cards, typography, colors, timers and add-account screens, with excluded controls omitted.
-- Keyboard-only use covers primary navigation, search, creation, copy, and confirmation dialogs.
+One person on a personal Windows PC who already uses Google Authenticator on a phone. They want their codes on the desktop as well, without retyping dozens of secrets. They care about security but don't want friction.
 
-## 3. Scope and priorities
+## 4. User Stories
 
-| Priority | Capability | Evidence / intent |
+| # | As a user, I want to… | So that… |
 |---|---|---|
-| P0 — highest | Screenshot → local QR scan → review → 2FA import | Defining product feature; Screenshot to Scan observed |
-| P0 | Rust implementation and reference-matching UI | Required product foundation |
-| P0 | Local TOTP vault, list, search, add, edit, copy | Core offline workflows |
-| P0 | Manual entry, QR image import and validation | Alternative entry workflows |
-| P0 | Encrypted local storage, locking, easy encrypted export/import | All persisted user data stays encrypted on the system |
-| P0 | Associated backup-code storage | Reference flow observed |
-| P1 | Folders, sorting, list/grid view, trash | Reference controls observed |
-| P1 | Startup, local clock handling and help | English-only settings |
+| U1 | export from Google Authenticator on my phone, show the QR, and snip it on my PC | all my accounts move over in one go |
+| U2 | snip a website's 2FA setup QR shown in my browser | I can enroll a new account without a phone |
+| U3 | paste a screenshot (Ctrl+V) or drag an image onto the window | I can import from images I already have |
+| U4 | type in an issuer, account name, and secret key | I can add accounts that only show a text key |
+| U5 | see every code with a countdown and copy it with one click | logging in is fast |
+| U6 | search my accounts by typing | I find the right one among many |
+| U7 | unlock with my face, fingerprint, or PIN | my codes stay protected if someone uses my PC |
+| U8 | export an encrypted backup file and restore it later | I don't lose access if my PC dies |
+| U9 | switch between light, dark, or system theme | the app matches my setup |
+| U10 | rename, reorder, pin, and delete accounts | my list stays tidy and my most-used codes stay on top |
+| U11 | use counter-based (HOTP) accounts too | older services and hardware-token-style accounts work as well |
+| U12 | close the window and still use the scan hotkey | the app is always ready without cluttering my taskbar |
 
-**Excluded product features:** Google sign-in, any other app login/registration, Authenticator accounts/profiles, cloud storage/backup, cross-device sync, multilingual UI and language selection. Browser extensions and mobile/watch companion integrations are outside this desktop app's scope. Service usernames stored in vault entries are supported; they do not create an Authenticator account.
+## 5. Functional Requirements
 
-**Non-goals for initial release:** Creating third-party service accounts, generating recovery codes on behalf of services, enterprise administration, hosted infrastructure, or claiming compatibility with the reference app's private vault format without testing. HOTP, Steam-style codes, passkeys, push approvals, and password management are not established by this inspection and are not assumed in P0.
+### 5.1 Code generation
+- **FR-1** Implement TOTP per RFC 6238 / RFC 4226 truncation.
+- **FR-2** Support algorithms SHA1 (default), SHA256, and SHA512.
+- **FR-3** Support 6 (default), 7, and 8 digit codes.
+- **FR-4** Support periods of 30 s (default) and 60 s, or any positive integer.
+- **FR-5** Base32 secrets: case-insensitive. Ignore spaces and hyphens. Accept missing padding.
+- **FR-6** Format codes for readability: `123 456` / `1234 5678`.
+- **FR-7** Show a per-account countdown ring. Change the ring color in the last 5 s.
+- **FR-8** Optionally show the *next* code during the last 5 s (setting, off by default).
+- **FR-9** Use the system clock. Warn if the clock looks wrong (optional NTP check, off by default, see §8).
+- **FR-9a HOTP:** implement HOTP per RFC 4226 with a stored counter per account (same algorithm/digit options as TOTP).
+  - HOTP rows hide the code (`••• •••`) and show a **"Get code"** (↻) button instead of a countdown ring.
+  - Pressing it increments the counter, **persists the new counter to the vault before showing the code**, then displays and copies the code.
+  - The code stays visible for 30 s, then is hidden again.
+  - "Edit details" lets the user view and adjust the counter to resync with a server (with a warning).
 
-## 4. Personas and jobs
+### 5.2 Import from screen / image
+- **FR-10 Snip region:** a "Scan from screen" button and a global hotkey (default `Ctrl+Shift+Q`, configurable) open a dimmed full-screen overlay on all monitors. The user drags a rectangle, and the app decodes the QR in that region.
+  - Use the Windows.Graphics.Capture API or a GDI/DXGI screen grab. Handle per-monitor DPI correctly.
+  - Hide the app window during capture so it doesn't cover the QR.
+- **FR-11 Clipboard:** `Ctrl+V` in the main window, or a "Paste image" button, decodes the image on the clipboard.
+- **FR-12 File:** drag & drop or an "Open image…" picker accepts PNG, JPG, BMP, GIF, and WEBP.
+- **FR-13 Decoder:** ZXing.Net (QR). Try the original image first, then grayscale, inverted, and upscaled versions to handle small or low-contrast QRs. If an image contains multiple QR codes, decode all of them.
+- **FR-14 Supported payloads:**
+  - `otpauth://totp/...`: standard Key URI format (issuer, label, secret, algorithm, digits, period).
+  - `otpauth://hotp/...`: same format, with the required `counter` parameter.
+  - `otpauth-migration://offline?data=...`: Google Authenticator export. Base64 → protobuf `MigrationPayload` → list of `OtpParameters` (both TOTP and HOTP entries, including HOTP counters). Handle multi-batch exports (batch_index/batch_size). Tell the user "batch 1 of 3 imported, scan the next".
+- **FR-15 Review screen:** before saving, show a list of the parsed accounts with checkboxes, editable issuer/name, and a flag on duplicates (same secret, or same issuer + name). The user confirms with "Import N accounts".
+- **FR-16 Errors:** show clear messages for "No QR found", "QR is not an authenticator code", and "Unsupported or malformed parameters".
+- **FR-17 Hygiene:** screenshots and decoded images exist **only in memory**. Never write them to disk or log them. Clear buffers after use.
 
-- **Personal user:** “Find my service, copy its current code, and sign in before it expires.”
-- **User onboarding a service:** “Scan the service’s QR code or enter its secret and verify the resulting code.”
-- **User preparing for device loss:** “Keep recoverable, protected backups of my vault and emergency codes.”
-- **User managing many accounts:** “Search, sort, and group entries without losing track of which account is which.”
+### 5.3 Manual entry
+- **FR-18** Form fields: Issuer (optional), Account name, Secret key (required), Type (Time-based / Counter-based, default Time-based), plus an "Advanced" expander for Algorithm, Digits, and Period (TOTP) or initial Counter (HOTP, default 0).
+- **FR-19** Validate Base32 as the user types and show inline errors. Show a live preview of the current code so the user can compare it with the website.
+- **FR-20** Accept a pasted `otpauth://` URI in the secret field and auto-fill all fields from it.
 
-## 5. Observed reference inventory
+### 5.4 Account list
+- **FR-21** Show cards/rows with: letter avatar (first letter of the issuer, or of the account name if there's no issuer, on the `AccentSubtle` tint; no logos, no network fetch), issuer, account name, code, and countdown (or "Get code" button for HOTP).
+- **FR-21a Favorites:** each account has a **Pin** toggle (☆/★ on hover and in the context menu). Pinned accounts appear in a "Pinned" section at the top of the list; the rest follow under "All accounts". Drag-to-reorder works within each section. No folders or groups.
+- **FR-22** Click a code (or press Enter when it's focused) to copy it. Show a toast saying "Copied". Clear the clipboard after 30 s if it still holds the code (configurable).
+- **FR-23** Search box (`Ctrl+F`, or just start typing) filters by issuer or name.
+- **FR-24** Drag to reorder. Context menu: Pin/Unpin, Rename, Edit details, Show QR (requires re-auth), Delete (with confirm).
+- **FR-25** Empty state: friendly illustration + "Scan from screen" / "Enter manually" buttons.
 
-This inventory records the reference app, not additional product scope. Observed profile, sync, language and companion controls are excluded from Authenticator.
+### 5.5 Security & lock
+- **FR-26** On launch, and after auto-lock, require **Windows Hello** (face / fingerprint / Windows PIN) via `UserConsentVerifier` / `KeyCredentialManager`.
+- **FR-27** Fallback: if Windows Hello isn't available or set up, the user creates an **app password** on first run instead.
+- **FR-28** Auto-lock after N minutes of inactivity (default 5; options: 1, 5, 15, 30, never) and on Windows session lock or sleep.
+- **FR-29** Exclude the window from screen capture by default (`SetWindowDisplayAffinity(WDA_EXCLUDEFROMCAPTURE)`), with a setting to turn this off.
+- **FR-30** Require re-authentication to reveal a secret, show a QR, or export.
 
-### 5.1 2FA Codes
+### 5.6 Backup & restore
+- **FR-31** **Export:** create an encrypted `.authbackup` file protected by a user-chosen password (minimum 8 characters, strength meter). Format: JSON payload → AES-256-GCM, key from Argon2id (salt + params stored in a header).
+- **FR-32** **Import:** pick a file, enter the password, then review and merge (same review screen as FR-15).
+- **FR-33 Transfer to phone (QR only):** "Export as QR" shows Google Authenticator-compatible `otpauth-migration://` QR codes **on screen only**, so the user can scan them with a phone. Behind re-auth and a strong warning ("anyone who sees these codes can copy your accounts").
+  - The user picks which accounts to include.
+  - Split into multiple QRs (batches) when needed, with Next/Previous.
+  - Screen-capture protection stays on while these QRs are shown, even if the user disabled it in settings.
+  - No plaintext file export (no `.txt`/`.csv` of URIs).
+- **FR-34** Show a reminder banner if there are more than 0 accounts and no backup has been made, or the last backup is older than 90 days (dismissible).
 
-- Main screen shows searchable account cards with a service/name, optional username, icon, six-digit code and a progress bar that changes as time passes. A floating plus opens account creation.
-- Toolbar contains a folder-creation control, a grid-shaped view control, and a sort menu. Sort options observed: **Latest First**, **Earliest First**, **Service A > Z**, **Service Z > A**, **Account A > Z**, and **Account Z > A**.
-- A help icon and profile/avatar control appear at the top. Their full flows were not inspected.
-- Folder creation has a name, six color choices, searchable account selection, sorting and Save.
+### 5.7 Settings
+- Theme: System / Light / Dark
+- Auto-lock timeout
+- Clipboard clear timeout
+- Show next code
+- Scan hotkey
+- Screen-capture protection
+- Start with Windows (**off** by default; when on, starts minimized to the tray)
+- Close button behavior: minimize to tray (**default**) / exit
+- Backup / Restore
+- About (version, licenses)
 
-### 5.2 Adding an account
+## 6. UI / UX
 
-- The plus opens **Scan QR Code**, with **Screenshot to Scan**, a QR help link, **Manually Input**, and **Import from Photos**. Further options may exist below the visible area; the list was not fully inspected.
-- Manual **Account** form contains website name, website address, username, secret key, advanced options and a backup-codes toggle.
-- Advanced options show SHA1, SHA256 and SHA512; 6 or 8 digits; and periods of 15, 30, 60 or 120 seconds. The displayed defaults were SHA1, 6 digits and 30 seconds.
-- Save is present. Validation, duplicate handling, QR formats, and saving behavior were not tested.
+### 6.1 Principles
+- **Minimal:** one main screen. Codes are the hero, and the chrome stays quiet.
+- **Fast:** from launch to a copied code should take under 3 seconds, including Hello.
+- **Native:** Fluent Design, Mica backdrop, rounded corners, and Segoe UI Variable all come from WinUI 3.
+- **Keyboard-first:** every action is reachable without a mouse.
 
-### 5.3 Backup Codes
+### 6.2 Layout
+```
+┌───────────────────────────────────────────────┐
+│  Authenticator                    ─  □  ✕     │  ← custom title bar, Mica
+│  [🔍 Search accounts…        ]   [+ ▾]  [⚙]   │  ← + menu: Scan screen / Paste / Open image / Manual
+├───────────────────────────────────────────────┤
+│  (G)  Google                                  │
+│       me@gmail.com              482 913   ◔   │  ← big monospace code, countdown ring
+│  ───────────────────────────────────────────  │
+│  (Gh) GitHub                                  │
+│       larry                     107 554   ◑   │
+│  ───────────────────────────────────────────  │
+│  …                                            │
+└───────────────────────────────────────────────┘
+```
+- Default window size is 420×640 and can be resized (minimum 360×480). In wide windows the list becomes a 2-column grid.
+- Codes use **Cascadia Mono / Segoe UI Variable Display** at 24–28 px with tabular figures.
+- Use motion sparingly: fade in new codes, ease out the countdown ring, use a subtle press scale on copy.
 
-- Separate tab has an empty-state explanation, **Add Backup Codes**, and a learn-more link.
-- Adding starts by selecting an existing 2FA account from a searchable, sortable list. The next screen displays its website name and username, a multiline backup-code field, **Read Backup Codes from File**, and Save.
-- Existing-code management, file formats, and used-code behavior were not tested.
+### 6.3 Color & theme
 
-### 5.4 Settings and recovery
+The purple brand color drives the accent. Neutrals come from Fluent's system defaults.
 
-- Settings displays counts for 2FA codes, backup codes and trash; **Sync & Backup** with an off status; **Export & Import**; **Auto Lock**; **Sync Time with Internet**; **Language**; **Auto Start**; **Browser Extensions**; **Developer Mode**; and rate, share and contact options.
-- Export & Import describes local backup. It offers **Export All Keys**, an **Enable Vault Password** switch, and **Select Vault File** for importing a compatible `.vault` file. Encryption, file format and behavior were not tested; the switch alone does not establish that an export is encrypted.
-- Trash shows deleted accounts, a remaining-days label, instructions to swipe left to restore, and **Empty Trash**. Retention policy and actual restore/deletion behavior were not tested.
-- A banner advertises access from phone and watch. Its platform support and synchronization implementation were not inspected.
+| Token | Light | Dark |
+|---|---|---|
+| `Accent` (primary) | `#7C3AED` | `#A78BFA` |
+| `AccentHover` | `#6D28D9` | `#C4B5FD` |
+| `AccentPressed` | `#5B21B6` | `#8B5CF6` |
+| `AccentSubtle` (avatar bg, selection) | `#EDE9FE` | `#2E1065` |
+| `OnAccent` (text on accent) | `#FFFFFF` | `#1E1033` |
+| `Background` | Mica / `#F7F5FB` fallback | Mica / `#141118` fallback |
+| `Surface` (cards) | `#FFFFFF` | `#1E1A24` |
+| `TextPrimary` | `#1C1626` | `#F3F0F7` |
+| `TextSecondary` | `#6B6478` | `#A59EB2` |
+| `Warning` (countdown < 5 s) | `#D97706` | `#FBBF24` |
+| `Danger` | `#DC2626` | `#F87171` |
 
-## 6. Functional requirements for the rewrite
+- Override `SystemAccentColor*` resources with the brand purple, so standard WinUI controls (buttons, toggles, focus rings) pick up the purple automatically.
+- All text/background pairs must meet WCAG AA contrast (4.5:1 for body text, 3:1 for large codes).
+- Follow the system theme live (`UISettings.ColorValuesChanged`) unless the user picks a theme manually.
+- Support high contrast mode: drop the brand colors and use system high-contrast colors.
 
-### FR-1: Vault and code list — P0
+### 6.4 Key screens
+1. **Unlock:** centered app icon, "Unlock with Windows Hello" button (prompts automatically on show).
+2. **Main list:** described above.
+3. **Add flyout/menu:** Scan from screen · Paste image · Open image… · Enter manually.
+4. **Snip overlay:** dimmed screen, crosshair, "Drag around the QR code · Esc to cancel".
+5. **Import review:** checklist of the parsed accounts, with editable fields and duplicate badges.
+6. **Manual entry dialog:** described in §5.3.
+7. **Settings page:** grouped settings cards (WinUI `SettingsCard` style from Community Toolkit).
 
-1. Show accounts with recognizable icon, service name, account identifier, current code and time remaining. Support empty, loading, error and locked states.
-2. Generate codes locally; update at the exact configured time-step boundary, including when the app resumes from sleep. Use system time as the baseline. Clearly report a detected clock problem without logging codes or secrets.
-3. Provide an explicit copy action, accessible by mouse and keyboard, with unobtrusive confirmation. Warn when a code is near expiry or display its remaining life. Clear clipboard only when the clipboard still contains the app's copied value, after a configurable timeout (default 30 seconds); do not overwrite a user's subsequent copy.
-4. Search service and account names as the user types. Include a clear no-results state. Support the six observed sort modes and persist the chosen sort. Provide both list and grid views and persist the chosen view.
-5. Editing and deleting entries must be explicit; deleting moves an entry to trash after confirmation. Define a predictable permanent-deletion policy and communicate it before deletion.
+### 6.5 System tray
+- Closing the window (✕) hides it to the notification area tray by default; the app keeps running so the global scan hotkey works.
+- The first time this happens, show a one-time toast: "Authenticator is still running in the tray."
+- Tray icon: left-click opens the window (unlock prompt if locked). Right-click menu: Open · Scan from screen · Lock now · Quit.
+- The app locks when hidden to the tray for longer than the auto-lock timeout.
 
-**Acceptance:** With a test account, searching narrows the list, copy places the current code on the clipboard, expiry updates without restarting, and edits persist after relaunch. No production credential is required for testing.
-
-### FR-2: Create and edit account — P0
-
-1. Support manual entry for service name, optional website address and account identifier, and a required secret. Validate and normalize Base32 secrets; never expose the secret in validation messages or logs.
-2. Make **Screenshot to Scan** the primary add-account action. Decode QR codes from a selected screen region or local PNG/JPEG image. Enforce bounded file size, pixel allocation and payload counts; document exact limits in implementation. Parse supported `otpauth://totp` URIs locally and show an editable review before saving. Capture only after an explicit user action.
-3. Advanced TOTP options: SHA-1, SHA-256 or SHA-512; 6 or 8 digits; 15, 30, 60 or 120-second periods. Default to SHA-1, six digits and 30 seconds. Preserve values supplied in supported QR URIs.
-4. Explain invalid or unsupported QR/URI, invalid secret, missing name, malformed period and incompatible algorithm; retain unsaved form input. Offer a non-blocking duplicate warning based on meaningful matching criteria without revealing the secret.
-5. Allow an optional backup-code set to be added during account creation. Require user intent before overwriting an existing entry.
-
-**Acceptance:** RFC test vectors and representative QR URIs produce expected values for all supported parameters; invalid input cannot create a broken entry. Screen/image data remains local.
-
-### FR-2A: Screenshot to Scan — P0, highest priority
-
-1. Expose **Screenshot to Scan** prominently from the codes screen/add-account flow. Require no sign-in, internet connection or screenshot-file save step.
-2. On user initiation, hide the main app as needed and show a region-selection overlay. Support multiple monitors and Windows display scaling. Escape cancels and restores the app without changing vault data.
-3. Capture only the selected region and decode locally in memory. Show service, account identifier, algorithm, digits and period for review; conceal the secret by default. If multiple supported QR codes are found, let the user select which credentials to review/import.
-4. Validate before saving, warn about duplicates and require explicit Save/Import confirmation. On success, show the imported account and current 2FA code.
-5. Provide actionable retry, image-import and manual-entry paths for missing QR, unsupported content, malformed credentials, capture permission failure and decoding failure. Preserve reviewed edits where applicable.
-6. Do not persist screenshot pixels or raw QR payloads to disk, clipboard, logs or telemetry. Release buffers after success, failure or cancellation. Block capture/import while locked and discard pending capture data when the vault locks.
-
-**Acceptance:** Capture a disposable TOTP QR displayed in another window and verify the imported code against an independent implementation. Test offline operation, real pointer selection, multiple monitors/scales, Escape cancellation, no/invalid/unsupported QR, multiple QR codes, duplicate entries and lock during capture. No screenshot file or plaintext payload remains afterward.
-
-### FR-3: Backup codes — P0
-
-1. List backup-code sets by associated account. Add a set by selecting an existing account and entering one code per line or choosing a local UTF-8 text file (optional BOM; 1 MiB maximum). Trim surrounding whitespace, ignore blank lines, detect exact duplicates and show a review before saving. Reject invalid encoding and excessive input without changing existing data.
-2. Encrypt backup codes at rest, conceal them by default, and require an intentional action to reveal or copy. Permit marking a code used and undoing that action; do not assume the service has accepted a code merely because it was copied.
-3. Support editing and deleting a set with a clear confirmation. Explain that backup codes are issued by the service, may be single-use, and should be stored separately as appropriate.
-4. Define behavior for duplicate or blank lines, large files, invalid encodings, and deletion of the associated account. Avoid storing raw source files.
-
-**Acceptance:** A set can be added from text or a test file, marked used, restored after an encrypted vault round trip, and is not disclosed while locked.
-
-### FR-4: Folders and organization — P1
-
-1. Create and rename a folder with a name and color; select accounts through a searchable list. Display membership clearly and persist changes.
-2. Accounts may belong to multiple folders (many-to-many). Removing a folder must not silently delete accounts.
-3. Provide visible, keyboard-operable folder navigation and an unfiled/all-accounts view.
-
-**Acceptance:** A folder and its membership survive restart and backup/restore; deleting a folder preserves accounts.
-
-### FR-5: Trash — P1
-
-1. Present deleted entries, deletion time and a clear no-automatic-expiry policy: retain entries until the user explicitly permanently deletes them. Allow restoring an entry and permanently deleting one or all entries, with confirmation for irreversible deletion.
-2. Restore the secret, metadata and associated backup codes together where possible; report conflicts and partial failure clearly. Do not silently remove existing entries.
-3. Use buttons/context actions as well as gestures so desktop and keyboard users can restore items.
-
-**Acceptance:** Delete and restore a test account without altering its OTP settings; permanent deletion is preceded by a clear confirmation. Trash has no automatic expiry; associated backup codes and recoverable folder relationships follow the account.
-
-### FR-6: Backup and migration — P0
-
-1. Provide clearly labeled **Export encrypted backup** and **Import backup** actions in Settings. Export a versioned, authenticated-encrypted vault to a user-selected local file, including accounts, OTP parameters, folders, backup-code states, trash, preferences and metadata. Require a backup passphrase with confirmation and explain that the app cannot recover it. Never offer plaintext export.
-2. Import through file selection, validate version and integrity, unlock with the backup passphrase, preview counts and conflicts, and choose merge or replace explicitly. A failed or cancelled import must leave the current vault unchanged.
-3. Write exports atomically; never silently overwrite an existing backup. Communicate destination and success or failure without displaying secret contents.
-4. The reference `.vault` import is a discovery target, not a promised format. Implement compatibility only after lawful format analysis and round-trip tests with disposable data.
-
-**Acceptance:** Restore a test export into an empty vault; reject an incorrect password, corrupt file and unsupported version without partial mutation. Verify a merge conflict path and backup portability. A new user can complete either flow with labeled actions, file selection, passphrase entry and a concise review, without an app account or external tools.
-
-### FR-7: Locking and settings — P0/P1
-
-1. Lock vault on user request and after a configurable idle period; a locked screen must conceal codes and require the configured unlock method. Use a local vault passphrase, with optional explicitly enabled OS-backed protection only where it preserves the recovery design. Default idle timeout is five minutes; lock on OS session lock, suspend and relaunch. Explain that a lost passphrase cannot be reset by the app and recovery requires an independently encrypted backup and its passphrase.
-2. Settings should show vault counts, lock status, backup/import actions, version and startup preference. Persist changes and show failures. Use English for all UI, help, errors and dialogs; omit language selection and sign-in/profile controls.
-3. Use local system time and explain that an incorrect clock can cause rejected codes. Recompute on clock changes and sleep/resume. Offer OS clock-correction guidance; do not implement remote time synchronization or change the OS clock.
-4. Keep startup registration optional with enable/disable controls. Do not change security settings without user intent. Browser integration is outside scope.
-
-### FR-8: Local-only operation and English UI — P0
-
-1. Do not implement Google sign-in, OAuth, app login/registration, Authenticator accounts, hosted vaults, cloud backup or cross-device synchronization. A local vault unlock prompt is a security control, not an app account.
-2. Keep all persisted user data encrypted on the local system, including metadata and preferences. Export only encrypted files to a user-selected destination; transferring backups is user-controlled.
-3. First use, unlock, screenshot scan/import, code generation, organization and export/import must work offline. Do not upload screenshots, secrets, metadata or backups.
-4. Ship English-only UI and documentation; do not build translation infrastructure or a language preference.
-
-**Acceptance:** With networking disabled on a clean installation, create a vault, scan/import a credential, generate a code, export and restore. No registration, sign-in, language selection or sync step appears.
-
-## 7. Interaction and visual requirements
-
-- Match the reference UI closely: three tabs (2FA Codes, Backup Codes and Settings), compact dark theme, blue accent, typography, spacing, card hierarchy, timers, navigation and add-account screens. Compare against reference screenshots during implementation. Remove excluded controls and extend the same design language to review, lock, empty and error states. Keep readable contrast and visible focus indicators.
-- At narrow and resizable desktop window widths, keep account names, controls and code values readable without overlapping. Do not rely on swipe-only interactions.
-- Show confirmation, error and progress states for long-running or destructive work. Do not reveal secrets in toast messages, notifications, persisted screenshots, or diagnostics. User-initiated QR capture stays in memory as specified in FR-2A.
-- Provide accessible names for icon-only controls, logical tab order, keyboard shortcuts with discoverable labels, and screen-reader announcements for meaningful status changes. Avoid announcing changing OTP values repeatedly.
-- Explain QR acquisition, clock problems, recovery codes, export passphrases and irreversible deletion in concise contextual help.
-
-## 8. Security and privacy requirements
-
-These are **proposed requirements**, not claims about the reference app.
-
-- Threat-model local credential theft, clipboard exposure, malicious imports, lost backup passphrases, stolen backups, compromised devices and malicious QR content. A local app cannot protect secrets from a fully compromised unlocked endpoint.
-- Use established, maintained cryptographic libraries; authenticated encryption and a modern memory-hard passphrase KDF with unique salt and calibrated parameters for portable backups. Store format and KDF version for migration. Never invent cryptography.
-- Protect local keys with OS facilities and/or a user-held vault secret after deciding recovery requirements. Encrypt all persisted user data: seeds, recovery codes, account metadata, organization, trash and preferences. Prevent database journals, caches and temporary files from exposing plaintext user data. Minimize plaintext lifetime in memory and document platform limitations.
-- No secrets, codes, QR payloads, passphrases, account identifiers, screenshots or raw imports in logs or crash reports. Do not include analytics, telemetry or automatic crash uploads.
-- Parse untrusted QR images and backup files defensively with size limits, schema validation and safe error handling. Use transactional imports and authenticated integrity checks.
-- Prevent lock bypass via notifications or accessible UI; consider screen capture privacy as a platform-dependent enhancement rather than a guarantee. Explain clipboard and backup risks.
-- Have the implementation and crypto reviewed before trusting it with irreplaceable accounts. Test first with disposable accounts and retain independent recovery methods.
-
-## 9. Data model (proposed)
-
-| Entity | Fields |
+### 6.6 Keyboard shortcuts
+| Key | Action |
 |---|---|
-| Vault | schema version, encryption metadata, preferences, timestamps |
-| Account | stable ID, service name, optional website and username, encrypted seed, TOTP algorithm/digits/period, icon reference, creation/update timestamps, deletion state |
-| Backup code set | stable ID, account ID, encrypted codes, per-code used state and timestamps |
-| Folder | stable ID, name, color, timestamps |
-| Folder membership | folder ID, account ID |
-| Preferences | sort, view, encrypted Codes search query and folder filter, auto-start, lock timeout, clipboard timeout |
+| `Ctrl+Shift+Q` (global) | Scan from screen |
+| `Ctrl+V` | Import image from clipboard |
+| `Ctrl+N` | Add manually |
+| `Ctrl+F` / type | Search |
+| `↑ ↓` + `Enter` | Navigate list / copy code |
+| `Ctrl+L` | Lock now |
+| `Ctrl+,` | Settings |
 
-Keep secrets out of indexes and filenames. Define migrations and rollback behavior for each schema change. All persisted user-data entities belong inside encrypted storage. Rust is required for application and UI implementation; the Rust UI framework and storage format remain implementation choices.
+## 7. Technical Architecture
 
-## 10. Architecture and implementation guidance
+### 7.1 Why this stack
+**C# / .NET 10 + WinUI 3** is the best fit for a Windows-only, modern-looking app:
+- It provides native Fluent controls, Mica, and light/dark theming without custom styling work.
+- It gives first-class access to Windows Hello, DPAPI, Windows.Graphics.Capture, the clipboard, and global hotkeys.
+- It has mature libraries: ZXing.Net (QR), Google.Protobuf (migration payload), Konscious/libsodium (Argon2id).
+- It can be packaged as MSIX for clean install, auto-update, and uninstall.
 
-- Implement the app in Rust, including its UI, domain logic, OTP generation, screenshot/QR processing, encrypted persistence and OS integrations. Separate these responsibilities and make code generation deterministic under an injectable clock.
-- Use a mature OTP/QR library where available and verify against published standard vectors. The account URI parser must validate and normalize inputs before persistence.
-- Encrypt portable backups independently of device-bound storage. Keep import/export versioned and test across clean installs. Use atomic writes and transactions to avoid partial vault changes.
-- Put capture and startup registration behind OS adapters. Core workflows require no network services. Do not add account services, OAuth, sync, extension messaging, translation infrastructure or telemetry.
-- Target Windows desktop for the initial release. Choose a Rust UI framework based on reference fidelity, accessibility, secure storage and capture integration, packaging and maintenance. Other platforms are outside the initial release.
+Alternative we considered: Tauri 2 (Rust + web UI). It is smaller and cross-platform, but feels less native on Windows and needs more effort for Hello and capture. Revisit it if cross-platform becomes a goal.
 
-## 11. Validation plan
+### 7.2 Project structure
+```
+Authenticator.sln
+├─ src/Authenticator.App/        WinUI 3 app (Views, ViewModels – MVVM via CommunityToolkit.Mvvm)
+├─ src/Authenticator.Core/       Pure .NET: TOTP, Base32, otpauth URI parser, migration parser, models
+├─ src/Authenticator.Infra/      Vault storage, crypto, Windows Hello, screen capture, QR decode, clipboard
+└─ tests/Authenticator.Core.Tests/  xUnit – RFC test vectors, parser fuzz cases
+```
 
-1. **OTP correctness:** standard TOTP/HOTP underlying algorithm vectors for SHA-1/256/512, supported digits and boundaries; timezone independence; sleep/resume and clock drift. HOTP vectors validate primitives, not a commitment to expose HOTP accounts.
-2. **Screenshot workflow:** Run the complete FR-2A acceptance matrix with disposable credentials, including actual pointer selection, Escape cancellation, scaling, local decode, review, import and code verification.
-3. **Account workflows:** manual entry, supported QR URIs, image/screen scan, validation errors, duplicates, edit, search, sort, folder membership, and keyboard operation using disposable secrets.
-4. **Recovery:** encrypted export/import on a clean installation; wrong passphrase, tampering, malformed/oversized files, conflicts, cancellation, interrupted writes and migration.
-5. **Privacy/security:** inspect logs, crash output, clipboard expiry, locked UI, temporary files, encryption and key recovery; independent security review before real use.
-6. **UI:** empty/populated/locked/error states, readable compact widths, scaling, focus order, screen reader labels and high-contrast settings. Compare desktop, intermediate and narrow-window screenshots against the reference. Verify English-only text and absence of excluded controls.
-7. **Reliability:** restart persistence, concurrent update protection, no data loss on failed writes, offline operation and system sleep/resume.
+### 7.3 Key libraries
+| Concern | Library |
+|---|---|
+| UI | Microsoft.WindowsAppSDK, CommunityToolkit.WinUI (SettingsControls) |
+| MVVM | CommunityToolkit.Mvvm |
+| QR decode | ZXing.Net (+ bindings for SkiaSharp or SoftwareBitmap) |
+| Google migration | Google.Protobuf (with `.proto` for `MigrationPayload`) |
+| KDF | Konscious.Security.Cryptography.Argon2 (or libsodium) |
+| AEAD | `System.Security.Cryptography.AesGcm` |
+| TOTP | Own implementation in Core (small, auditable), using `HMACSHA1/256/512` |
 
-## 12. Settled decisions for autonomous implementation
+### 7.4 Data model
+```csharp
+record Account(
+    Guid Id,
+    string Issuer,
+    string Name,
+    byte[] Secret,          // raw bytes, never Base32 at rest
+    OtpType Type,           // Totp | Hotp
+    OtpAlgorithm Algorithm, // SHA1 | SHA256 | SHA512
+    int Digits,             // 6–8
+    int Period,             // seconds (TOTP only)
+    long Counter,           // HOTP only
+    bool Pinned,
+    int SortOrder,
+    DateTimeOffset CreatedAt);
+```
 
-The user authorizes reasonable implementation decisions without follow-up questions. These defaults resolve the former discovery backlog; agents must record evidence and actual implementation choices rather than asking for routine confirmation.
+### 7.5 Storage & encryption
+- Store the vault file at `%LOCALAPPDATA%\Authenticator\vault.dat`.
+- The vault is serialized JSON, encrypted with **AES-256-GCM** using a random 256-bit **vault key**.
+- Protecting the vault key:
+  - **Windows Hello mode:** the vault key is wrapped with DPAPI (CurrentUser) *and* gated by a Hello `KeyCredential` signature. The app derives a wrapping key from the signature over a fixed challenge, so the vault can't be decrypted without a Hello prompt.
+  - **Password fallback:** the vault key is wrapped with an Argon2id-derived key (m=64 MiB, t=3, p=1, tunable).
+- Write files atomically (write temp → flush → replace). Keep one previous copy as `vault.bak`.
+- Hold secrets in memory only while unlocked, and zero the byte arrays on lock where practical.
 
-1. **Platform and technology:** Windows desktop first; application and UI in Rust. Evaluate egui/eframe first with a reference-fidelity/accessibility/capture spike; select another Rust UI framework if evidence shows it is needed. Record the choice and Windows packaging model in docs/architecture.md. No JavaScript/web UI substitution.
-2. **Unlock and recovery:** A local passphrase creates/unlocks the encrypted vault; it is not an Authenticator account. Use established authenticated encryption and a memory-hard KDF, versioned/calibrated during implementation. Default idle lock is five minutes; also lock on OS session lock, suspend and relaunch. OS-backed protection is optional and must not prevent passphrase-based backup portability. No forgotten-passphrase reset/backdoor; recovery uses a separately encrypted backup.
-3. **Portable backups:** Native versioned encrypted export/import is mandatory and portable across Windows users/devices without the original device keys. Require a backup passphrase with confirmation for export. Reference-app private `.vault` compatibility is optional evidence-driven discovery; if no lawful documentation/disposable samples are available, document it as unsupported in v1 and continue. Never guess compatibility or require real user credentials.
-4. **Account interaction:** Use explicit Copy, Edit and Delete actions, both list and grid views, all six reference sorts and local icons/fallbacks. Do not fetch icons or service metadata over the network. Default app-owned clipboard expiry is 30 seconds and must preserve subsequent user copies.
-5. **Folders and trash:** Use many-to-many folder membership and six reference-style color choices. Keep trash until explicitly permanently deleted; no automatic expiry. Restore metadata, seed, associated recovery codes/used states and surviving folder relationships atomically. Folder removal preserves accounts. Do not promise secure filesystem/SSD/old-backup erasure.
-6. **QR/image input:** Support user-selected screenshot regions and PNG/JPEG image files, processed locally with resource limits. Multiple supported QR codes require selection and review before atomic approved-batch import. Only supported TOTP URIs are required; HOTP/proprietary/third-party migration formats remain excluded unless separately verified and authorized.
-7. **Reference evidence:** Inspect the installed app or existing screenshots non-destructively when available; record evidence paths in docs/reference-ui.md. If unavailable, implement against section 5's observed inventory and mark precise visual fidelity unverified. Extend the same reference language to lock/review/error screens; do not invent evidence or wait for uploads.
-8. **Backup-code input:** UTF-8 text with optional BOM, CRLF/LF, up to 1 MiB; trim surrounding whitespace, omit blanks and review exact duplicates before saving. Preserve used state for exact retained codes when editing. Copying never marks a code used; used marking is explicit and undoable.
-9. **Settings and help:** English only, no translations or language preference. Offline contextual help covers capture, clock issues, recovery codes, backups, passphrase loss and irreversible deletion. Auto Start is explicit opt-in. Imported preferences must not silently enable startup or weaken local lock policy.
-10. **Execution:** Make remaining reversible technical choices autonomously and record material decisions. Never weaken mandatory scope to finish. Record genuine policy/tool/authentication/environment blockers and unperformed checks honestly; no requirement may be marked complete without evidence.
+### 7.6 Privacy
+- No telemetry and no icon fetching. The only network calls are update checks against the project's public GitHub releases (Settings → Updates, on by default, can be turned off) and the opt-in clock check.
+- It doesn't log secrets, codes, URIs, or images, even at debug level.
 
-### Concrete implementation record
+## 8. Non-Functional Requirements
 
-This records actual choices without changing the requirements above. Rust/eframe/egui provides the Windows native UI, AccessKit labels and local icons. The unsigned x64 portable ZIP uses an asInvoker/PerMonitorV2 executable and static CRT. No app login, cloud, remote clock sync, translation infrastructure, telemetry or runtime networking client is enabled.
+| Area | Requirement |
+|---|---|
+| Performance | Cold start to unlock prompt < 1 s. Code refresh does not cause visible jank with 200 accounts. QR decode < 500 ms for a 4K capture. |
+| Accuracy | Pass all RFC 6238 Appendix B test vectors (SHA1/256/512) and RFC 4226 Appendix D HOTP vectors. |
+| Reliability | No vault corruption on crash or power loss (atomic writes + backup copy). |
+| Accessibility | Full keyboard navigation. Narrator reads issuer, name, and code (digit by digit). AA contrast. High contrast mode supported. Respects the "reduce animations" setting. |
+| Size | MSIX < 40 MB (self-contained, trimmed). |
+| Clock | Optional, opt-in "check time drift" that queries an NTP server and warns if drift > 15 s. This is the only network use, and it's off by default. |
 
-Local AUTHLOC1 and portable AUTHPBK1 are distinct authenticated-encrypted formats. Both use established Argon2id/XChaCha20-Poly1305 primitives; native backups require their own passphrase and independent key material. Local plaintext schema 2 includes encrypted search, filter, display, security and startup preferences. Passphrases use their exact 12–1024 UTF-8 bytes. Bounded calibration, accepted KDF and field limits, cancellation/rename admission and memory/endpoint limitations are specified in [storage format](docs/storage-format.md) and [portable backup format](docs/portable-backup-format.md). No OS-backed unlock is enabled. Default idle and clipboard timeouts are 300 and 30 seconds. Trash never automatically expires; recovery used states and surviving relationships follow atomic restore. Startup is explicit opt-in and always remains local during import. Local security preferences are retained by default; adoption of supported display/security preferences requires the corresponding explicit choice.
+## 9. Distribution
+- MSIX package, signed. Sideload in v1; Microsoft Store is optional later.
+- Optional portable unpackaged build. Without package identity, some features fall back: Hello needs the password fallback, and there is no auto-start.
+- Version scheme: SemVer.
 
-Image input supports PNG/JPEG up to 8 MiB, 4096 pixels per dimension, 4,194,304 pixels and a 32 MiB decoded allocation budget. QR payloads are limited to 2048 bytes and at most seven detected candidates; detector saturation is rejected. Capture geometry has separate adapter bounds. Recovery text supports UTF-8 with optional BOM and CRLF/LF, bounded by 1 MiB, 10,000 nonblank lines and 4096 bytes per code. Exact duplicates require review. See src/qr.rs, docs/architecture.md and the format documents for the source-backed limits.
+## 10. Milestones
 
-Private reference `.vault` remains unsupported after Task 22 discovery. AUTHPBK1 normally uses `.authpbk` and is recognized by content. Public phone reference pages do not prove exact installed Windows-version parity.
+| Milestone | Scope |
+|---|---|
+| **M1 – Core** | TOTP + HOTP engine, Base32, `otpauth://` parser, migration parser (read + write), unit tests |
+| **M2 – Vault & lock** | Encrypted storage, Windows Hello + password fallback, auto-lock |
+| **M3 – Main UI** | Account list, copy, search, pin, reorder, HOTP "Get code", light/dark/purple theming, manual entry |
+| **M4 – Import** | Image file + clipboard decode, snip overlay + hotkey, review screen, Google batch flow |
+| **M5 – Backup & polish** | Encrypted export/import, QR transfer export, settings, tray, accessibility pass, MSIX packaging |
 
-Native journeys in Tasks 21/23 and the Task 24 follow-up provide scoped pointer, keyboard, recovery and visual evidence. Actual screenshot review, explicit Save and independent HMAC checks cover primary 96/144/192 DPI and a negative-coordinate 96-DPI monitor with the main app at 144 DPI. Width/application-zoom grids are recorded separately from physical display DPI. Page-entry and focus repairs address clipped headings, import actions and initial dialog cancellation. Two complete release builds, each compiling 183 crates from empty release output directories, produced identical EXE and ZIP bytes in the same fixed toolchain and project path. The bounded fixes were independently reviewed, committed as109171a, packaged with clean metadata and passed the full hosted check/package workflow. The exact local EXE bytes match the native-tested binary. The five additional required native state groups are independently closed. QA-only debug support preserves the exact release EXE bytes. Final source `079c08ddcda27c652f452e5b5756ed2500523fc9` passed [CI 43546047875](https://github.com/ranjbar-dev/authenticator/actions/runs/43546047875) and clean local package validation; [integration record](docs/qa/task24/final-integration.md); mandatory isolated-runtime, actual OS lifecycle/logon and heard-speech acceptance remain blocked.
+## 11. Success Metrics
+- Importing a 20-account Google Authenticator export takes under 60 s end to end.
+- Zero code mismatches against Google Authenticator for the same accounts.
+- Unlock → copy code in ≤ 3 s.
+- No secret material found on disk outside `vault.dat` (verified with a disk/temp-folder scan in testing).
 
-Actual Aquatic contrast and app accessibility-label/focus observations remain scoped evidence. Narrator rollover announcements are unverified: the official Speech Recap observer exposed window chrome but failed its known-utterance positive control. Effective offline clean-profile/no-Rust recovery and actual OS session-lock/suspend/logon delivery also remain unverified on this host. [The current audit](docs/completion-report.md) identifies exact tested states, remaining feasible work and environment limits. All mandatory requirements remain in force; no full release completion is claimed.
+## 12. Decisions Log
 
-## 13. Suggested delivery sequence
+| Topic | Decision |
+|---|---|
+| Platform | Windows only, C# / .NET 10 + WinUI 3 |
+| App lock | Windows Hello, with app-password fallback |
+| Import sources | Google Authenticator export QR, single `otpauth://` QRs, screen snip, clipboard/file image |
+| Backup | Encrypted local `.authbackup` file; no cloud sync |
+| App name | **Authenticator** |
+| HOTP | **Supported in v1** (FR-9a) |
+| Account icons | **Letter avatars** only |
+| Close button | **Minimize to tray** by default (§6.5) |
+| Plaintext export | **On-screen QR only**, with warning; no plaintext file (FR-33) |
+| Start with Windows | **Off** by default |
+| Organization | **Pin favorites** to top; no folders (FR-21a) |
+| Distribution | Single-file `Authenticator.exe` built and released by GitHub Actions on every push to `main`; the app self-updates from GitHub releases (SHA-256 verified) |
+| App icon | **Purple gradient tile + white shield + 3/4 countdown ring + keyhole**, source in `assets/icon/` (§14) |
 
-1. Set up the Rust project at https://github.com/ranjbar-dev/authenticator on `main`, select the Rust UI framework and unlock/recovery design, and establish reference screenshots and deterministic TOTP tests.
-2. Deliver the defining workflow first with disposable data: **Screenshot to Scan → region selection → local QR decoding → editable review → encrypted save → current 2FA code**. Validate offline operation, cancellation, multiple monitors and scaling.
-3. Complete the reference-matching codes list, manual/image entry, search, copy, lock and easy encrypted export/import. Verify recovery on a clean installation before real use.
-4. Add backup-code management, folders, trash, accessibility and visual polish. Investigate reference-format migration only after the local vault and recovery workflow are reliable.
-5. Commit and push project changes to `main` in the designated repository. Keep secrets, real vaults, screenshots and backups out of version control.
+## 13. Open Questions
+_None at this time._
 
-## 14. Implementation task plan and completion evidence
+## 14. App Icon
 
-The ordered implementation plan lives in [tasks/README.md](tasks/README.md), with **24 numbered task files**, one per sequential work unit. [tasks/coverage.md](tasks/coverage.md) maps all functional, security, UI, reliability and delivery requirements to tasks and evidence. [tasks/CODEX_PROMPT.md](tasks/CODEX_PROMPT.md) instructs a future Codex CLI session to execute them with one child agent at a time, independent review after each implementation, no routine questions and persistent checkpoints.
-
-Tasks 01–07 establish the Rust/security/UI/capture foundation; task 08 completes the defining screenshot-to-2FA journey before secondary work. Tasks 09–19 complete all remaining workflows; tasks 20–24 cover independent security/visual validation, reference-format discovery, packaging/documentation and the final PRD audit/commit/push.
-
-Plan generation does not constitute implementation. Initial task status is todo, and coverage is planned rather than verified. Completion requires actual acceptance evidence, independent review, a usable Windows package, accurate final documentation and main pushed to the designated repository. Preserve the task files and update PRD.md to the actual final behavior after implementation; do not remove mandatory requirements or fabricate successful checks to declare completion.
-
-### Evidence chronology
-
-Earlier implementation checkpoints are preserved, with relative links adjusted, in [implementation history](docs/implementation-history.md). Current behavior and remaining acceptance gates are summarized above and in [completion report](docs/completion-report.md); the numbered tasks and coverage table retain their exact requirements and acceptance status.
+| | |
+|---|---|
+| **Concept** | A white **shield** for security and a **keyhole** for the lock, surrounded by a **3/4 ring** that matches the per-code countdown ring in the UI. All of it sits on a rounded tile with a purple gradient (`#A78BFA` → `#7C3AED` → `#5B21B6`). |
+| **Small-size variant** | At 16–24 px the ring is dropped and the shield and keyhole fill the tile, so the icon stays legible in the title bar and tray. |
+| **Files** | `assets/icon/app-icon.svg` (master, ≥ 32 px) · `assets/icon/app-icon-small.svg` (≤ 24 px) · `assets/icon/png/app-icon-{16…1024}.png` · `assets/icon/app.ico` (16–256 px, multi-size) |
+| **Usage** | `app.ico` for the window, tray, and unpackaged EXE. PNGs for MSIX visual assets (`Square44x44Logo`, `Square150x150Logo`, `StoreLogo`, etc.). |

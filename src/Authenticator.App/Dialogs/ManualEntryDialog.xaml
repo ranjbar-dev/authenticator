@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog
+    x:Class="Authenticator.App.Dialogs.ManualEntryDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Add account"
+    CloseButtonText="Cancel"
+    DefaultButton="Primary"
+    IsPrimaryButtonEnabled="False"
+    PrimaryButtonClick="OnPrimaryClick"
+    PrimaryButtonText="Add">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel
+            MinWidth="320"
+            Padding="0,0,12,0"
+            Spacing="12">
+            <StackPanel x:Name="SecretPanel" Spacing="4">
+                <TextBox
+                    x:Name="SecretBox"
+                    Header="Setup key"
+                    IsSpellCheckEnabled="False"
+                    PlaceholderText="e.g. JBSW Y3DP EHPK 3PXP"
+                    TextChanged="OnSecretChanged" />
+                <TextBlock
+                    x:Name="SecretHint"
+                    Style="{StaticResource SecondaryTextStyle}"
+                    Text="The key shown under &quot;Can't scan the QR code?&quot;. You can also paste an otpauth:// link."
+                    TextTrimming="None"
+                    TextWrapping="Wrap" />
+                <TextBlock
+                    x:Name="SecretError"
+                    Foreground="{ThemeResource DangerBrush}"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Visibility="Collapsed" />
+            </StackPanel>
+            <TextBox
+                x:Name="IssuerBox"
+                Header="Service"
+                PlaceholderText="e.g. GitHub"
+                TextChanged="OnFieldChanged" />
+            <TextBox
+                x:Name="NameBox"
+                Header="Account name"
+                IsSpellCheckEnabled="False"
+                PlaceholderText="e.g. you@example.com"
+                TextChanged="OnFieldChanged" />
+            <RadioButtons
+                x:Name="TypeButtons"
+                Header="Type"
+                MaxColumns="2"
+                SelectedIndex="0"
+                SelectionChanged="OnFieldChanged">
+                <x:String>Time-based</x:String>
+                <x:String>Counter-based</x:String>
+            </RadioButtons>
+
+            <Expander
+                x:Name="AdvancedExpander"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Stretch"
+                Header="Advanced">
+                <StackPanel Spacing="12">
+                    <ComboBox
+                        x:Name="AlgorithmBox"
+                        HorizontalAlignment="Stretch"
+                        Header="Algorithm"
+                        SelectedIndex="0"
+                        SelectionChanged="OnFieldChanged">
+                        <x:String>SHA1</x:String>
+                        <x:String>SHA256</x:String>
+                        <x:String>SHA512</x:String>
+                    </ComboBox>
+                    <ComboBox
+                        x:Name="DigitsBox"
+                        HorizontalAlignment="Stretch"
+                        Header="Digits"
+                        SelectedIndex="0"
+                        SelectionChanged="OnFieldChanged">
+                        <x:String>6</x:String>
+                        <x:String>7</x:String>
+                        <x:String>8</x:String>
+                    </ComboBox>
+                    <NumberBox
+                        x:Name="PeriodBox"
+                        Header="Period (seconds)"
+                        Maximum="600"
+                        Minimum="1"
+                        SpinButtonPlacementMode="Compact"
+                        ValueChanged="OnNumberChanged"
+                        Value="30" />
+                    <NumberBox
+                        x:Name="CounterBox"
+                        Header="Counter"
+                        Minimum="0"
+                        SpinButtonPlacementMode="Compact"
+                        ValueChanged="OnNumberChanged"
+                        Visibility="Collapsed"
+                        Value="0" />
+                    <TextBlock
+                        x:Name="CounterWarning"
+                        Foreground="{ThemeResource WarningBrush}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Text="Only change the counter if your codes are being rejected."
+                        TextWrapping="Wrap"
+                        Visibility="Collapsed" />
+                </StackPanel>
+            </Expander>
+
+            <Border
+                x:Name="PreviewPanel"
+                Padding="14,10"
+                Background="{ThemeResource AvatarBackgroundBrush}"
+                CornerRadius="8">
+                <StackPanel>
+                    <TextBlock
+                        x:Name="PreviewLabel"
+                        Style="{StaticResource SecondaryTextStyle}"
+                        Text="Current code" />
+                    <TextBlock
+                        x:Name="PreviewCode"
+                        CharacterSpacing="40"
+                        FontFamily="{StaticResource CodeFontFamily}"
+                        FontSize="24"
+                        FontWeight="SemiBold"
+                        Foreground="{ThemeResource CodeForegroundBrush}"
+                        Text="––– –––" />
+                    <TextBlock
+                        Style="{StaticResource SecondaryTextStyle}"
+                        Text="Check that it matches the code the website asks for."
+                        TextTrimming="None"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</ContentDialog>

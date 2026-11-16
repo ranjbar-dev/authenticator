@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Authenticator.App.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
+    FontFamily="{StaticResource AppFontFamily}">
+
+    <Page.Resources>
+        <Style x:Key="GroupHeaderStyle" TargetType="TextBlock" BasedOn="{StaticResource SectionHeaderStyle}">
+            <Setter Property="Margin" Value="2,24,0,8" />
+        </Style>
+        <Style x:Key="SummaryIconStyle" TargetType="Border">
+            <Setter Property="Width" Value="32" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="Background" Value="{ThemeResource AvatarBackgroundBrush}" />
+        </Style>
+    </Page.Resources>
+
+    <ScrollViewer Padding="20,0,20,28" VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="680" Spacing="4">
+            <StackPanel.ChildrenTransitions>
+                <TransitionCollection>
+                    <EntranceThemeTransition FromVerticalOffset="12" IsStaggeringEnabled="True" />
+                </TransitionCollection>
+            </StackPanel.ChildrenTransitions>
+
+            <TextBlock
+                Margin="2,2,0,14"
+                Style="{StaticResource DisplayTextStyle}"
+                Text="Settings" />
+
+            <!--  Protection at a glance: the three things that decide whether you can lose your codes.  -->
+            <Grid
+                Padding="16,14"
+                Background="{ThemeResource TileBrush}"
+                BorderBrush="{ThemeResource TileStrokeBrush}"
+                BorderThickness="1"
+                ColumnSpacing="12"
+                CornerRadius="12"
+                RowSpacing="14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Border Style="{StaticResource SummaryIconStyle}">
+                    <FontIcon FontSize="15" Foreground="{ThemeResource AvatarForegroundBrush}" Glyph="&#xE928;" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Unlock" />
+                    <TextBlock x:Name="SummaryUnlock" FontWeight="SemiBold" Foreground="{ThemeResource InkBrush}" />
+                </StackPanel>
+
+                <Border Grid.Row="1" Style="{StaticResource SummaryIconStyle}">
+                    <FontIcon FontSize="15" Foreground="{ThemeResource AvatarForegroundBrush}" Glyph="&#xE8F1;" />
+                </Border>
+                <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Backup" />
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon
+                            x:Name="SummaryBackupWarning"
+                            FontSize="13"
+                            Foreground="{ThemeResource WarningBrush}"
+                            Glyph="&#xE7BA;"
+                            Visibility="Collapsed" />
+                        <TextBlock x:Name="SummaryBackup" FontWeight="SemiBold" Foreground="{ThemeResource InkBrush}" />
+                    </StackPanel>
+                </StackPanel>
+                <Button
+                    x:Name="SummaryBackupButton"
+                    Grid.Row="1"
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    Click="OnExportBackupClick"
+                    Content="Back up now"
+                    Style="{StaticResource AccentButtonStyle}"
+                    Visibility="Collapsed" />
+
+                <Border Grid.Row="2" Style="{StaticResource SummaryIconStyle}">
+                    <FontIcon FontSize="15" Foreground="{ThemeResource AvatarForegroundBrush}" Glyph="&#xE72E;" />
+                </Border>
+                <StackPanel Grid.Row="2" Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Auto-lock" />
+                    <TextBlock x:Name="SummaryLock" FontWeight="SemiBold" Foreground="{ThemeResource InkBrush}" />
+                </StackPanel>
+            </Grid>
+
+            <!--  Appearance  -->
+            <TextBlock Style="{StaticResource GroupHeaderStyle}" Text="Appearance" />
+            <toolkit:SettingsCard Description="Follow Windows, or always use light or dark." Header="Theme">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE790;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ComboBox x:Name="ThemeBox" SelectionChanged="OnThemeChanged">
+                    <x:String>System</x:String>
+                    <x:String>Light</x:String>
+                    <x:String>Dark</x:String>
+                </ComboBox>
+            </toolkit:SettingsCard>
+
+            <!--  Security  -->
+            <TextBlock Style="{StaticResource GroupHeaderStyle}" Text="Security" />
+            <toolkit:SettingsCard x:Name="UnlockCard" Header="Unlock with">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE928;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <!--  Stacked so both actions stay fully visible in a narrow window.  -->
+                <StackPanel HorizontalAlignment="Left" Spacing="6">
+                    <Button
+                        x:Name="ChangePasswordButton"
+                        HorizontalAlignment="Stretch"
+                        Click="OnChangePasswordClick"
+                        Content="Change password" />
+                    <Button
+                        x:Name="SwitchUnlockButton"
+                        HorizontalAlignment="Stretch"
+                        Click="OnSwitchUnlockClick" />
+                </StackPanel>
+            </toolkit:SettingsCard>
+            <toolkit:SettingsCard Description="Lock after this long without activity. Also locks when Windows locks or sleeps." Header="Auto-lock">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE72E;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ComboBox x:Name="AutoLockBox" SelectionChanged="OnAutoLockChanged" />
+            </toolkit:SettingsCard>
+            <toolkit:SettingsCard Description="Remove a copied code from the clipboard after a while." Header="Clear clipboard">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE77F;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ComboBox x:Name="ClipboardBox" SelectionChanged="OnClipboardChanged" />
+            </toolkit:SettingsCard>
+            <toolkit:SettingsCard Description="Hide the window from screenshots, screen sharing and recordings." Header="Screen capture protection">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE7B3;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch x:Name="CaptureToggle" Toggled="OnCaptureToggled" />
+            </toolkit:SettingsCard>
+
+            <!--  Codes  -->
+            <TextBlock Style="{StaticResource GroupHeaderStyle}" Text="Codes" />
+            <toolkit:SettingsCard Description="In the last 5 seconds, also show the code that comes next." Header="Show next code">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE893;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch x:Name="NextCodeToggle" Toggled="OnNextCodeToggled" />
+            </toolkit:SettingsCard>
+            <toolkit:SettingsExpander
+                Description="Codes depend on your PC's clock. Optionally compare it with time.windows.com when you unlock. This is the only time the app goes online."
+                Header="Check clock">
+                <toolkit:SettingsExpander.HeaderIcon>
+                    <FontIcon Glyph="&#xE823;" />
+                </toolkit:SettingsExpander.HeaderIcon>
+                <ToggleSwitch x:Name="ClockToggle" Toggled="OnClockToggled" />
+                <toolkit:SettingsExpander.Items>
+                    <toolkit:SettingsCard x:Name="ClockResultCard" Header="Check now">
+                        <Button
+                            x:Name="CheckClockButton"
+                            Click="OnCheckClockClick"
+                            Content="Check" />
+                    </toolkit:SettingsCard>
+                </toolkit:SettingsExpander.Items>
+            </toolkit:SettingsExpander>
+
+            <!--  Shortcuts and startup  -->
+            <TextBlock Style="{StaticResource GroupHeaderStyle}" Text="Shortcut and startup" />
+            <toolkit:SettingsCard
+                x:Name="HotkeyCard"
+                Description="Works anywhere in Windows while Authenticator is running."
+                Header="Scan QR code shortcut">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE765;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <Button
+                    x:Name="HotkeyButton"
+                    MinWidth="140"
+                    Click="OnHotkeyClick"
+                    LosingFocus="OnHotkeyLosingFocus"
+                    PreviewKeyDown="OnHotkeyKeyDown" />
+            </toolkit:SettingsCard>
+            <toolkit:SettingsCard Description="Starts in the system tray when you sign in." Header="Start with Windows">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE7E8;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch x:Name="StartupToggle" Toggled="OnStartupToggled" />
+            </toolkit:SettingsCard>
+            <toolkit:SettingsCard Description="Keep running in the tray so the shortcut keeps working." Header="Closing the window">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE8BB;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ComboBox x:Name="CloseBox" SelectionChanged="OnCloseActionChanged">
+                    <x:String>Minimize to tray</x:String>
+                    <x:String>Exit the app</x:String>
+                </ComboBox>
+            </toolkit:SettingsCard>
+
+            <!--  Backup  -->
+            <TextBlock Style="{StaticResource GroupHeaderStyle}" Text="Backup and transfer" />
+            <toolkit:SettingsCard x:Name="BackupCard" Header="Back up to file">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE8F1;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <Button Click="OnExportBackupClick" Content="Export…" />
+            </toolkit:SettingsCard>
+            <toolkit:SettingsCard Description="Add accounts from an Authenticator backup file." Header="Restore from file">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE896;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <Button Click="OnImportBackupClick" Content="Import…" />
+            </toolkit:SettingsCard>
+            <toolkit:SettingsCard Description="Show QR codes that Google Authenticator on your phone can scan." Header="Transfer to phone">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE8EA;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <Button Click="OnTransferClick" Content="Show QR codes…" />
+            </toolkit:SettingsCard>
+
+            <!--  Updates  -->
+            <TextBlock Style="{StaticResource GroupHeaderStyle}" Text="Updates" />
+            <toolkit:SettingsExpander x:Name="UpdatesExpander" Header="App version">
+                <toolkit:SettingsExpander.HeaderIcon>
+                    <FontIcon Glyph="&#xE895;" />
+                </toolkit:SettingsExpander.HeaderIcon>
+                <Grid>
+                    <Button
+                        x:Name="CheckUpdatesButton"
+                        Click="OnCheckUpdatesClick"
+                        Content="Check now" />
+                    <Button
+                        x:Name="RestartUpdateButton"
+                        Click="OnRestartToUpdateClick"
+                        Content="Restart to update"
+                        Style="{StaticResource AccentButtonStyle}"
+                        Visibility="Collapsed" />
+                </Grid>
+                <toolkit:SettingsExpander.Items>
+                    <toolkit:SettingsCard
+                        Description="Checks GitHub every few hours and downloads new versions in the background. Downloads are verified against their published SHA-256 checksum."
+                        Header="Update automatically">
+                        <ToggleSwitch x:Name="AutoUpdateToggle" Toggled="OnAutoUpdateToggled" />
+                    </toolkit:SettingsCard>
+                    <toolkit:SettingsCard Header="Release notes">
+                        <HyperlinkButton Click="OnReleaseNotesClick" Content="Open on GitHub" />
+                    </toolkit:SettingsCard>
+                </toolkit:SettingsExpander.Items>
+            </toolkit:SettingsExpander>
+
+            <!--  About  -->
+            <TextBlock Style="{StaticResource GroupHeaderStyle}" Text="About" />
+            <toolkit:SettingsExpander x:Name="AboutExpander" Header="Authenticator">
+                <toolkit:SettingsExpander.HeaderIcon>
+                    <ImageIcon Source="ms-appx:///Assets/AppIcon-256.png" />
+                </toolkit:SettingsExpander.HeaderIcon>
+                <toolkit:SettingsExpander.Items>
+                    <toolkit:SettingsCard Description="Windows App SDK, CommunityToolkit (MIT) · ZXing.Net (Apache 2.0) · Konscious Argon2 (MIT) · Geist and Geist Mono fonts (SIL Open Font License 1.1)" Header="Open-source components" />
+                    <toolkit:SettingsCard x:Name="DataFolderCard" Header="Data folder">
+                        <Button Click="OnOpenDataFolderClick" Content="Open" />
+                    </toolkit:SettingsCard>
+                </toolkit:SettingsExpander.Items>
+            </toolkit:SettingsExpander>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

@@ -1,45 +1,72 @@
 # Authenticator
 
-Windows-first desktop authenticator written in Rust. Work is tracked in [tasks/README.md](tasks/README.md).
+A Windows desktop authenticator (TOTP/HOTP) with screenshot-based import, Windows Hello unlock and a light/dark purple UI. See [PRD.md](PRD.md) for the full spec.
 
-The implementation has independent source and native workflow reviews; release acceptance remains incomplete. The app includes an encrypted local vault, TOTP and QR entry, portable encrypted backups, recovery-code management and folders. Reviewed evidence covers native scan, copy, recovery, folders, Trash, measured mixed-monitor capture, deterministic packaging and the required feasible page states. [The audit report](docs/completion-report.md) records the exact tested sizes/states and remaining offline installation, separate-user recovery, Windows lifecycle/logon and heard screen-reader checks. [The task checkpoint](tasks/README.md) retains all acceptance requirements. Use disposable test data while required acceptance remains open; no production-readiness claim is made.
+![icon](assets/icon/png/app-icon-128.png)
 
-## Development on Windows
+## Requirements
 
-Install Rust stable with `rustup`, Visual Studio C++ Build Tools and a Windows SDK. The dependency MSRV is Rust 1.95; this checkout was built with Rust 1.98.0, `x86_64-pc-windows-msvc`. `rust-toolchain.toml` selects stable plus rustfmt/clippy. Dependency versions are locked in Cargo.lock; use `--locked` below. A compiler update is not a dependency-lock update.
+- Windows 10 1809+ / Windows 11 (x64 or ARM64)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download) (`winget install Microsoft.DotNet.SDK.10`)
+
+## Build, run, test
 
 ```powershell
-rtk cargo build --locked --bin Authenticator
-rtk cargo run --locked --bin Authenticator
-rtk cargo run --locked --bin Authenticator -- --framework-spike
-rtk cargo build --locked --example framework_spike
-rtk cargo fmt --all -- --check
-rtk cargo clippy --locked --all-targets -- -D warnings
-rtk cargo test --locked --all-targets
+dotnet build src\Authenticator.App -p:Platform=x64
+.\src\Authenticator.App\bin\x64\Debug\net10.0-windows10.0.26100.0\win-x64\Authenticator.exe
+
+dotnet test --project tests\Authenticator.Core.Tests
 ```
 
-RTK is the local command proxy required by this workspace's rules; elsewhere run the underlying Cargo commands directly. The debug executable is `target/debug/Authenticator.exe`. The spike flag exposes inert test controls, resize/zoom actions and a separate region-selection test viewport. It captures no screen pixels. Do not type credentials into the spike.
+Production build: one self-contained `Authenticator.exe` (~41 MB, no .NET or Windows App SDK install needed):
 
-For automated pointer/keyboard/accessibility checks, launch the no-argument `target/debug/examples/framework_spike.exe` with the computer-use helper's documented `launch_app` API. An elevated terminal's `Start-Process` inherits high integrity; the medium-integrity helper cannot inject input or inspect its controls through Windows UIPI. Authenticator does not require elevation. An unelevated launch exposes labeled controls and supports real input. Application zoom is not a Windows DPI test. Production screen selection uses the Windows-native capture overlay adapter.
+```powershell
+dotnet publish src\Authenticator.App -c Release -r win-x64 -p:Platform=x64 `
+  -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
+  -p:IncludeAllContentForSelfExtract=true -p:EnableCompressionInSingleFile=true -o dist
+```
 
-Runtime requires no registration or network service. Build-time Cargo dependency downloads and GitHub CI require network access. No framework persistence, link launching, telemetry or network client is enabled by this application.
+MSIX package: add `-p:WindowsPackageType=MSIX` and sign it (`AppxPackageSigningEnabled`, or `winapp sign`).
 
-## Windows portable package
+### Development data folder
 
-Build the unsigned x64 ZIP with `rtk proxy python scripts/package_windows.py`.
-The allowlisted archive and SHA256 file appear under `dist/`; `--replace` only
-replaces a verified prior build. [Build/package details](docs/windows-build.md)
-describe static CRT linkage, Windows resources, notices and source-dirty metadata.
-End users extract and run `Authenticator.exe` without Rust/Python/Node.
+The vault and settings live in `%LOCALAPPDATA%\Authenticator`. To test without touching your real accounts, point the app at another folder:
 
-[User guide](docs/user-guide.md) covers every shipped workflow and deliberate
-update/uninstall handling. [Security and validation limits](docs/security-limits.md)
-distinguish implemented behavior from unperformed release gates. App-folder
-removal preserves the per-user encrypted vault; backups are separately managed.
+```powershell
+$env:AUTHENTICATOR_DATA_DIR = "$env:TEMP\auth-dev"; .\...\Authenticator.exe
+```
 
-Backups use this app's native encrypted `AUTHPBK1` format, normally `.authpbk`.
-The reference app's private `.vault` format is unsupported in v1; renaming a file
-does not convert it. [Compatibility and migration evidence](docs/migration-compatibility.md)
-explains supported inputs and the safe native export/import path.
+Screen-capture protection is on by default, so screenshots of the window come out black. Turn it off in Settings or set `"screenCaptureProtection": false` in that folder's `settings.json`.
 
-See [architecture](docs/architecture.md), [security design](docs/security-design.md) and [reference evidence](docs/reference-ui.md). Windows CI runs formatting, warning-free Clippy, tests, a debug build and release/package validation; a local pass does not establish a hosted CI pass.
+## Project layout
+
+| Project | What's in it |
+|---|---|
+| `src/Authenticator.Core` | Pure .NET: TOTP/HOTP, Base32, `otpauth://` and Google `otpauth-migration://` parsing/building, AES-GCM + Argon2id, vault and backup file formats |
+| `src/Authenticator.Infra` | Windows platform: Windows Hello + DPAPI key wrapping (`VaultSession`), atomic file writes, settings, screen capture, QR decode/encode (ZXing.Net), SNTP clock check, start-with-Windows |
+| `src/Authenticator.App` | WinUI 3 app: pages, dialogs, snip overlay, tray icon, global hotkey, auto-lock |
+| `tests/Authenticator.Core.Tests` | RFC 4226/6238 vectors, parsers, crypto round-trips, QR decoding (tight crops, 6400×1440 desktops) |
+
+## Releases and auto-update
+
+- Every push to `main` runs [`.github/workflows/release.yml`](.github/workflows/release.yml): tests, a single-file build stamped `1.1.<run number>`, and a GitHub release `v1.1.<run number>` with `Authenticator.exe` and `Authenticator.exe.sha256`.
+- The released app checks the [latest release](https://github.com/ranjbar-dev/authenticator/releases/latest) 20 s after start and every 6 hours. It downloads the new exe next to itself as `Authenticator.exe.update`, verifies its SHA-256 against the published checksum, and offers **Restart now**. If you just quit, the update installs on exit.
+- The swap renames the running exe to `Authenticator.exe.old` (deleted on next start) and moves the new one into place, so shortcuts keep working.
+- Self-update only runs in the published single-file exe, not in `dotnet build` output. Settings → Updates shows the version and status, and has a "Check now" button.
+
+## Design
+
+- **Type:** Geist for the interface, Geist Mono for codes (bundled, SIL OFL 1.1; see `Assets/Fonts`).
+- **Color:** one purple accent on purple-tinted neutrals. Codes are ink; the accent marks what you can act on.
+- **Main screen:** one shared time strip for all 30-second codes instead of a ring per row. Rows are borderless tiles with hover, press and inline "Copied" feedback.
+- Design tokens live in `src/Authenticator.App/Styles/Theme.xaml` (light, dark and high-contrast).
+
+## How secrets are protected
+
+- Accounts are stored in `vault.dat`, encrypted with AES-256-GCM using a random vault key.
+- **Windows Hello mode:** the vault key is wrapped by a key derived from a Hello signature (the TPM-backed private key signs a stored challenge), and that is wrapped again with DPAPI for the current user. Unlocking requires a Hello prompt.
+- **Password mode:** the vault key is wrapped by an Argon2id key (64 MiB, 3 iterations).
+- Screenshots used for import exist only in memory and are zeroed after decoding. Copied codes are excluded from clipboard history and cloud clipboard, and are cleared after 30 s.
+- Network access is limited to update checks against this repository's GitHub releases (can be turned off in Settings → Updates) and the opt-in clock check against `time.windows.com`. Account data never leaves the PC.
+
+If Windows Hello is reset, its key is gone and the vault can't be opened. The unlock screen then offers a reset, after which you can restore from an `.authbackup` file. **Make a backup.**

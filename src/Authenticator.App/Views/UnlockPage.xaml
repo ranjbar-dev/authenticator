@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Authenticator.App.Views.UnlockPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Authenticator.App.Controls"
+    FontFamily="{StaticResource AppFontFamily}">
+
+    <Grid>
+        <controls:AmbientGlow />
+        <ScrollViewer SizeChanged="OnViewportSizeChanged" VerticalScrollBarVisibility="Auto">
+            <StackPanel
+                x:Name="Column"
+                Width="356"
+                Margin="0,24,0,56"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Spacing="14">
+                <StackPanel.ChildrenTransitions>
+                    <TransitionCollection>
+                        <EntranceThemeTransition FromVerticalOffset="16" IsStaggeringEnabled="True" />
+                    </TransitionCollection>
+                </StackPanel.ChildrenTransitions>
+
+                <Image
+                    Width="52"
+                    Height="52"
+                    HorizontalAlignment="Left"
+                    AutomationProperties.AccessibilityView="Raw"
+                    Source="ms-appx:///Assets/AppIcon-256.png" />
+                <TextBlock
+                    Margin="0,6,0,0"
+                    Style="{StaticResource DisplayTextStyle}"
+                    Text="Locked" />
+                <TextBlock
+                    x:Name="Subtitle"
+                    Style="{StaticResource LeadTextStyle}"
+                    Text="Unlock to see your codes." />
+
+                <Button
+                    x:Name="HelloButton"
+                AutomationProperties.Name="Unlock with Windows Hello"
+                    Height="44"
+                    Margin="0,10,0,0"
+                    HorizontalAlignment="Stretch"
+                    Click="OnHelloClick"
+                    Style="{StaticResource AccentButtonStyle}"
+                    Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Grid Width="18">
+                            <FontIcon
+                                x:Name="HelloIcon"
+                                FontSize="18"
+                                Glyph="&#xE928;" />
+                            <ProgressRing
+                                x:Name="HelloBusy"
+                                Width="16"
+                                Height="16"
+                                Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
+                                IsActive="False" />
+                        </Grid>
+                        <TextBlock x:Name="HelloLabel" Text="Unlock with Windows Hello" />
+                    </StackPanel>
+                </Button>
+
+                <StackPanel
+                    x:Name="PasswordPanel"
+                    Margin="0,10,0,0"
+                    Spacing="10"
+                    Visibility="Collapsed">
+                    <PasswordBox
+                        x:Name="Password"
+                        Height="40"
+                        KeyDown="OnPasswordKeyDown"
+                        PasswordChanged="OnPasswordChanged"
+                        PlaceholderText="App password" />
+                    <Button
+                        x:Name="UnlockButton"
+                        AutomationProperties.Name="Unlock"
+                        Height="40"
+                        HorizontalAlignment="Stretch"
+                        Click="OnUnlockClick"
+                        IsEnabled="False"
+                        Style="{StaticResource AccentButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ProgressRing
+                                x:Name="PasswordBusy"
+                                Width="14"
+                                Height="14"
+                                Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
+                                IsActive="False"
+                                Visibility="Collapsed" />
+                            <TextBlock x:Name="UnlockLabel" Text="Unlock" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!--  Inline error: says what happened and what to do, no modal.  -->
+                <StackPanel
+                    x:Name="ErrorPanel"
+                    Orientation="Horizontal"
+                    Spacing="8"
+                    Visibility="Collapsed">
+                    <FontIcon
+                        Margin="0,2,0,0"
+                        VerticalAlignment="Top"
+                        FontSize="14"
+                        Foreground="{ThemeResource DangerBrush}"
+                        Glyph="&#xE783;" />
+                    <TextBlock
+                        x:Name="ErrorText"
+                        MaxWidth="320"
+                        Foreground="{ThemeResource DangerBrush}"
+                        Style="{StaticResource SecondaryTextStyle}"
+                        TextTrimming="None"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+
+                <HyperlinkButton
+                    x:Name="ResetLink"
+                    Margin="-12,8,0,0"
+                    Click="OnResetClick"
+                    Content="Reset Authenticator…"
+                    Foreground="{ThemeResource SecondaryTextBrush}"
+                    Visibility="Collapsed" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>
