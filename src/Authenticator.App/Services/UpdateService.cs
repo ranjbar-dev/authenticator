@@ -103,9 +103,13 @@ internal sealed class UpdateService
         catch (Exception ex)
         {
             // Background and best-effort: any failure is reported in Settings, never allowed to crash the app.
-            Error = ex is HttpRequestException or TaskCanceledException
-                ? "Couldn't reach GitHub. Check your internet connection."
-                : ex.Message;
+            Error = ex switch
+            {
+                HttpRequestException { StatusCode: System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.TooManyRequests } =>
+                    "GitHub is limiting update checks from this network right now. Authenticator will try again later.",
+                HttpRequestException or TaskCanceledException => "Couldn't reach GitHub. Check your internet connection.",
+                _ => ex.Message,
+            };
             SetState(UpdateState.Failed);
         }
         finally
