@@ -486,3 +486,6 @@ $RECYCLE.BIN/
 
 # Production builds
 dist/
+
+# The 'Backup*/' rule above is for Visual Studio upgrade backups; this is source code.
+!src/Authenticator.Core/Backup/
