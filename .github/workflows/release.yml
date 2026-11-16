@@ -34,7 +34,8 @@ jobs:
         run: dotnet test --project tests/Authenticator.Core.Tests -c Release
 
       - name: Restore
-        run: dotnet restore src/Authenticator.App -r win-x64 -p:Platform=x64
+        # Release configuration so the ReadyToRun runtime pack is restored for the publish step.
+        run: dotnet restore src/Authenticator.App -r win-x64 -p:Platform=x64 -p:Configuration=Release
 
       - name: Publish single-file exe
         run: >
