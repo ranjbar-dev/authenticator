@@ -100,10 +100,9 @@ internal sealed class UpdateService
             _settings.Save();
             SetState(UpdateState.Ready);
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException
-                                       or UnauthorizedAccessException or InvalidDataException or System.Text.Json.JsonException
-                                       or KeyNotFoundException or InvalidOperationException)
+        catch (Exception ex)
         {
+            // Background and best-effort: any failure is reported in Settings, never allowed to crash the app.
             Error = ex is HttpRequestException or TaskCanceledException
                 ? "Couldn't reach GitHub. Check your internet connection."
                 : ex.Message;

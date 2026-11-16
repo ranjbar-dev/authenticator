@@ -16,11 +16,13 @@ public static class UpdateClient
 
     public static readonly Uri ReleasesPage = new($"https://github.com/{Repository}/releases");
 
-    private static readonly HttpClient Http = CreateClient();
-
     /// <summary>The running app's version, normalized to four parts (CI sets it to 1.1.&lt;build&gt;).</summary>
     public static Version CurrentVersion { get; } =
         Normalize(Assembly.GetEntryAssembly()?.GetName().Version ?? new Version(0, 0));
+
+    // Must come after CurrentVersion: static initializers run in declaration order, and the
+    // User-Agent header reads CurrentVersion.
+    private static readonly HttpClient Http = CreateClient();
 
     /// <summary>The latest published release, or null if there is none or it lacks the expected assets.</summary>
     public static async Task<ReleaseInfo?> GetLatestAsync(CancellationToken cancellationToken = default)

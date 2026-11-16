@@ -18,6 +18,15 @@ public class UpdateVersionTests
     public void Rejects_non_version_tags(string tag) => Assert.Null(UpdateClient.ParseTag(tag));
 
     [Fact]
+    public void Type_initializes_and_reports_a_version()
+    {
+        // Touching CurrentVersion runs the static initializer (HTTP client included); it once threw
+        // because the client was built before the version it reads.
+        Assert.NotNull(UpdateClient.CurrentVersion);
+        Assert.Equal(4, UpdateClient.CurrentVersion.ToString().Split('.').Length);
+    }
+
+    [Fact]
     public void Three_and_four_part_versions_compare_equal()
     {
         // The assembly reports 1.1.5.0; the tag says v1.1.5. Without normalizing, 1.1.5 < 1.1.5.0 and
