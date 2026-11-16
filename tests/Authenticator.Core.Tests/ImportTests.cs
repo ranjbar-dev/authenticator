@@ -134,6 +134,52 @@ public class ImportTests
     }
 
     [Fact]
+    public void Parses_first_order_vault()
+    {
+        // Same layout as a real export: "uri:" + otpauth link, then an empty "backup_codes:" line per account.
+        const string text =
+            "uri:otpauth://totp/Google%3Aalice%40gmail.com?secret=JBSWY3DPEHPK3PXP&issuer=Google&algorithm=SHA1&digits=6&period=30&websiteurl=Z29vZ2xlLmNvbQ==\n" +
+            "backup_codes:\n" +
+            "uri:otpauth://totp/Binance:bob@mail.com?secret=HXDMVJECJJWSRB3HWIZR4IFUGFTMXBOZ&issuer=Binance&algorithm=SHA512&digits=6&period=30\n" +
+            "backup_codes:\n";
+        var payload = FirstOrderVault.Parse(FirstOrderVault.Encrypt(text));
+
+        Assert.Equal(2, payload.Accounts.Count);
+        Assert.Empty(payload.Warnings);
+        Assert.Equal("Google", payload.Accounts[0].Issuer);
+        Assert.Equal("alice@gmail.com", payload.Accounts[0].Name);
+        Assert.Equal("JBSWY3DPEHPK3PXP", Base32.Encode(payload.Accounts[0].Secret));
+        Assert.Equal(OtpAlgorithm.Sha512, payload.Accounts[1].Algorithm);
+    }
+
+    [Fact]
+    public void First_order_vault_matches_real_export_bytes()
+    {
+        // Every real export starts with this ciphertext block (the fixed IV encrypting "uri:otpauth://to").
+        var encrypted = FirstOrderVault.Encrypt("uri:otpauth://totp/A:b?secret=JBSWY3DPEHPK3PXP\nbackup_codes:\n");
+        Assert.Equal("ad0ff386f541", Convert.ToHexStringLower(encrypted.AsSpan(0, 6)));
+    }
+
+    [Fact]
+    public void First_order_vault_skips_bad_accounts_and_flags_backup_codes()
+    {
+        const string text =
+            "uri:otpauth://totp/A:b?secret=JBSWY3DPEHPK3PXP\nbackup_codes:\n" +
+            "uri:otpauth://totp/C:d?secret=!!!\nbackup_codes:12345678,87654321\n";
+        var payload = FirstOrderVault.Parse(FirstOrderVault.Encrypt(text));
+        Assert.Single(payload.Accounts);
+        Assert.Equal(2, payload.Warnings.Count);
+    }
+
+    [Fact]
+    public void First_order_vault_rejects_other_files()
+    {
+        Assert.Throws<OtpFormatException>(() => FirstOrderVault.Parse([1, 2, 3]));
+        Assert.Throws<OtpFormatException>(() => FirstOrderVault.Parse(new byte[64]));
+        Assert.Throws<OtpFormatException>(() => FirstOrderVault.Parse(FirstOrderVault.Encrypt("{\"not\":\"a vault\"}")));
+    }
+
+    [Fact]
     public void Duplicates_detected_by_secret_or_label()
     {
         var a = new Account { Issuer = "GitHub", Name = "larry", Secret = [1, 2, 3] };

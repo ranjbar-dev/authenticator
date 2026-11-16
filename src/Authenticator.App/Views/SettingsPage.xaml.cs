@@ -377,7 +377,7 @@ public sealed partial class SettingsPage : Page
     {
         var added = await TransferActions.ImportBackupAsync(XamlRoot);
         if (added > 0)
-            await DialogService.ShowMessageAsync(XamlRoot, "Backup restored", $"{added} account{(added == 1 ? "" : "s")} added.");
+            await DialogService.ShowMessageAsync(XamlRoot, "Accounts imported", $"{added} account{(added == 1 ? "" : "s")} added.");
     }
 
     private async void OnTransferClick(object sender, RoutedEventArgs e) => await TransferActions.ShowTransferQrAsync(XamlRoot);

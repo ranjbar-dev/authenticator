@@ -69,28 +69,63 @@ internal static class TransferActions
         await DialogService.ShowMessageAsync(root, "Backup saved", $"{snapshot.Count} account{(snapshot.Count == 1 ? "" : "s")} saved to {Path.GetFileName(result.Path)}. Keep it somewhere safe, like a USB drive or cloud storage.");
     }
 
-    /// <summary>Returns the number of accounts restored.</summary>
+    public static bool IsImportablePath(string path) =>
+        string.Equals(Path.GetExtension(path), BackupFile.Extension, StringComparison.OrdinalIgnoreCase) || FirstOrderVault.IsVaultPath(path);
+
+    /// <summary>Picks an Authenticator backup or an Authenticator App · 2FA vault. Returns the number of accounts added.</summary>
     public static async Task<int> ImportBackupAsync(XamlRoot root)
     {
         var picker = new FileOpenPicker(App.Current!.Window.AppWindow.Id);
         picker.FileTypeFilter.Add(BackupFile.Extension);
+        picker.FileTypeFilter.Add(FirstOrderVault.Extension);
         var result = await picker.PickSingleFileAsync();
         if (result == null)
             return 0;
+        return await ImportFileAsync(root, result.Path);
+    }
 
+    /// <summary>Imports a <c>.authbackup</c> or <c>.vault</c> file. Returns the number of accounts added.</summary>
+    public static async Task<int> ImportFileAsync(XamlRoot root, string path)
+    {
         byte[] bytes;
         try
         {
-            bytes = await File.ReadAllBytesAsync(result.Path);
+            bytes = await File.ReadAllBytesAsync(path);
         }
         catch (IOException ex)
         {
-            await DialogService.ShowMessageAsync(root, "Couldn't open the backup", ex.Message);
+            await DialogService.ShowMessageAsync(root, "Couldn't open the file", ex.Message);
             return 0;
         }
 
+        return FirstOrderVault.IsVaultPath(path)
+            ? await ImportVaultAsync(root, bytes)
+            : await ImportBackupBytesAsync(root, bytes, Path.GetFileName(path));
+    }
+
+    private static async Task<int> ImportVaultAsync(XamlRoot root, byte[] bytes)
+    {
+        ParsedPayload payload;
+        try
+        {
+            payload = await Task.Run(() => FirstOrderVault.Parse(bytes));
+        }
+        catch (OtpFormatException ex)
+        {
+            await DialogService.ShowMessageAsync(root, "Couldn't import the vault", ex.Message);
+            return 0;
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(bytes);
+        }
+        return await ReviewAndAddAsync(root, payload.Accounts, payload.Warnings);
+    }
+
+    private static async Task<int> ImportBackupBytesAsync(XamlRoot root, byte[] bytes, string fileName)
+    {
         BackupContents? contents = null;
-        var password = await PasswordDialog.EnterAsync(root, "Enter backup password", $"Enter the password for {Path.GetFileName(result.Path)}.", "Restore", async candidate =>
+        var password = await PasswordDialog.EnterAsync(root, "Enter backup password", $"Enter the password for {fileName}.", "Restore", async candidate =>
         {
             try
             {

@@ -13,6 +13,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Windows.Storage.Pickers;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Storage;
 using Windows.System;
 using DispatcherQueueTimer = Microsoft.UI.Dispatching.DispatcherQueueTimer;
 
@@ -448,7 +449,7 @@ public sealed partial class MainPage : Page
         if (e.DataView.Contains(StandardDataFormats.StorageItems) || e.DataView.Contains(StandardDataFormats.Bitmap))
         {
             e.AcceptedOperation = DataPackageOperation.Copy;
-            e.DragUIOverride.Caption = "Import QR code";
+            e.DragUIOverride.Caption = "Import";
         }
     }
 
@@ -459,9 +460,20 @@ public sealed partial class MainPage : Page
         var deferral = e.GetDeferral();
         try
         {
+            if (e.DataView.Contains(StandardDataFormats.StorageItems))
+            {
+                var items = await e.DataView.GetStorageItemsAsync();
+                var file = items.OfType<StorageFile>().FirstOrDefault(f => TransferActions.IsImportablePath(f.Path));
+                if (file != null)
+                {
+                    await ImportFileAsync(file.Path);
+                    return;
+                }
+            }
+
             var (image, _) = await ImageLoader.FromDataViewAsync(e.DataView);
             if (image == null)
-                ShowNotice(InfoBarSeverity.Warning, "Not an image", "Drop a PNG, JPG or other image file that shows a QR code.");
+                ShowNotice(InfoBarSeverity.Warning, "Can't import this file", "Drop an image of a QR code, an Authenticator backup (.authbackup) or an Authenticator App · 2FA vault (.vault).");
             else
                 await ImportFromImageAsync(image);
         }
@@ -473,6 +485,17 @@ public sealed partial class MainPage : Page
         {
             deferral.Complete();
         }
+    }
+
+    private async Task ImportFileAsync(string path)
+    {
+        NoticeBar.IsOpen = false;
+        var added = await TransferActions.ImportFileAsync(XamlRoot, path);
+        ViewModel.Load();
+        Tick();
+        UpdateBackupReminder();
+        if (added > 0)
+            ShowToast(added == 1 ? "Account added" : $"{added} accounts added");
     }
 
     private async Task ImportFromClipboardAsync()
